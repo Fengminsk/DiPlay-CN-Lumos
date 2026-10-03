@@ -918,6 +918,31 @@ class CarPlayHostActivity : ComponentActivity() {
         }
         root.addView(video, FrameLayout.LayoutParams(-1, -1))
         root.addView(gestureLayer, FrameLayout.LayoutParams(-1, -1))
+        // The BYD system takes three-finger swipe-down for its AC panel, so the same gesture
+        // cannot reliably open DiPlay's settings there. A quiet corner button always works.
+        val settingsGear = TextView(this).apply {
+            text = "⚙"
+            textSize = 24f
+            setTextColor(Color.argb(200, 235, 241, 250))
+            gravity = Gravity.CENTER
+            contentDescription = getString(R.string.app_settings)
+            isClickable = true
+            alpha = 0.35f
+            setOnTouchListener { _, event ->
+                if (event.actionMasked == MotionEvent.ACTION_DOWN) alpha = 0.9f
+                if (event.actionMasked == MotionEvent.ACTION_UP || event.actionMasked == MotionEvent.ACTION_CANCEL) {
+                    alpha = 0.35f
+                    if (event.actionMasked == MotionEvent.ACTION_UP) openSettingsMenu()
+                }
+                true
+            }
+        }
+        root.addView(
+            settingsGear,
+            FrameLayout.LayoutParams(dp(52), dp(52), Gravity.BOTTOM or Gravity.END).apply {
+                marginEnd = dp(18); bottomMargin = dp(18)
+            },
+        )
         val panel = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
             gravity = Gravity.CENTER
@@ -957,7 +982,7 @@ class CarPlayHostActivity : ComponentActivity() {
             setOnClickListener { showDiPlayHome() }
         }, LinearLayout.LayoutParams(dp(300), dp(64)))
         panel.addView(TextView(this).apply {
-            text = getString(R.string.in_carplay_swipe_down_with_three_fingers_to_open_diplay_se)
+            text = getString(R.string.open_diplay_settings_hint)
             textSize = 13f; gravity = Gravity.CENTER; setTextColor(Color.rgb(168, 182, 202)); setPadding(0, dp(20), 0, 0)
         })
         root.addView(panel, FrameLayout.LayoutParams(-1, -1))
