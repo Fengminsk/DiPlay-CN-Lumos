@@ -4,7 +4,7 @@
 
 **下载**
 
-- APK：本 Release 附件 `DiPlay-cn-v0.2.10-cn.1.apk`
+- APK：本 Release 附带的 `DiPlay-cn-v0.2.10-cn.*.apk`
 - 完整优化记录：[docs/CN_OPTIMIZATIONS.md](https://github.com/serein-morii/DiPlay-CN/blob/main/docs/CN_OPTIMIZATIONS.md)
 
 **这一版（0.2.10-cn.1）**

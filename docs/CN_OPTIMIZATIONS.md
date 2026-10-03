@@ -4,6 +4,11 @@
 
 覆盖安装：包名始终为 `com.shihab.diplay.cn`，公开 APK 使用同一套 debug 签名。只要新包的 `versionCode` 更大，即可覆盖旧版并保留设置。不能覆盖官方 `com.shihab.diplay`。
 
+## 0.2.10-cn.2 — 2026-10-03
+
+- CarPlay 画面右下角新增半透明 ⚙ 按钮，点按直接打开 DiPlay 设置。比亚迪系统把三指下滑占给了空调面板，原手势在部分车机上不可用；三指手势保留，⚙ 按钮始终可用。
+- APK：见 [v0.2.10-cn.2](https://github.com/serein-morii/DiPlay-CN/releases/tag/v0.2.10-cn.2)
+
 ## 0.2.10-cn.1 — 2026-10-02
 
 - 基于官方 v0.2.10。版本名 `0.2.10`，`versionCode` 35，标签 `v0.2.10-cn.1`。
