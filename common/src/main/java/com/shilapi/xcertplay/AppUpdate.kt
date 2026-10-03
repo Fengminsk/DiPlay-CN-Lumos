@@ -21,7 +21,7 @@ import java.util.concurrent.Executors
 object AppUpdate {
     private const val LATEST_URL = "https://api.github.com/repos/serein-morii/DiPlay-CN/releases/latest"
     private const val ACCEPT = "application/vnd.github+json"
-    private const val USER_AGENT = "DiPlay-Plus-Updater"
+    private const val USER_AGENT = "DiPlay-CN-Updater"
     private const val CONNECT_TIMEOUT = 10_000
     private const val READ_TIMEOUT = 20_000
     private const val MAX_APK_BYTES = 200L * 1024 * 1024

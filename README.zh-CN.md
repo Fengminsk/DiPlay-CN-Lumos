@@ -1,6 +1,6 @@
-# DiPlay Plus
+# DiPlay CN
 
-本仓库基于上游 DiPlay `v0.2.10`。桌面名称为 **DiPlay Plus**，包名保持 `com.shihab.diplay.cn`（沿用旧包名以便覆盖升级），可与官方正式版并存。
+本仓库基于上游 DiPlay `v0.2.10`。桌面名称为 **DiPlay CN**，包名为 `com.shihab.diplay.cn`，可与官方正式版并存。
 
 为兼容的比亚迪安卓车机提供有线及无线 CarPlay，采用 DiAuto 风格界面。
 

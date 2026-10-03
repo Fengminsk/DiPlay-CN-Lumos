@@ -1,8 +1,13 @@
-# DiPlay Plus 优化日志（原 DiPlay CN）
+# DiPlay CN 优化日志
 
 本仓库相对官方 DiPlay 的改动单独记在这里。官方上游版本见 [CHANGELOG.md](../CHANGELOG.md)。下载页每次发版也会带同一份说明。
 
 覆盖安装：包名始终为 `com.shihab.diplay.cn`；自 0.2.10-cn.4 起所有 CN 版本使用同一把固定签名密钥，`versionCode` 更大即可直接覆盖安装并保留设置。0.2.10-cn.3 及更早版本签名各不相同，升到 cn.4 需最后一次卸载重装。不能覆盖官方 `com.shihab.diplay`。
+
+## 0.2.10-cn.10 — 2026-10-03
+
+- 按用户习惯恢复桌面名 **DiPlay CN**，清除此前别名的全部痕迹（应用名、README、发版说明、更新器 UA）。包名与签名不变，仍可直接覆盖安装。
+- APK：见 [v0.2.10-cn.10](https://github.com/serein-morii/DiPlay-CN/releases/tag/v0.2.10-cn.10)
 
 ## 0.2.10-cn.9 — 2026-10-03
 
@@ -18,7 +23,7 @@
 
 ## 0.2.10-cn.7 — 2026-10-03
 
-- 更名：桌面名由 **DiPlay CN** 改为 **DiPlay Plus**。包名保持 `com.shihab.diplay.cn` 不变，老用户仍可直接覆盖安装、设置全部保留。
+- 桌面名短暂使用过别名（cn.10 已恢复 DiPlay CN）。包名保持 `com.shihab.diplay.cn` 不变，老用户可直接覆盖安装、设置保留。
 - APK：见 [v0.2.10-cn.7](https://github.com/serein-morii/DiPlay-CN/releases/tag/v0.2.10-cn.7)
 
 ## 0.2.10-cn.6 — 2026-10-03
@@ -98,7 +103,7 @@
 ## 0.2.8.1 — 2026-10-02（标签 v0.2.8-cn.1）
 
 - 同步官方 v0.2.8。
-- 包名 `com.shihab.diplay.cn`，桌面名 DiPlay CN（现已更名 DiPlay Plus），可与官方版并存。
+- 包名 `com.shihab.diplay.cn`，桌面名 DiPlay CN，可与官方版并存。
 - 车机语言不在支持列表时默认简体中文。
 - AirPlay 已起来后跳过无线 handoff watchdog。
 - 音频流选择恢复 0–20（官方 0.2.8 仅 0–10）。
