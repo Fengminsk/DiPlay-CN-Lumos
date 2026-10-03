@@ -288,6 +288,10 @@ class DiPlayActivity : ComponentActivity() {
         section(content, getString(R.string.automatic_connection), R.drawable.ic_dp_automation) { card ->
             toggle(card, getString(R.string.connect_when_diplay_opens), getString(R.string.use_your_last_connection_type_and_selected_iphone), DiPlayPreferences.autoConnect(this)) { DiPlayPreferences.saveAutoConnect(this, it) }
             toggle(card, getString(R.string.open_after_the_car_starts), getString(R.string.availability_depends_on_your_head_unit_s_startup_settings), AirPlayPersistence.loadAutoStartOnBoot(this)) { AirPlayPersistence.saveAutoStartOnBoot(this, it) }
+            if (AirPlayPersistence.loadAutoStartOnBoot(this)) {
+                card.addView(button(getString(R.string.boot_start_repair), false) { repairBootStart() }, matchButton(6, 56))
+                card.addView(label(getString(R.string.boot_start_repair_desc), 14, MUTED).apply { setPadding(0, dp(8), 0, dp(6)) })
+            }
             card.addView(button("${getString(R.string.choose_iphone_prefix)}${DiPlayPreferences.phoneName(this)}", false) { choosePhone() }, matchButton(12, 60))
         }
         section(content, getString(R.string.display_and_performance), R.drawable.ic_dp_display) { card ->
@@ -943,6 +947,30 @@ class DiPlayActivity : ComponentActivity() {
     }
 
     // The car's approval dialog for DiPlay's ADB key opens only from here, never while driving.
+    private fun repairBootStart() {
+        val dialog = AlertDialog.Builder(this)
+            .setTitle(getString(R.string.boot_start_repair))
+            .setMessage(getString(R.string.boot_start_repair_running))
+            .setNegativeButton(getString(R.string.common_cancel), null)
+            .show()
+        Thread({
+            val result = runCatching {
+                com.shilapi.xcertplay.hud.BydBootStartRepair.apply(applicationContext, packageName)
+            }.getOrNull()
+            runOnUiThread {
+                if (isFinishing || isDestroyed) return@runOnUiThread
+                dialog.dismiss()
+                val text = result?.lines?.joinToString("\n")?.let { getString(R.string.boot_start_repair_result, it) }
+                    ?: getString(R.string.adb_check_failed)
+                AlertDialog.Builder(this)
+                    .setTitle(getString(R.string.boot_start_repair))
+                    .setMessage(text)
+                    .setPositiveButton(android.R.string.ok, null)
+                    .show()
+            }
+        }, "diplay-boot-repair").start()
+    }
+
     private fun checkAdbAccess(mayAsk: Boolean, reconnectWhenReady: Boolean = false) {
         val status = adbStatus ?: return
         val generation = ++adbCheckGeneration

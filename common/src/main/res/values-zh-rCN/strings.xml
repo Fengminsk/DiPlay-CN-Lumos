@@ -498,6 +498,10 @@
     <string name="launcher_map_sharing">与其他启动器共享实时地图</string>
     <string name="launcher_map_sharing_description">支持 DiPlay 的启动器可以在自己的主屏幕中显示实时仪表盘地图。默认关闭，因为开启后车机上的任何应用都可以请求该地图。详见 docs/LAUNCHER_INTEGRATION.md。</string>
     <string name="check_for_updates">检查更新</string>
+    <string name="boot_start_repair">开机自启 · ADB 修复（实验）</string>
+    <string name="boot_start_repair_desc">部分固件会拦截第三方应用的开机广播。此操作通过车机自身的 ADB 通道，把 DiPlay 加入后台运行白名单，让开机广播能送达。执行一次即可；车机固件升级后如失效可重新执行。</string>
+    <string name="boot_start_repair_running">正在应用开机自启白名单…</string>
+    <string name="boot_start_repair_result">开机自启修复结果：%1$s</string>
     <string name="up_to_date">已经是最新版本。</string>
     <string name="update_available">有新版本 %1$s（%2$s）。</string>
     <string name="download_and_install">下载并安装</string>

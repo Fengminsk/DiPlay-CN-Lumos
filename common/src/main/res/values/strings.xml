@@ -498,6 +498,10 @@
     <string name="launcher_map_sharing">Share the live map with other launchers</string>
     <string name="launcher_map_sharing_description">Launchers that support DiPlay can show the live dashboard map inside their own home screen. Off by default, because any app on the head unit could then ask for the map. See docs/LAUNCHER_INTEGRATION.md.</string>
     <string name="check_for_updates">Check for updates</string>
+    <string name="boot_start_repair">Boot auto-start · ADB repair (experimental)</string>
+    <string name="boot_start_repair_desc">Some firmwares block third-party boot receivers. This asks the head unit, over its own ADB link, to exempt DiPlay from background limits so the boot broadcast can reach it. One-time; re-run after a firmware update.</string>
+    <string name="boot_start_repair_running">Applying boot auto-start exemptions…</string>
+    <string name="boot_start_repair_result">Boot auto-start repair:%1$s</string>
     <string name="up_to_date">You are on the latest version.</string>
     <string name="update_available">New version %1$s available (%2$s).</string>
     <string name="download_and_install">Download and install</string>
