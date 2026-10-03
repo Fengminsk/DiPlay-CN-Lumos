@@ -488,4 +488,8 @@
     <string name="update_download_failed">فشل التنزيل: %1$s. تحقق من اتصال الشبكة.</string>
     <string name="update_install_failed">لم يُفتح المثبِّت. اسمح لـ DiPlay بتثبيت تطبيقات غير معروفة ثم أعد المحاولة.</string>
     <string name="update_check_failed">تعذر الوصول إلى GitHub: %1$s. حاول لاحقًا.</string>
+    <string name="turn_card_info_arrival">الوصول %1$s</string>
+    <string name="turn_card_info_duration_hm">%1$d س %2$d د</string>
+    <string name="turn_card_info_duration_m">%1$d د</string>
+    <string name="turn_card_info_km">%1$.1f كم</string>
 </resources>

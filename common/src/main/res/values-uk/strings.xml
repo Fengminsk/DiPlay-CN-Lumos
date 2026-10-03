@@ -500,4 +500,8 @@
     <string name="update_download_failed">Не вдалося завантажити: %1$s. Перевірте мережу.</string>
     <string name="update_install_failed">Інсталятор не відкрився. Дозвольте DiPlay встановлювати невідомі застосунки та повторіть.</string>
     <string name="update_check_failed">Немає звʼязку з GitHub: %1$s. Спробуйте пізніше.</string>
+    <string name="turn_card_info_arrival">Прибуття %1$s</string>
+    <string name="turn_card_info_duration_hm">%1$d год %2$d хв</string>
+    <string name="turn_card_info_duration_m">%1$d хв</string>
+    <string name="turn_card_info_km">%1$.1f км</string>
 </resources>

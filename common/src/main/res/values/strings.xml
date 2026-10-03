@@ -509,4 +509,8 @@
     <string name="update_download_failed">Download failed: %1$s. Check the car\'s network connection.</string>
     <string name="update_install_failed">No installer opened. Allow DiPlay to install unknown apps, then try again.</string>
     <string name="update_check_failed">Could not reach GitHub: %1$s. Try again later.</string>
+    <string name="turn_card_info_arrival">Arrive %1$s</string>
+    <string name="turn_card_info_duration_hm">%1$dh %2$dmin</string>
+    <string name="turn_card_info_duration_m">%1$dmin</string>
+    <string name="turn_card_info_km">%1$.1f km</string>
 </resources>

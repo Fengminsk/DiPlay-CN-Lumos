@@ -488,4 +488,8 @@
     <string name="update_download_failed">Не удалось скачать: %1$s. Проверьте сеть.</string>
     <string name="update_install_failed">Установщик не открылся. Разрешите DiPlay установку неизвестных приложений и повторите.</string>
     <string name="update_check_failed">Нет связи с GitHub: %1$s. Попробуйте позже.</string>
+    <string name="turn_card_info_arrival">Прибытие %1$s</string>
+    <string name="turn_card_info_duration_hm">%1$d ч %2$d мин</string>
+    <string name="turn_card_info_duration_m">%1$d мин</string>
+    <string name="turn_card_info_km">%1$.1f км</string>
 </resources>

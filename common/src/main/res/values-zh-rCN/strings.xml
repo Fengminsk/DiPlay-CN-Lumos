@@ -509,4 +509,8 @@
     <string name="update_download_failed">下载失败：%1$s。请检查车机网络。</string>
     <string name="update_install_failed">未能打开安装器。请允许 DiPlay 安装未知应用后重试。</string>
     <string name="update_check_failed">无法连接 GitHub：%1$s。请稍后再试。</string>
+    <string name="turn_card_info_arrival">%1$s到达</string>
+    <string name="turn_card_info_duration_hm">%1$d小时%2$d分</string>
+    <string name="turn_card_info_duration_m">%1$d分</string>
+    <string name="turn_card_info_km">%1$.1f公里</string>
 </resources>

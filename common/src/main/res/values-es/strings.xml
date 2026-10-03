@@ -488,4 +488,8 @@
     <string name="update_download_failed">Error al descargar: %1$s. Comprueba la conexión.</string>
     <string name="update_install_failed">No se abrió el instalador. Permite a DiPlay instalar apps desconocidas e inténtalo de nuevo.</string>
     <string name="update_check_failed">No se pudo conectar con GitHub: %1$s. Prueba más tarde.</string>
+    <string name="turn_card_info_arrival">Llegada %1$s</string>
+    <string name="turn_card_info_duration_hm">%1$d h %2$d min</string>
+    <string name="turn_card_info_duration_m">%1$d min</string>
+    <string name="turn_card_info_km">%1$.1f km</string>
 </resources>

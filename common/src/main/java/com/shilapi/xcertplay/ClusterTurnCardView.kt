@@ -7,6 +7,9 @@ import android.graphics.Paint
 import android.graphics.RectF
 import android.graphics.Typeface
 import android.graphics.drawable.Drawable
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 import android.view.View
 import androidx.core.content.ContextCompat
 import com.shilapi.xcertplay.airplay.CarPlayClusterDisplay
@@ -44,6 +47,9 @@ internal class ClusterTurnCardView(context: Context) : View(context) {
     }
     private val roadPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
         color = Color.argb(179, 199, 199, 204); typeface = Typeface.create("sans-serif", Typeface.NORMAL)
+    }
+    private val infoPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        color = Color.argb(224, 235, 235, 240); typeface = Typeface.create("sans-serif-medium", Typeface.NORMAL)
     }
     private val rect = RectF()
     private var glyph: Drawable? = null
@@ -111,6 +117,56 @@ internal class ClusterTurnCardView(context: Context) : View(context) {
                 textLeft, card.top + h * 0.72f, roadPaint,
             )
         }
+        drawInfoStrip(canvas, next, card.left, card.top + h, w, h)
+    }
+
+    /** The arrival/duration/distance pill that hangs under the card, like the stock nav bar. */
+    private fun drawInfoStrip(canvas: Canvas, next: ClusterTurnGuidance, left: Int, belowTop: Int, width: Int, cardHeight: Int) {
+        val parts = infoParts(next)
+        if (parts.isEmpty()) return
+        val h = (cardHeight * 0.40f).coerceAtLeast(34f)
+        val gap = cardHeight * 0.05f
+        val top = (belowTop + gap).coerceAtMost(height - h)
+        rect.set(left.toFloat(), top.toFloat(), (left + width).toFloat(), top + h)
+        canvas.drawRoundRect(rect, h / 2f, h / 2f, glassPaint)
+        canvas.drawRoundRect(rect, h / 2f, h / 2f, strokePaint)
+        infoPaint.textSize = h * 0.42f
+        val separator = "   ·   "
+        val joined = parts.joinToString(separator)
+        val textWidth = paintMeasure(joined)
+        if (textWidth <= width - h * 0.5f) {
+            canvas.drawText(joined, left + width / 2f - textWidth / 2f, top + h * 0.69f, infoPaint)
+            return
+        }
+        // Too long for one line: drop the separator spacing and retry, then ellipsize.
+        val compact = parts.joinToString("  ")
+        val compactWidth = paintMeasure(compact)
+        val draw = if (compactWidth <= width - h * 0.4f) compact else ellipsize(compact, width - h * 0.4f, infoPaint)
+        val drawWidth = paintMeasure(draw)
+        canvas.drawText(draw, left + width / 2f - drawWidth / 2f, top + h * 0.69f, infoPaint)
+    }
+
+    private fun paintMeasure(text: String): Float = infoPaint.measureText(text)
+
+    private fun infoParts(next: ClusterTurnGuidance): List<String> {
+        val parts = mutableListOf<String>()
+        next.arrivalEpochSeconds?.takeIf { it > 0 }?.let { epoch ->
+            val time = SimpleDateFormat("HH:mm", Locale.getDefault()).format(Date(epoch * 1000L))
+            parts += context.getString(R.string.turn_card_info_arrival, time)
+        }
+        next.remainingSeconds?.takeIf { it > 0 }?.let { total ->
+            val hours = total / 3600
+            val minutes = (total % 3600) / 60
+            parts += if (hours > 0) {
+                context.getString(R.string.turn_card_info_duration_hm, hours.toInt(), minutes.toInt())
+            } else {
+                context.getString(R.string.turn_card_info_duration_m, minutes.toInt())
+            }
+        }
+        next.remainingMeters?.takeIf { it > 0 }?.let { meters ->
+            parts += context.getString(R.string.turn_card_info_km, meters / 1000.0)
+        }
+        return parts
     }
 
     /** Draws the tinted Material Symbols glyph; the roundabout exit number gets a corner badge. */
