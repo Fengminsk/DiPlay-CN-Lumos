@@ -10,6 +10,7 @@ import android.graphics.drawable.Drawable
 import android.view.View
 import androidx.core.content.ContextCompat
 import com.shilapi.xcertplay.airplay.CarPlayClusterDisplay
+import com.shilapi.xcertplay.host.R
 import com.shilapi.xcertplay.airplay.ClusterTurnCardOverlay
 import com.shilapi.xcertplay.hud.ClusterTurnGuidance
 
@@ -151,16 +152,16 @@ internal class ClusterTurnCardView(context: Context) : View(context) {
     }
 
     private fun distanceLabel(meters: Int): String = when {
-        meters <= 20 -> context.getString(com.shilapi.xcertplay.host.R.string.turn_card_now)
-        meters < 1000 -> context.getString(com.shilapi.xcertplay.host.R.string.turn_card_distance_m, meters)
+        meters <= 20 -> context.getString(R.string.turn_card_now)
+        meters < 1000 -> context.getString(R.string.turn_card_distance_m, meters)
         else -> context.getString(
-            com.shilapi.xcertplay.host.R.string.turn_card_distance_km, meters / 100 / 10f,
+            R.string.turn_card_distance_km, meters / 100 / 10f,
         )
     }
 
     private fun roadLabel(next: ClusterTurnGuidance): String =
         if (next.roundaboutExit in 1..9) {
-            context.getString(com.shilapi.xcertplay.host.R.string.turn_card_exit, next.roundaboutExit)
+            context.getString(R.string.turn_card_exit, next.roundaboutExit)
         } else {
             next.road
         }
