@@ -72,6 +72,7 @@ object AirPlayPersistence {
     private const val KEY_CLUSTER_TURN_CARD_OVERLAY_Y = "cluster_turn_card_overlay_y_percent"
     private const val KEY_CENTER_MAP_FOLLOWS_DASHBOARD = "center_map_follows_dashboard"
     private const val KEY_SETTINGS_GESTURE_FINGERS = "settings_gesture_fingers"
+    private const val KEY_BT_SUSPEND_DURING_CARPLAY = "bt_suspend_during_carplay"
     private const val KEY_WIDTH_PHYSICAL_MM = "display_width_physical_mm"
     private const val KEY_PHYSICAL_SIZE_BASIS = "display_physical_size_basis"
     private const val KEY_MAX_DETECTED_WIDTH = "display_max_detected_width"

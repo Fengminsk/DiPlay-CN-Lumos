@@ -257,6 +257,10 @@ class CarPlayController(
         override fun onSessionActive(session: AirPlaySession) {
             if (activeSession !== session) {
                 BydNavigationOutputs.start(appContext)
+                if (appContext.getSharedPreferences("xcertplay_airplay", android.content.Context.MODE_PRIVATE)
+                    .getBoolean("bt_suspend_during_carplay", false)) {
+                    BydBluetoothSuspend.suspend(appContext)
+                }
                 com.shilapi.xcertplay.glance.CarPlayGlance.setConnected(true)
                 // The gear may have changed since /info.
                 if (videoListener != null) session.setVideoPlaybackAllowed(VideoInCar.allowed)
@@ -273,6 +277,7 @@ class CarPlayController(
             if (activeSession === session) {
                 activeSession = null
                 BydNavigationOutputs.endNow()
+                BydBluetoothSuspend.resume(appContext)
                 com.shilapi.xcertplay.glance.CarPlayGlance.setConnected(false)
                 videoListener?.onVideoSessionEnded()
                 synchronized(playbackStatus) {
@@ -964,6 +969,11 @@ class CarPlayController(
 
             val adapter = bluetoothAdapter
                 ?: throw IOException("Bluetooth adapter is unavailable")
+            if (BydBluetoothSuspend.isSuspendedByUs(appContext)) {
+                if (!BydBluetoothSuspend.resumeAndWait(appContext, adapter)) {
+                    debugLog("car Bluetooth did not wake in time for the handshake")
+                }
+            }
             if (!adapter.isEnabled) throw IOException("Bluetooth is not enabled")
             val device = selectWirelessBluetoothDevice(adapter)
             val hostBluetoothMac = accessoryBluetoothMac(adapter)

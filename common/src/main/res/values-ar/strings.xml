@@ -492,4 +492,6 @@
     <string name="turn_card_info_duration_hm">%1$d س %2$d د</string>
     <string name="turn_card_info_duration_m">%1$d د</string>
     <string name="turn_card_info_km">%1$.1f كم</string>
+    <string name="bt_suspend_during_carplay">إيقاف بلوتوث السيارة أثناء CarPlay · يتطلب ADB</string>
+    <string name="bt_suspend_during_carplay_description">يبقى الهاتف متصلًا بنظام التحدث الحر في السيارة، فرنين المكالمة يظهر على هاتف السيارة وعلى CarPlay معًا. عند التشغيل: يُوقف بلوتوث السيارة مؤقتًا عبر ADB طوال جلسة CarPlay فترد المكالمات على CarPlay فقط، ويُعاد تشغيله عند انتهاء الجلسة وقبل مصافحة الاتصال اللاسلكي التالية. لا يتأثر الاقتران. يسري التغيير عند الاتصال التالي.</string>
 </resources>

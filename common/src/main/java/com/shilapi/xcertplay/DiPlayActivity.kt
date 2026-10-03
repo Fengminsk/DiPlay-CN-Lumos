@@ -466,6 +466,11 @@ class DiPlayActivity : ComponentActivity() {
                     }
                 }
             }
+            toggle(card, getString(R.string.bt_suspend_during_carplay), getString(R.string.bt_suspend_during_carplay_description),
+                AirPlayPersistence.loadBtSuspendDuringCarplay(this)) {
+                AirPlayPersistence.saveBtSuspendDuringCarplay(this, it)
+                if (it) checkAdbAccess(mayAsk = true)
+            }
             toggle(card, getString(R.string.car_battery_for_the_iphone),
                 getString(R.string.car_battery_for_the_iphone_description),
                 BydOutputSettings.batteryToIphone(this)) {

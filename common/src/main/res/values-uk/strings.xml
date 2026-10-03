@@ -504,4 +504,6 @@
     <string name="turn_card_info_duration_hm">%1$d год %2$d хв</string>
     <string name="turn_card_info_duration_m">%1$d хв</string>
     <string name="turn_card_info_km">%1$.1f км</string>
+    <string name="bt_suspend_during_carplay">Призупинити Bluetooth авто під час CarPlay · потрібен ADB</string>
+    <string name="bt_suspend_during_carplay_description">Телефон тримає hands-free звʼязок з авто, тому вхідний дзвінок звучить і в телефоні авто, і в CarPlay. Після ввімкнення: Bluetooth авто призупиняється через ADB на час сеансу CarPlay — дзвінки йдуть лише в CarPlay; вмикається назад після сеансу і перед наступним бездротовим зʼєднанням. Пара не змінюється. Застосується з наступного підключення.</string>
 </resources>
