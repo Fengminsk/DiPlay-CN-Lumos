@@ -494,4 +494,14 @@
     <string name="turn_card_info_km">%1$.1f км</string>
     <string name="bt_suspend_during_carplay">Приостановить Bluetooth автомобиля при CarPlay · нужен ADB</string>
     <string name="bt_suspend_during_carplay_description">Телефон держит hands-free связь с автомобилем, поэтому входящий звонок звонит и в телефоне автомобиля, и в CarPlay. При включении: Bluetooth автомобиля приостанавливается через ADB на время сеанса CarPlay — звонки идут только в CarPlay; включается обратно после сеанса и перед следующим беспроводным соединением. Сопряжение не затрагивается. Применится при следующем подключении.</string>
+    <string name="vehicle_card_content">Карточка состояния авто</string>
+    <string name="vehicle_card_off">Выключена</string>
+    <string name="vehicle_card_speed_gear">Скорость и передача</string>
+    <string name="vehicle_card_battery_range">Батарея и запас хода</string>
+    <string name="vehicle_card_clock_battery">Часы и батарея</string>
+    <string name="vehicle_card_charging">Состояние зарядки</string>
+    <string name="vehicle_card_size">Размер карточки</string>
+    <string name="vehicle_card_horizontal">Карточка · влево / вправо</string>
+    <string name="vehicle_card_vertical">Карточка · вверх / вниз</string>
+    <string name="vehicle_card_note">Стеклянная карточка-близнец поворотной с живыми данными автомобиля в любом месте панели. Скорость, передача, батарея, запас хода и зарядка требуют ADB; часы работают без него. Изменения применяются сразу.</string>
 </resources>

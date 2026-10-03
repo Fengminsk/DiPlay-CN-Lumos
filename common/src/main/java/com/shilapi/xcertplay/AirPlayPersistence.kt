@@ -71,6 +71,10 @@ object AirPlayPersistence {
     private const val KEY_CLUSTER_TURN_CARD_OVERLAY_SIZE_PERCENT = "cluster_turn_card_overlay_size_percent"
     private const val KEY_CLUSTER_TURN_CARD_OVERLAY_X = "cluster_turn_card_overlay_x_percent"
     private const val KEY_CLUSTER_TURN_CARD_OVERLAY_Y = "cluster_turn_card_overlay_y_percent"
+    private const val KEY_VEHICLE_CARD_CONTENT = "cluster_vehicle_card_content"
+    private const val KEY_VEHICLE_CARD_X = "cluster_vehicle_card_x_percent"
+    private const val KEY_VEHICLE_CARD_Y = "cluster_vehicle_card_y_percent"
+    private const val KEY_VEHICLE_CARD_SIZE = "cluster_vehicle_card_size_percent"
     private const val KEY_CENTER_MAP_FOLLOWS_DASHBOARD = "center_map_follows_dashboard"
     private const val KEY_SETTINGS_GESTURE_FINGERS = "settings_gesture_fingers"
     private const val KEY_BT_SUSPEND_DURING_CARPLAY = "bt_suspend_during_carplay"
@@ -508,6 +512,52 @@ object AirPlayPersistence {
 
     fun saveClusterContent(context: Context, content: CarPlayClusterDisplay.Content) {
         context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit().putString(KEY_CLUSTER_CONTENT, content.name).apply()
+        overlaySettingsListener?.invoke()
+    }
+
+    fun loadVehicleCardContent(context: Context): Int =
+        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+            .getInt(KEY_VEHICLE_CARD_CONTENT, 0).coerceIn(0, 4)
+
+    fun saveVehicleCardContent(context: Context, content: Int) {
+        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit()
+            .putInt(KEY_VEHICLE_CARD_CONTENT, content.coerceIn(0, 4)).apply()
+        overlaySettingsListener?.invoke()
+    }
+
+    fun loadVehicleCardXPercent(context: Context): Int =
+        ClusterTurnCardOverlay.snap(
+            context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+                .getInt(KEY_VEHICLE_CARD_X, 24),
+            ClusterTurnCardOverlay.xPercents,
+        )
+
+    fun saveVehicleCardXPercent(context: Context, percent: Int) {
+        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit()
+            .putInt(KEY_VEHICLE_CARD_X, ClusterTurnCardOverlay.snap(percent, ClusterTurnCardOverlay.xPercents)).apply()
+        overlaySettingsListener?.invoke()
+    }
+
+    fun loadVehicleCardYPercent(context: Context): Int =
+        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+            .getInt(KEY_VEHICLE_CARD_Y, ClusterTurnCardOverlay.DEFAULT_Y_PERCENT)
+
+    fun saveVehicleCardYPercent(context: Context, percent: Int) {
+        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit()
+            .putInt(KEY_VEHICLE_CARD_Y, ClusterTurnCardOverlay.snap(percent, ClusterTurnCardOverlay.yPercents)).apply()
+        overlaySettingsListener?.invoke()
+    }
+
+    fun loadVehicleCardSizePercent(context: Context): Int =
+        ClusterTurnCardOverlay.snap(
+            context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+                .getInt(KEY_VEHICLE_CARD_SIZE, ClusterTurnCardOverlay.DEFAULT_SIZE_PERCENT),
+            ClusterTurnCardOverlay.sizePercents,
+        )
+
+    fun saveVehicleCardSizePercent(context: Context, percent: Int) {
+        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit()
+            .putInt(KEY_VEHICLE_CARD_SIZE, ClusterTurnCardOverlay.snap(percent, ClusterTurnCardOverlay.sizePercents)).apply()
         overlaySettingsListener?.invoke()
     }
 

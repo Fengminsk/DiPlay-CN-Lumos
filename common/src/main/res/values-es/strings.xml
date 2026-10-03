@@ -494,4 +494,14 @@
     <string name="turn_card_info_km">%1$.1f km</string>
     <string name="bt_suspend_during_carplay">Pausar el Bluetooth del coche con CarPlay · requiere ADB</string>
     <string name="bt_suspend_during_carplay_description">El teléfono mantiene el manos libres del coche, por lo que una llamada suena en el teléfono Bluetooth del coche y en CarPlay a la vez. Al activarlo: se pausa el Bluetooth del coche por ADB durante la sesión de CarPlay y las llamadas suenan solo en CarPlay; se reactiva al terminar y antes del próximo enlace inalámbrico. El emparejamiento no se toca. Surte efecto en la próxima conexión.</string>
+    <string name="vehicle_card_content">Tarjeta de estado del coche</string>
+    <string name="vehicle_card_off">Desactivada</string>
+    <string name="vehicle_card_speed_gear">Velocidad y marcha</string>
+    <string name="vehicle_card_battery_range">Batería y autonomía</string>
+    <string name="vehicle_card_clock_battery">Reloj y batería</string>
+    <string name="vehicle_card_charging">Estado de carga</string>
+    <string name="vehicle_card_size">Tamaño de la tarjeta</string>
+    <string name="vehicle_card_horizontal">Tarjeta · izquierda / derecha</string>
+    <string name="vehicle_card_vertical">Tarjeta · arriba / abajo</string>
+    <string name="vehicle_card_note">Una gemela de cristal de la tarjeta de giro con datos del coche en vivo, colocable en cualquier punto del cuadro. Velocidad, marcha, batería, autonomía y carga requieren ADB; el reloj funciona sin él. Cambios inmediatos.</string>
 </resources>
