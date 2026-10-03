@@ -426,6 +426,7 @@
     <string name="turn_card_vertical">转向提示卡 · 垂直位置</string>
     <string name="reset_turn_card_to_centre">将转向提示卡重置到中央</string>
     <string name="turn_card_overlay_size">自定义转向卡大小</string>
+    <string name="turn_card_overlay_size_option">%1$d %%</string>
     <string name="turn_card_overlay_horizontal">自定义转向卡 · 左右</string>
     <string name="turn_card_overlay_vertical">自定义转向卡 · 上下</string>
     <string name="turn_card_overlay_small">小</string>

@@ -68,6 +68,7 @@ object AirPlayPersistence {
     private const val KEY_CLUSTER_MARKER_Y = "cluster_marker_vertical_step"
     private const val KEY_CLUSTER_TURN_CARD_OVERLAY_POSITION = "cluster_turn_card_overlay_position"
     private const val KEY_CLUSTER_TURN_CARD_OVERLAY_SIZE = "cluster_turn_card_overlay_size"
+    private const val KEY_CLUSTER_TURN_CARD_OVERLAY_SIZE_PERCENT = "cluster_turn_card_overlay_size_percent"
     private const val KEY_CLUSTER_TURN_CARD_OVERLAY_X = "cluster_turn_card_overlay_x_percent"
     private const val KEY_CLUSTER_TURN_CARD_OVERLAY_Y = "cluster_turn_card_overlay_y_percent"
     private const val KEY_CENTER_MAP_FOLLOWS_DASHBOARD = "center_map_follows_dashboard"
@@ -529,15 +530,28 @@ object AirPlayPersistence {
             .putBoolean(KEY_CENTER_MAP_FOLLOWS_DASHBOARD, enabled).apply()
     }
 
-    fun loadClusterTurnCardOverlaySize(context: Context): CarPlayClusterDisplay.OverlaySize =
-        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
-            .getString(KEY_CLUSTER_TURN_CARD_OVERLAY_SIZE, null)
-            ?.let { name -> CarPlayClusterDisplay.OverlaySize.entries.firstOrNull { it.name == name } }
-            ?: CarPlayClusterDisplay.OverlaySize.MEDIUM
+    fun loadClusterTurnCardOverlaySizePercent(context: Context): Int {
+        val prefs = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+        if (prefs.contains(KEY_CLUSTER_TURN_CARD_OVERLAY_SIZE_PERCENT)) {
+            return ClusterTurnCardOverlay.snap(
+                prefs.getInt(KEY_CLUSTER_TURN_CARD_OVERLAY_SIZE_PERCENT, ClusterTurnCardOverlay.DEFAULT_SIZE_PERCENT),
+                ClusterTurnCardOverlay.sizePercents,
+            )
+        }
+        // Legacy Small/Medium/Large presets map onto the slider.
+        return when (prefs.getString(KEY_CLUSTER_TURN_CARD_OVERLAY_SIZE, null)) {
+            "SMALL" -> 40
+            "LARGE" -> 70
+            else -> ClusterTurnCardOverlay.DEFAULT_SIZE_PERCENT
+        }
+    }
 
-    fun saveClusterTurnCardOverlaySize(context: Context, size: CarPlayClusterDisplay.OverlaySize) {
+    fun saveClusterTurnCardOverlaySizePercent(context: Context, percent: Int) {
         context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit()
-            .putString(KEY_CLUSTER_TURN_CARD_OVERLAY_SIZE, size.name).apply()
+            .putInt(
+                KEY_CLUSTER_TURN_CARD_OVERLAY_SIZE_PERCENT,
+                ClusterTurnCardOverlay.snap(percent, ClusterTurnCardOverlay.sizePercents),
+            ).apply()
         overlaySettingsListener?.invoke()
     }
 

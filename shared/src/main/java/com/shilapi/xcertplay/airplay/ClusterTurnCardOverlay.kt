@@ -22,27 +22,23 @@ object ClusterTurnCardOverlay {
         50, 52, 54, 56, 58, 60, 62, 64, 66, 68, 70, 72,
     )
 
+    /** Card width as percent of the visible navi window; one slider step = 5 %. */
+    val sizePercents = listOf(30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80, 85, 90, 95)
+    const val DEFAULT_SIZE_PERCENT = 55
+
     fun card(
         panelWidth: Int,
         panelHeight: Int,
         xPercent: Int,
         yPercent: Int,
-        size: CarPlayClusterDisplay.OverlaySize,
+        sizePercent: Int,
     ): CardRect {
         require(panelWidth > 0 && panelHeight > 0)
         val window = visibleWindow(panelWidth, panelHeight)
-        val widthFraction = when (size) {
-            CarPlayClusterDisplay.OverlaySize.SMALL -> 0.42f
-            CarPlayClusterDisplay.OverlaySize.MEDIUM -> 0.56f
-            CarPlayClusterDisplay.OverlaySize.LARGE -> 0.70f
-        }
-        val heightFraction = when (size) {
-            CarPlayClusterDisplay.OverlaySize.SMALL -> 0.22f
-            CarPlayClusterDisplay.OverlaySize.MEDIUM -> 0.28f
-            CarPlayClusterDisplay.OverlaySize.LARGE -> 0.34f
-        }
-        val width = (window.width * widthFraction).toInt().coerceAtLeast(140).coerceAtMost(panelWidth)
-        val height = (window.height * heightFraction).toInt().coerceAtLeast(72).coerceAtMost(panelHeight)
+        val size = snap(sizePercent, sizePercents)
+        // The card keeps its ~2.6:1 banner aspect at any size.
+        val width = (window.width * size / 100).coerceAtLeast(150).coerceAtMost(panelWidth)
+        val height = (width / 2.64f).toInt().coerceAtLeast(58).coerceAtMost((window.height * 0.55f).toInt())
         val x = snap(xPercent, xPercents)
         val y = snap(yPercent, yPercents)
         val left = (panelWidth * x / 100 - width / 2).coerceIn(0, panelWidth - width)

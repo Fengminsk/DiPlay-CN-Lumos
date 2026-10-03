@@ -29,7 +29,7 @@ internal class ClusterTurnCardView(context: Context) : View(context) {
     private var guidance: ClusterTurnGuidance? = null
     private var xPercent = ClusterTurnCardOverlay.DEFAULT_X_PERCENT
     private var yPercent = ClusterTurnCardOverlay.DEFAULT_Y_PERCENT
-    private var size = CarPlayClusterDisplay.OverlaySize.MEDIUM
+    private var sizePercent = ClusterTurnCardOverlay.DEFAULT_SIZE_PERCENT
 
     private val accent = Color.rgb(10, 132, 255)
     private val glassPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply { color = Color.argb(232, 28, 28, 30) }
@@ -55,10 +55,10 @@ internal class ClusterTurnCardView(context: Context) : View(context) {
     private var glyph: Drawable? = null
     private var glyphTag: Int = -1
 
-    fun setLayout(xPercent: Int, yPercent: Int, size: CarPlayClusterDisplay.OverlaySize) {
+    fun setLayout(xPercent: Int, yPercent: Int, sizePercent: Int) {
         this.xPercent = xPercent
         this.yPercent = yPercent
-        this.size = size
+        this.sizePercent = sizePercent
         invalidate()
     }
 
@@ -83,7 +83,7 @@ internal class ClusterTurnCardView(context: Context) : View(context) {
     override fun onDraw(canvas: Canvas) {
         super.onDraw(canvas)
         val next = guidance ?: return
-        val card = ClusterTurnCardOverlay.card(width, height, xPercent, yPercent, size)
+        val card = ClusterTurnCardOverlay.card(width, height, xPercent, yPercent, sizePercent)
         val h = card.height.toFloat()
         val w = card.width.toFloat()
 
@@ -127,26 +127,26 @@ internal class ClusterTurnCardView(context: Context) : View(context) {
         val h = (cardHeight * 0.40f).coerceAtLeast(34f)
         val gap = cardHeight * 0.05f
         val top = (belowTop + gap).coerceAtMost(height - h)
-        rect.set(left.toFloat(), top.toFloat(), (left + width).toFloat(), top + h)
-        canvas.drawRoundRect(rect, h / 2f, h / 2f, glassPaint)
-        canvas.drawRoundRect(rect, h / 2f, h / 2f, strokePaint)
         infoPaint.textSize = h * 0.42f
         val separator = "   ·   "
-        val joined = parts.joinToString(separator)
-        val textWidth = paintMeasure(joined)
-        if (textWidth <= width - h * 0.5f) {
-            canvas.drawText(joined, left + width / 2f - textWidth / 2f, top + h * 0.69f, infoPaint)
-            return
-        }
-        // Too long for one line: drop the separator spacing and retry, then ellipsize.
-        val compact = parts.joinToString("  ")
-        val compactWidth = paintMeasure(compact)
-        val draw = if (compactWidth <= width - h * 0.4f) compact else ellipsize(compact, width - h * 0.4f, infoPaint)
+        val text = parts.joinToString(separator)
+        val textWidth = paintMeasure(text)
+        // Wider than the card is fine: the strip centers on the card and may reach the panel edges.
+        val maxStrip = width - dp(8f) * 2
+        val stripWidth = maxOf(width, (textWidth + h * 0.9f).toInt()).coerceAtMost(maxStrip)
+        val stripLeft = (left + width / 2f - stripWidth / 2f).toInt().coerceIn(4, (width - stripWidth - 4).coerceAtLeast(4))
+        rect.set(stripLeft.toFloat(), top.toFloat(), (stripLeft + stripWidth).toFloat(), top + h)
+        canvas.drawRoundRect(rect, h / 2f, h / 2f, glassPaint)
+        canvas.drawRoundRect(rect, h / 2f, h / 2f, strokePaint)
+        val draw = if (textWidth <= stripWidth - h * 0.6f) text else ellipsize(text, stripWidth - h * 0.6f, infoPaint)
         val drawWidth = paintMeasure(draw)
-        canvas.drawText(draw, left + width / 2f - drawWidth / 2f, top + h * 0.69f, infoPaint)
+        val centerX = stripLeft + stripWidth / 2f
+        canvas.drawText(draw, centerX - drawWidth / 2f, top + h * 0.69f, infoPaint)
     }
 
     private fun paintMeasure(text: String): Float = infoPaint.measureText(text)
+
+    private fun dp(value: Float): Float = value * resources.displayMetrics.density
 
     private fun infoParts(next: ClusterTurnGuidance): List<String> {
         val parts = mutableListOf<String>()
