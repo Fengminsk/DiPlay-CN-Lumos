@@ -64,5 +64,5 @@ jobs:
             "$apk.sha256#SHA-256" \
             --repo "$GITHUB_REPOSITORY" \
             --verify-tag \
-            --title "DiPlay CN 0.2.10" \
+            --title "DiPlay Plus 0.2.10" \
             --notes-file release-notes.md
