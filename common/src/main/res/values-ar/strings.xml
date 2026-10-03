@@ -480,6 +480,4 @@
     <string name="turn_card_distance_m">%1$d م</string>
     <string name="turn_card_distance_km">%1$.1f كم</string>
     <string name="turn_card_exit">مخرج %1$d</string>
-    <string name="center_map_follows_dashboard">إبقاء خريطة الشاشة الرئيسية متزامنة مع لوحة العدادات</string>
-    <string name="center_map_follows_dashboard_description">تشغيل: بطاقة الشاشة الرئيسية تعكس خريطة لوحة العدادات. إيقاف: تُخفى البطاقة وتبقى الخريطة على لوحة العدادات. لا يغيّر هذا شاشة CarPlay الرئيسية.</string>
 </resources>

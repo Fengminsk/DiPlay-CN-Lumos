@@ -480,6 +480,4 @@
     <string name="turn_card_distance_m">%1$d m</string>
     <string name="turn_card_distance_km">%1$.1f km</string>
     <string name="turn_card_exit">Salida %1$d</string>
-    <string name="center_map_follows_dashboard">Mantener el mapa de inicio sincronizado con el cuadro</string>
-    <string name="center_map_follows_dashboard_description">Activado: la tarjeta de inicio refleja el mapa del cuadro. Desactivado: se oculta la tarjeta y el mapa queda solo en el cuadro. No cambia la pantalla principal de CarPlay.</string>
 </resources>

@@ -480,6 +480,4 @@
     <string name="turn_card_distance_m">%1$d м</string>
     <string name="turn_card_distance_km">%1$.1f км</string>
     <string name="turn_card_exit">Съезд %1$d</string>
-    <string name="center_map_follows_dashboard">Синхронизировать карту домашнего экрана с приборной панелью</string>
-    <string name="center_map_follows_dashboard_description">Вкл.: карточка на домашнем экране повторяет карту панели. Выкл.: карточка скрыта, карта только на панели. Не меняет основной экран CarPlay.</string>
 </resources>
