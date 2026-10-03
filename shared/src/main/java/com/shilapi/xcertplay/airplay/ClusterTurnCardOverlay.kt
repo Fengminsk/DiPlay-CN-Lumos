@@ -17,6 +17,10 @@ object ClusterTurnCardOverlay {
         8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30, 32, 34, 36, 38, 40, 42, 44, 46, 48,
         50, 52, 54, 56, 58, 60, 62, 64, 66, 68, 70, 72, 74, 76, 78, 80, 82, 84, 86, 88, 90, 92,
     )
+    /** Opacity choices for the slider: 20..100 in steps of 5, default 85. */
+    val opacityPercents = listOf(20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80, 85, 90, 95, 100)
+    const val DEFAULT_OPACITY_PERCENT = 85
+
     val yPercents = listOf(
         12, 14, 16, 18, 20, 22, 24, 26, 28, 30, 32, 34, 36, 38, 40, 42, 44, 46, 48,
         50, 52, 54, 56, 58, 60, 62, 64, 66, 68, 70, 72,

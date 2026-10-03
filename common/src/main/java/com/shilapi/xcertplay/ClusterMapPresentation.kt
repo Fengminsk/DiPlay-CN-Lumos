@@ -140,6 +140,14 @@ internal class ClusterMapPresentation(
         turnCardView?.setLayout(xPercent, yPercent, sizePercent)
     }
 
+    fun setTurnCardNightMode(night: Boolean) {
+        turnCardView?.setNightMode(night)
+    }
+
+    fun setTurnCardOpacity(percent: Int) {
+        turnCardView?.setOpacity(percent)
+    }
+
     fun setTurnCardGuidance(guidance: ClusterTurnGuidance?) {
         turnCardView?.setGuidance(guidance)
     }

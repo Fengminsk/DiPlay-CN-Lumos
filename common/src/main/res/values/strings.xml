@@ -427,6 +427,8 @@
     <string name="turn_card_vertical">Turn card · vertical</string>
     <string name="reset_turn_card_to_centre">Reset turn card to centre</string>
     <string name="turn_card_overlay_size">Custom turn card size</string>
+    <string name="turn_card_overlay_opacity">Custom turn card opacity</string>
+    <string name="turn_card_overlay_opacity_option">%1$d %%</string>
     <string name="turn_card_overlay_size_option">%1$d %%</string>
     <string name="turn_card_overlay_horizontal">Custom turn card · left / right</string>
     <string name="turn_card_overlay_vertical">Custom turn card · up / down</string>
@@ -521,4 +523,6 @@
     <string name="update_channel">Update channel</string>
     <string name="update_channel_github">GitHub direct</string>
     <string name="update_channel_gitee">Gitee (China)</string>
+    <string name="update_channel_mirror1">Acceleration mirror (gh-proxy.com)</string>
+    <string name="update_channel_mirror2">Acceleration mirror (ghproxy.net)</string>
 </resources>

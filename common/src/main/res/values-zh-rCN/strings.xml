@@ -426,6 +426,8 @@
     <string name="turn_card_vertical">转向提示卡 · 垂直位置</string>
     <string name="reset_turn_card_to_centre">将转向提示卡重置到中央</string>
     <string name="turn_card_overlay_size">自定义转向卡大小</string>
+    <string name="turn_card_overlay_opacity">自定义转向卡透明度</string>
+    <string name="turn_card_overlay_opacity_option">%1$d %%</string>
     <string name="turn_card_overlay_size_option">%1$d %%</string>
     <string name="turn_card_overlay_horizontal">自定义转向卡 · 左右</string>
     <string name="turn_card_overlay_vertical">自定义转向卡 · 上下</string>
@@ -521,4 +523,6 @@
     <string name="update_channel">更新通道</string>
     <string name="update_channel_github">GitHub 直连</string>
     <string name="update_channel_gitee">Gitee（国内）</string>
+    <string name="update_channel_mirror1">国内加速镜像（gh-proxy.com）</string>
+    <string name="update_channel_mirror2">国内加速镜像（ghproxy.net）</string>
 </resources>

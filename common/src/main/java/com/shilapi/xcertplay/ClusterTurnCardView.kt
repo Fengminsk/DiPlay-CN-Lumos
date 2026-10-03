@@ -27,17 +27,21 @@ import com.shilapi.xcertplay.hud.ClusterTurnGuidance
  */
 internal class ClusterTurnCardView(context: Context) : View(context) {
     private var guidance: ClusterTurnGuidance? = null
+    private var night = false
     private var xPercent = ClusterTurnCardOverlay.DEFAULT_X_PERCENT
     private var yPercent = ClusterTurnCardOverlay.DEFAULT_Y_PERCENT
     private var sizePercent = ClusterTurnCardOverlay.DEFAULT_SIZE_PERCENT
 
     private val accent = Color.rgb(10, 132, 255)
-    private val glassPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply { color = Color.argb(232, 28, 28, 30) }
+    /** Card opacity as percent; 100 keeps the historical fully-opaque look available. */
+    private var opacityPercent = 85
+    private val glassPaint = Paint(Paint.ANTI_ALIAS_FLAG)
+    private val chipPaint = Paint(Paint.ANTI_ALIAS_FLAG)
     private val strokePaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-        color = Color.argb(38, 255, 255, 255); style = Paint.Style.STROKE; strokeWidth = 2f
+        style = Paint.Style.STROKE; strokeWidth = 2f
     }
-    private val chipPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply { color = Color.argb(38, 255, 255, 255) }
-    private val badgePaint = Paint(Paint.ANTI_ALIAS_FLAG).apply { color = accent }
+
+    private val badgePaint = Paint(Paint.ANTI_ALIAS_FLAG)
     private val badgeTextPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
         color = Color.WHITE; textAlign = Paint.Align.CENTER
         typeface = Typeface.create("sans-serif-medium", Typeface.NORMAL)
@@ -60,6 +64,44 @@ internal class ClusterTurnCardView(context: Context) : View(context) {
         this.yPercent = yPercent
         this.sizePercent = sizePercent
         invalidate()
+    }
+
+    /** Percent 20..100 of the card's background alpha; text stays readable at any value. */
+    fun setOpacity(percent: Int) {
+        val next = percent.coerceIn(20, 100)
+        if (next == opacityPercent) return
+        opacityPercent = next
+        applyPalette()
+        invalidate()
+    }
+
+    /** Day: dark glass on a light map; night: lighter translucent panel for the dark map. */
+    fun setNightMode(night: Boolean) {
+        if (night == this.night) return
+        this.night = night
+        applyPalette()
+        invalidate()
+    }
+
+    private fun applyPalette() {
+        val alpha = (opacityPercent * 255 / 100).coerceIn(51, 255)
+        if (night) {
+            glassPaint.color = Color.argb(alpha, 12, 14, 18)
+            chipPaint.color = Color.argb((alpha * 0.18f).toInt().coerceAtLeast(12), 255, 255, 255)
+            strokePaint.color = Color.argb((alpha * 0.16f).toInt().coerceAtLeast(10), 255, 255, 255)
+            distancePaint.color = Color.argb(255, 240, 242, 246)
+            roadPaint.color = Color.argb(179, 176, 182, 192)
+            infoPaint.color = Color.argb(224, 226, 228, 236)
+            badgePaint.color = accent
+        } else {
+            glassPaint.color = Color.argb(alpha, 28, 28, 30)
+            chipPaint.color = Color.argb((alpha * 0.18f).toInt().coerceAtLeast(12), 255, 255, 255)
+            strokePaint.color = Color.argb((alpha * 0.15f).toInt().coerceAtLeast(10), 255, 255, 255)
+            distancePaint.color = Color.WHITE
+            roadPaint.color = Color.argb(179, 199, 199, 204)
+            infoPaint.color = Color.argb(224, 235, 235, 240)
+            badgePaint.color = accent
+        }
     }
 
     fun setGuidance(next: ClusterTurnGuidance?) {

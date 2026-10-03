@@ -71,6 +71,7 @@ object AirPlayPersistence {
     private const val KEY_CLUSTER_TURN_CARD_OVERLAY_SIZE_PERCENT = "cluster_turn_card_overlay_size_percent"
     private const val KEY_CLUSTER_TURN_CARD_OVERLAY_X = "cluster_turn_card_overlay_x_percent"
     private const val KEY_CLUSTER_TURN_CARD_OVERLAY_Y = "cluster_turn_card_overlay_y_percent"
+    private const val KEY_CLUSTER_TURN_CARD_OPACITY = "cluster_turn_card_opacity_percent"
     private const val KEY_CENTER_MAP_FOLLOWS_DASHBOARD = "center_map_follows_dashboard"
     private const val KEY_SETTINGS_GESTURE_FINGERS = "settings_gesture_fingers"
     private const val KEY_UPDATE_CHANNEL = "update_channel"
@@ -533,13 +534,13 @@ object AirPlayPersistence {
             .putInt(KEY_BT_SUSPEND_DELAY, if (seconds in listOf(5, 10, 15, 30)) seconds else 10).apply()
     }
 
-    /** 0 = GitHub, 1 = Gitee (default: reachable from cars in China). */
+    /** 0 = GitHub, 1 = Gitee (default), 2/3 = GitHub-relaying mirrors. */
     fun loadUpdateChannel(context: Context): Int =
-        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).getInt(KEY_UPDATE_CHANNEL, 1).coerceIn(0, 1)
+        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).getInt(KEY_UPDATE_CHANNEL, 1).coerceIn(0, 3)
 
     fun saveUpdateChannel(context: Context, channel: Int) {
         context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit()
-            .putInt(KEY_UPDATE_CHANNEL, channel.coerceIn(0, 1)).apply()
+            .putInt(KEY_UPDATE_CHANNEL, channel.coerceIn(0, 3)).apply()
     }
 
     /** Fingers for the swipe-down that opens settings; BYD's AC panel takes three. */
@@ -616,6 +617,17 @@ object AirPlayPersistence {
             )
         }
         return ClusterTurnCardOverlay.DEFAULT_Y_PERCENT
+    }
+
+    /** Card opacity 20..100 %; lower shows more of the map behind the glass. */
+    fun loadClusterTurnCardOpacityPercent(context: Context): Int =
+        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+            .getInt(KEY_CLUSTER_TURN_CARD_OPACITY, 85).coerceIn(20, 100)
+
+    fun saveClusterTurnCardOpacityPercent(context: Context, percent: Int) {
+        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit()
+            .putInt(KEY_CLUSTER_TURN_CARD_OPACITY, percent.coerceIn(20, 100)).apply()
+        overlaySettingsListener?.invoke()
     }
 
     fun saveClusterTurnCardOverlayYPercent(context: Context, percent: Int) {

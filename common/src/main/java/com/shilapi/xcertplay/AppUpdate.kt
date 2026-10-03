@@ -43,12 +43,20 @@ object AppUpdate {
 
     private const val CHANNEL_GITHUB = 0
     private const val CHANNEL_GITEE = 1
+    private const val CHANNEL_MIRROR1 = 2
+    private const val CHANNEL_MIRROR2 = 3
+
+    /** GitHub-relaying proxies that also front api.github.com. */
+    private val mirrorPrefixes = mapOf(
+        CHANNEL_MIRROR1 to "https://gh-proxy.com/",
+        CHANNEL_MIRROR2 to "https://ghproxy.net/",
+    )
 
     @Volatile private var channel = CHANNEL_GITEE
 
     /** The settings page stores the chosen channel; the updater picks it up before each call. */
     fun setChannel(choice: Int) {
-        channel = choice.coerceIn(CHANNEL_GITHUB, CHANNEL_GITEE)
+        channel = choice.coerceIn(CHANNEL_GITHUB, CHANNEL_MIRROR2)
     }
 
     fun currentVersion(context: Context): String =
@@ -63,8 +71,13 @@ object AppUpdate {
             var result: Release? = null
             var failure: String? = null
             runCatching {
-                val gitee = channel == CHANNEL_GITEE
-                val connection = URL(if (gitee) GITEE_LATEST else GITHUB_LATEST).openConnection() as HttpURLConnection
+                val mirrorPrefix = mirrorPrefixes[channel]
+                val latest = when {
+                    channel == CHANNEL_GITEE -> GITEE_LATEST
+                    mirrorPrefix != null -> mirrorPrefix + GITHUB_LATEST
+                    else -> GITHUB_LATEST
+                }
+                val connection = URL(latest).openConnection() as HttpURLConnection
                 connection.connectTimeout = CONNECT_TIMEOUT
                 connection.readTimeout = READ_TIMEOUT
                 connection.setRequestProperty("Accept", ACCEPT)
@@ -110,7 +123,8 @@ object AppUpdate {
             runCatching {
                 val directory = File(context.cacheDir, "updates").apply { mkdirs() }
                 val target = File(directory, "diplay-plus-${release.tag}.apk")
-                val connection = URL(release.apkUrl).openConnection() as HttpURLConnection
+                val downloadUrl = mirrorPrefixes[channel]?.let { it + release.apkUrl } ?: release.apkUrl
+                val connection = URL(downloadUrl).openConnection() as HttpURLConnection
                 connection.connectTimeout = CONNECT_TIMEOUT
                 connection.readTimeout = 60_000
                 connection.setRequestProperty("User-Agent", USER_AGENT)

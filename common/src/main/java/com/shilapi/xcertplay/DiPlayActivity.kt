@@ -416,6 +416,12 @@ class DiPlayActivity : ComponentActivity() {
                         ) { it -> getString(R.string.turn_card_overlay_size_option, it) }
                             .also { it.onSave = { v -> AirPlayPersistence.saveClusterTurnCardOverlaySizePercent(this, v) } })
                         card.addView(overlaySliderRow(
+                            getString(R.string.turn_card_overlay_opacity),
+                            ClusterTurnCardOverlay.opacityPercents,
+                            AirPlayPersistence.loadClusterTurnCardOpacityPercent(this),
+                        ) { it -> getString(R.string.turn_card_overlay_opacity_option, it) }
+                            .also { it.onSave = { v -> AirPlayPersistence.saveClusterTurnCardOpacityPercent(this, v) } })
+                        card.addView(overlaySliderRow(
                             getString(R.string.turn_card_overlay_horizontal),
                             ClusterTurnCardOverlay.xPercents,
                             AirPlayPersistence.loadClusterTurnCardOverlayXPercent(this),
@@ -559,9 +565,11 @@ class DiPlayActivity : ComponentActivity() {
             val channels = listOf(
                 getString(R.string.update_channel_github),
                 getString(R.string.update_channel_gitee),
+                getString(R.string.update_channel_mirror1),
+                getString(R.string.update_channel_mirror2),
             )
             choice(card, getString(R.string.update_channel), channels,
-                AirPlayPersistence.loadUpdateChannel(this).coerceIn(0, 1), reconnects = false) {
+                AirPlayPersistence.loadUpdateChannel(this).coerceIn(0, 3), reconnects = false) {
                 AirPlayPersistence.saveUpdateChannel(this, it)
                 AppUpdate.setChannel(it)
             }

@@ -746,6 +746,8 @@ class CarPlayHostActivity : ComponentActivity() {
                 AirPlayPersistence.loadClusterTurnCardOverlayYPercent(this),
                 AirPlayPersistence.loadClusterTurnCardOverlaySizePercent(this),
             )
+            presentation.setTurnCardNightMode(darkMode)
+            presentation.setTurnCardOpacity(AirPlayPersistence.loadClusterTurnCardOpacityPercent(this))
             presentation.setTurnCardGuidance(if (overlay) clusterTurnGuidance else null)
         }
     }
@@ -3365,6 +3367,8 @@ class CarPlayHostActivity : ComponentActivity() {
         val night = nightModeOrNull(newConfig.uiMode) ?: return
         if (night == darkMode) return
         darkMode = night
+        val presentations = (clusterLayers.values + listOfNotNull(clusterPresentation)).distinct()
+        for (presentation in presentations) presentation.setTurnCardNightMode(night)
         appendLog("Head unit switched to ${if (night) "night" else "day"} mode")
         syncAirPlayDarkMode()
     }
