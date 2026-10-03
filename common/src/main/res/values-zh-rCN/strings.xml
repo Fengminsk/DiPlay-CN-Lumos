@@ -497,4 +497,12 @@
     <string name="center_map_no_permission_screen">此车机没有该权限的设置界面，请通过 ADB 允许。</string>
     <string name="launcher_map_sharing">与其他启动器共享实时地图</string>
     <string name="launcher_map_sharing_description">支持 DiPlay 的启动器可以在自己的主屏幕中显示实时仪表盘地图。默认关闭，因为开启后车机上的任何应用都可以请求该地图。详见 docs/LAUNCHER_INTEGRATION.md。</string>
+    <string name="check_for_updates">检查更新</string>
+    <string name="up_to_date">已经是最新版本。</string>
+    <string name="update_available">有新版本 %1$s（%2$s）。</string>
+    <string name="download_and_install">下载并安装</string>
+    <string name="update_downloading">正在下载更新…</string>
+    <string name="update_download_failed">下载失败：%1$s。请检查车机网络。</string>
+    <string name="update_install_failed">未能打开安装器。请允许 DiPlay 安装未知应用后重试。</string>
+    <string name="update_check_failed">无法连接 GitHub：%1$s。请稍后再试。</string>
 </resources>

@@ -480,4 +480,12 @@
     <string name="turn_card_distance_m">%1$d м</string>
     <string name="turn_card_distance_km">%1$.1f км</string>
     <string name="turn_card_exit">Съезд %1$d</string>
+    <string name="check_for_updates">Проверить обновления</string>
+    <string name="up_to_date">У вас последняя версия.</string>
+    <string name="update_available">Доступна новая версия %1$s (%2$s).</string>
+    <string name="download_and_install">Скачать и установить</string>
+    <string name="update_downloading">Загрузка обновления…</string>
+    <string name="update_download_failed">Не удалось скачать: %1$s. Проверьте сеть.</string>
+    <string name="update_install_failed">Установщик не открылся. Разрешите DiPlay установку неизвестных приложений и повторите.</string>
+    <string name="update_check_failed">Нет связи с GitHub: %1$s. Попробуйте позже.</string>
 </resources>

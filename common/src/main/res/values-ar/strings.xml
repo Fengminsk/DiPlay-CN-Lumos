@@ -480,4 +480,12 @@
     <string name="turn_card_distance_m">%1$d م</string>
     <string name="turn_card_distance_km">%1$.1f كم</string>
     <string name="turn_card_exit">مخرج %1$d</string>
+    <string name="check_for_updates">التحقق من التحديثات</string>
+    <string name="up_to_date">أنت على أحدث إصدار.</string>
+    <string name="update_available">يتوفر إصدار جديد %1$s (%2$s).</string>
+    <string name="download_and_install">تنزيل وتثبيت</string>
+    <string name="update_downloading">جارٍ تنزيل التحديث…</string>
+    <string name="update_download_failed">فشل التنزيل: %1$s. تحقق من اتصال الشبكة.</string>
+    <string name="update_install_failed">لم يُفتح المثبِّت. اسمح لـ DiPlay بتثبيت تطبيقات غير معروفة ثم أعد المحاولة.</string>
+    <string name="update_check_failed">تعذر الوصول إلى GitHub: %1$s. حاول لاحقًا.</string>
 </resources>

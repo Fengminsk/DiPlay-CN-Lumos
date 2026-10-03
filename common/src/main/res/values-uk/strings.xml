@@ -492,4 +492,12 @@
     <string name="turn_card_distance_m">%1$d м</string>
     <string name="turn_card_distance_km">%1$.1f км</string>
     <string name="turn_card_exit">Зʼїзд %1$d</string>
+    <string name="check_for_updates">Перевірити оновлення</string>
+    <string name="up_to_date">У вас найновіша версія.</string>
+    <string name="update_available">Доступна нова версія %1$s (%2$s).</string>
+    <string name="download_and_install">Завантажити та встановити</string>
+    <string name="update_downloading">Завантаження оновлення…</string>
+    <string name="update_download_failed">Не вдалося завантажити: %1$s. Перевірте мережу.</string>
+    <string name="update_install_failed">Інсталятор не відкрився. Дозвольте DiPlay встановлювати невідомі застосунки та повторіть.</string>
+    <string name="update_check_failed">Немає звʼязку з GitHub: %1$s. Спробуйте пізніше.</string>
 </resources>

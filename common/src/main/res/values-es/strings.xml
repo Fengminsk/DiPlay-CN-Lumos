@@ -480,4 +480,12 @@
     <string name="turn_card_distance_m">%1$d m</string>
     <string name="turn_card_distance_km">%1$.1f km</string>
     <string name="turn_card_exit">Salida %1$d</string>
+    <string name="check_for_updates">Buscar actualizaciones</string>
+    <string name="up_to_date">Ya tienes la última versión.</string>
+    <string name="update_available">Nueva versión %1$s disponible (%2$s).</string>
+    <string name="download_and_install">Descargar e instalar</string>
+    <string name="update_downloading">Descargando actualización…</string>
+    <string name="update_download_failed">Error al descargar: %1$s. Comprueba la conexión.</string>
+    <string name="update_install_failed">No se abrió el instalador. Permite a DiPlay instalar apps desconocidas e inténtalo de nuevo.</string>
+    <string name="update_check_failed">No se pudo conectar con GitHub: %1$s. Prueba más tarde.</string>
 </resources>

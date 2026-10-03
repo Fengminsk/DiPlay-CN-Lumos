@@ -1,13 +1,14 @@
-# DiPlay Plus 0.2.10
+# DiPlay Plus 0.2.10-cn.8
 
 基于官方 DiPlay v0.2.10，桌面名 DiPlay Plus。包名保持 `com.shihab.diplay.cn`（沿用旧包名以便覆盖升级），可与官方版并存。自本版（cn.4）起 CN 使用固定签名，之后新版本可直接覆盖安装并保留设置；从 cn.3 及更早版本升级需最后一次卸载重装。
 
 **下载**
 
 - APK：本 Release 附带的 `DiPlay-cn-v0.2.10-cn.*.apk`
+- 应用内「关于 → 检查更新」可直接下载并安装新版本（同签名覆盖安装，设置保留）
 - 完整优化记录：[docs/CN_OPTIMIZATIONS.md](https://github.com/serein-morii/DiPlay-CN/blob/main/docs/CN_OPTIMIZATIONS.md)
 
-**这一版（0.2.10-cn.1）**
+**这一版（0.2.10-cn.8）**
 
 - 同步官方 0.2.10：车载视频播放器（Media3/时间条）、专辑封面、AirPlay 端口回退、无热点 USB 连接、麦克风/连接诊断，以及十项社区修复。
 - 「主屏幕地图与仪表盘同步」开关已由官方合入（PR #133，来自本仓库贡献）。

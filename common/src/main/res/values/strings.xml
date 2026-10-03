@@ -497,4 +497,12 @@
     <string name="center_map_no_permission_screen">This head unit has no settings screen for this permission. Allow it over ADB.</string>
     <string name="launcher_map_sharing">Share the live map with other launchers</string>
     <string name="launcher_map_sharing_description">Launchers that support DiPlay can show the live dashboard map inside their own home screen. Off by default, because any app on the head unit could then ask for the map. See docs/LAUNCHER_INTEGRATION.md.</string>
+    <string name="check_for_updates">Check for updates</string>
+    <string name="up_to_date">You are on the latest version.</string>
+    <string name="update_available">New version %1$s available (%2$s).</string>
+    <string name="download_and_install">Download and install</string>
+    <string name="update_downloading">Downloading update…</string>
+    <string name="update_download_failed">Download failed: %1$s. Check the car's network connection.</string>
+    <string name="update_install_failed">No installer opened. Allow DiPlay to install unknown apps, then try again.</string>
+    <string name="update_check_failed">Could not reach GitHub: %1$s. Try again later.</string>
 </resources>

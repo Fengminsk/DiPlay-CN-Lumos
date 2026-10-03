@@ -415,18 +415,18 @@ class DiPlayActivity : ComponentActivity() {
                         ), overlaySizes.indexOf(AirPlayPersistence.loadClusterTurnCardOverlaySize(this)).coerceAtLeast(0), reconnects = false) {
                             AirPlayPersistence.saveClusterTurnCardOverlaySize(this, overlaySizes[it])
                         }
-                        val overlayAcross = ClusterTurnCardOverlay.xPercents
-                        choice(card, getString(R.string.turn_card_overlay_horizontal), overlayAcross.map {
-                            overlayOffsetLabel(it, getString(R.string.marker_left), getString(R.string.marker_right), 50)
-                        }, overlayAcross.indexOf(AirPlayPersistence.loadClusterTurnCardOverlayXPercent(this)).coerceAtLeast(0), reconnects = false) {
-                            AirPlayPersistence.saveClusterTurnCardOverlayXPercent(this, overlayAcross[it])
-                        }
-                        val overlayUpDown = ClusterTurnCardOverlay.yPercents
-                        choice(card, getString(R.string.turn_card_overlay_vertical), overlayUpDown.map {
-                            overlayOffsetLabel(it, getString(R.string.marker_up), getString(R.string.marker_down), 40)
-                        }, overlayUpDown.indexOf(AirPlayPersistence.loadClusterTurnCardOverlayYPercent(this)).coerceAtLeast(0), reconnects = false) {
-                            AirPlayPersistence.saveClusterTurnCardOverlayYPercent(this, overlayUpDown[it])
-                        }
+                        card.addView(overlaySliderRow(
+                            getString(R.string.turn_card_overlay_horizontal),
+                            ClusterTurnCardOverlay.xPercents,
+                            AirPlayPersistence.loadClusterTurnCardOverlayXPercent(this),
+                        ) { it -> overlayOffsetLabel(it, getString(R.string.marker_left), getString(R.string.marker_right), 50) }
+                            .also { it.slider.onSave = { v -> AirPlayPersistence.saveClusterTurnCardOverlayXPercent(this, v) } })
+                        card.addView(overlaySliderRow(
+                            getString(R.string.turn_card_overlay_vertical),
+                            ClusterTurnCardOverlay.yPercents,
+                            AirPlayPersistence.loadClusterTurnCardOverlayYPercent(this),
+                        ) { it -> overlayOffsetLabel(it, getString(R.string.marker_up), getString(R.string.marker_down), 40) }
+                            .also { it.slider.onSave = { v -> AirPlayPersistence.saveClusterTurnCardOverlayYPercent(this, v) } })
                         card.addView(button(getString(R.string.reset_turn_card_overlay), false) {
                             AirPlayPersistence.saveClusterTurnCardOverlayXPercent(this, ClusterTurnCardOverlay.DEFAULT_X_PERCENT)
                             AirPlayPersistence.saveClusterTurnCardOverlayYPercent(this, ClusterTurnCardOverlay.DEFAULT_Y_PERCENT)
@@ -540,10 +540,68 @@ class DiPlayActivity : ComponentActivity() {
         content.addView(label(getString(R.string.carplay_at_home_in_your_car), 20, MUTED).apply { setPadding(0, dp(8), 0, dp(24)) })
         section(content, "${getString(R.string.about_public_preview_prefix)}${version()}") { card ->
             card.addView(label(getString(R.string.an_independent_carplay_receiver_for_android_head_units_wir), 17, TEXT))
+            val updateStatus = label(AppUpdate.currentVersion(this), 15, MUTED).apply {
+                setPadding(0, dp(10), 0, 0)
+            }
+            card.addView(updateStatus)
+            card.addView(button(getString(R.string.check_for_updates), false) {
+                updateStatus.text = "…"
+                AppUpdate.check { release, failure ->
+                    when {
+                        release == null ->
+                            updateStatus.text = getString(R.string.update_check_failed, failure ?: "?")
+                        !AppUpdate.isAvailable(release, this) ->
+                            updateStatus.text = getString(R.string.up_to_date)
+                        else -> {
+                            updateStatus.text = release.tag
+                            offerUpdate(release)
+                        }
+                    }
+                }
+            }, matchButton(10, 56))
         }
         section(content, getString(R.string.made_possible_by_open_source)) { card ->
             card.addView(label(getString(R.string.receiver_based_on_xcertplay_licensed_under_gpl_3_0_diplay), 16, MUTED))
         }
+    }
+
+    private fun offerUpdate(release: AppUpdate.Release) {
+        val size = if (release.apkBytes > 0) "${release.apkBytes / 1024 / 1024} MB" else "?"
+        AlertDialog.Builder(this)
+            .setTitle(getString(R.string.update_available, release.tag, size))
+            .setPositiveButton(getString(R.string.download_and_install)) { _, _ -> downloadUpdate(release) }
+            .setNegativeButton(getString(R.string.common_cancel), null)
+            .show()
+    }
+
+    private fun downloadUpdate(release: AppUpdate.Release) {
+        val progress = android.app.ProgressDialog(this).apply {
+            setMessage(getString(R.string.update_downloading))
+            isIndeterminate = false
+            max = 100
+            setProgressStyle(android.app.ProgressDialog.STYLE_HORIZONTAL)
+            setCancelable(true)
+            show()
+        }
+        AppUpdate.download(
+            this,
+            release,
+            onProgress = { percent -> runOnUiThread { if (percent >= 0) progress.progress = percent else progress.isIndeterminate = true } },
+            onDone = { file ->
+                runOnUiThread {
+                    progress.dismiss()
+                    if (!AppUpdate.install(this, file)) {
+                        toast(getString(R.string.update_install_failed))
+                    }
+                }
+            },
+            onError = { message ->
+                runOnUiThread {
+                    progress.dismiss()
+                    toast(getString(R.string.update_download_failed, message))
+                }
+            },
+        )
     }
 
     // The car hotspot link needs the hotspot on; DiPlay only checks it (turning it on needs ADB-only permission).
@@ -794,6 +852,36 @@ class DiPlayActivity : ComponentActivity() {
         step < 0 -> "$negative ${-step * CarPlayClusterDisplay.MARKER_STEP_PERCENT} %"
         else -> "$positive ${step * CarPlayClusterDisplay.MARKER_STEP_PERCENT} %"
     }
+
+    /** A 2%-step slider row for overlay placement; every step saves, so the card moves live. */
+    private fun overlaySliderRow(title: String, values: List<Int>, current: Int, describe: (Int) -> String): LinearLayout {
+        val valueView = label(describe(current), 16, ACCENT, true)
+        val container = column()
+        val head = row().apply { gravity = Gravity.CENTER_VERTICAL; setPadding(0, dp(12), 0, 0) }
+        head.addView(label(title, 16, TEXT, true), LinearLayout.LayoutParams(0, -2, 1f))
+        head.addView(valueView)
+        container.addView(head)
+        val slider = object : SeekBar(this) {
+            val steps = values
+            override fun onProgressChanged(seekBar: SeekBar, progress: Int, fromUser: Boolean) {
+                val value = steps[progress.coerceIn(steps.indices)]
+                valueView.text = describe(value)
+                if (fromUser) onSave(value)
+            }
+            var onSave: (Int) -> Unit = {}
+        }.apply {
+            max = values.lastIndex
+            progress = values.indexOf(current).coerceIn(values.indices)
+            minHeight = dp(44)
+        }
+        container.addView(slider, LinearLayout.LayoutParams(-1, dp(44)))
+        container.slider = slider
+        return container
+    }
+
+    private var LinearLayout.slider: SeekBar
+        get() = tag as? SeekBar ?: error("missing slider")
+        set(value) { tag = value }
 
     private fun overlayOffsetLabel(percent: Int, negative: String, positive: String, centre: Int): String {
         val delta = percent - centre
