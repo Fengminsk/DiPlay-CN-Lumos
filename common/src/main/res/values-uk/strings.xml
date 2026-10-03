@@ -508,6 +508,5 @@
     <string name="bt_suspend_during_carplay_description">Телефон тримає hands-free звʼязок з авто, тому вхідний дзвінок звучить і в телефоні авто, і в CarPlay. Після ввімкнення: Bluetooth авто призупиняється через ADB на час сеансу CarPlay — дзвінки йдуть лише в CarPlay; вмикається назад після сеансу і перед наступним бездротовим зʼєднанням. Пара не змінюється. Застосується з наступного підключення.</string>
     <string name="update_channel">Канал оновлень</string>
     <string name="update_channel_github">GitHub безпосередньо</string>
-    <string name="update_channel_mirror1">Дзеркало-прискорювач (gh-proxy.com)</string>
-    <string name="update_channel_mirror2">Дзеркало-прискорювач (ghproxy.net)</string>
+    <string name="update_channel_gitee">Gitee (Китай)</string>
 </resources>
