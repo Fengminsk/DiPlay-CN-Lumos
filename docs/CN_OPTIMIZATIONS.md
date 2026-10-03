@@ -13,7 +13,7 @@
 ## 0.2.10-cn.12 — 2026-10-03
 
 - 自定义转向卡下方新增行程信息条：**xx:xx 到达 · xx小时xx分 · xx.x 公里**（预计到达时间、剩余时长、剩余里程，数据来自 CarPlay 导航元数据）。胶囊样式与转向卡一致，宽度对齐、高度随卡缩放，跟随卡片位置移动；无行程数据时自动隐藏。
-- APK：见 [v0.2.10-cn.12](https://github.com/serein-morii/DiPlay-CN/releases/tag/v0.2.10-cn.12)
+- APK：已撤回（安装解析问题反馈），功能包含在 [v0.2.10-cn.13](https://github.com/serein-morii/DiPlay-CN/releases/tag/v0.2.10-cn.13) 中
 
 ## 0.2.10-cn.11 — 2026-10-03
 

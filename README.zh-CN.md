@@ -6,7 +6,7 @@
 
 > 这些项目专注于比亚迪汽车。它们可能在其他品牌上运行，但其他品牌不在支持范围内，也没有增加支持或修复其品牌特定兼容性问题的计划。
 
-[下载 CN 0.2.10](https://github.com/serein-morii/DiPlay-CN/releases/download/v0.2.10-cn.4/DiPlay-cn-v0.2.10-cn.4.apk) · [CN 优化日志](docs/CN_OPTIMIZATIONS.md) · [全部发版](https://github.com/serein-morii/DiPlay-CN/releases) · [完整说明](README.md)
+[下载 CN 0.2.10](https://github.com/serein-morii/DiPlay-CN/releases/download/v0.2.10-cn.13/DiPlay-cn-v0.2.10-cn.13.apk) · [CN 优化日志](docs/CN_OPTIMIZATIONS.md) · [全部发版](https://github.com/serein-morii/DiPlay-CN/releases) · [完整说明](README.md)
 
 ## CN 优化了什么
 
