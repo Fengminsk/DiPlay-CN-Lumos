@@ -8,7 +8,7 @@
 - 应用内「关于 → 检查更新」可直接下载并安装新版本（同签名覆盖安装，设置保留）
 - 完整优化记录：[docs/CN_OPTIMIZATIONS.md](https://github.com/serein-morii/DiPlay-CN/blob/main/docs/CN_OPTIMIZATIONS.md)
 
-**这一版（0.2.10-cn.9）**
+**本版更新**
 
 - 同步官方 0.2.10：车载视频播放器（Media3/时间条）、专辑封面、AirPlay 端口回退、无热点 USB 连接、麦克风/连接诊断，以及十项社区修复。
 - 「主屏幕地图与仪表盘同步」开关已由官方合入（PR #133，来自本仓库贡献）。
