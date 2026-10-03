@@ -2,7 +2,13 @@
 
 本仓库相对官方 DiPlay 的改动单独记在这里。官方上游版本见 [CHANGELOG.md](../CHANGELOG.md)。下载页每次发版也会带同一份说明。
 
-覆盖安装：包名始终为 `com.shihab.diplay.cn`，公开 APK 使用同一套 debug 签名。只要新包的 `versionCode` 更大，即可覆盖旧版并保留设置。不能覆盖官方 `com.shihab.diplay`。
+覆盖安装：包名始终为 `com.shihab.diplay.cn`；自 0.2.10-cn.4 起所有 CN 版本使用同一把固定签名密钥，`versionCode` 更大即可直接覆盖安装并保留设置。0.2.10-cn.3 及更早版本签名各不相同，升到 cn.4 需最后一次卸载重装。不能覆盖官方 `com.shihab.diplay`。
+
+## 0.2.10-cn.4 — 2026-10-03
+
+- 修复「每次都要卸载才能安装」：此前 CI 用临时运行器上随机生成的 debug 签名，每个包签名都不同，Android 拒绝覆盖更新。现在仓库内置固定的 CN 签名密钥（`signing/diplay-cn.jks`，专用一次性密钥），此后所有 CN 版本同签名，可直接覆盖安装。
+- 注意：从 cn.3 及更早版本升级到本版仍需**最后一次**卸载（签名切换），此后不再需要。
+- APK：见 [v0.2.10-cn.4](https://github.com/serein-morii/DiPlay-CN/releases/tag/v0.2.10-cn.4)
 
 ## 0.2.10-cn.3 — 2026-10-03
 

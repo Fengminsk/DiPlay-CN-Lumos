@@ -1,6 +1,6 @@
 # DiPlay CN 0.2.10
 
-基于官方 DiPlay v0.2.10。包名 `com.shihab.diplay.cn`，可与官方版并存。覆盖安装上一版 CN 即可保留设置。
+基于官方 DiPlay v0.2.10。包名 `com.shihab.diplay.cn`，可与官方版并存。自本版（cn.4）起 CN 使用固定签名，之后新版本可直接覆盖安装并保留设置；从 cn.3 及更早版本升级需最后一次卸载重装。
 
 **下载**
 

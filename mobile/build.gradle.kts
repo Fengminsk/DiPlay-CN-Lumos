@@ -17,7 +17,7 @@ android {
         applicationId = "com.shihab.diplay.cn"
         minSdk = 28
         targetSdk = 37
-        versionCode = 37
+        versionCode = 38
         versionName = "0.2.10"
 
     }
@@ -33,6 +33,13 @@ android {
                 storePassword = providers.environmentVariable("ANDROID_KEYSTORE_PASSWORD").getOrElse("")
                 keyAlias = providers.environmentVariable("ANDROID_KEY_ALIAS").getOrElse("")
                 keyPassword = providers.environmentVariable("ANDROID_KEY_PASSWORD").getOrElse("")
+            } else {
+                // Stable CN key: CI runners are ephemeral, so a per-run debug key would change the
+                // signature on every build and users could not install updates over each other.
+                storeFile = rootProject.file("signing/diplay-cn.jks")
+                storePassword = "diplay-cn"
+                keyAlias = "diplaycn"
+                keyPassword = "diplay-cn"
             }
         }
     }
@@ -44,13 +51,7 @@ android {
             optimization {
                 enable = false
             }
-            signingConfig = signingConfigs.getByName(
-                if (providers.environmentVariable("ANDROID_KEYSTORE_PATH").orNull != null) {
-                    "release"
-                } else {
-                    "debug"
-                },
-            )
+            signingConfig = signingConfigs.getByName("release")
         }
     }
     compileOptions {
