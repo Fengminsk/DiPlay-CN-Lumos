@@ -59,4 +59,17 @@ class AppLocaleTest {
         AppLocale.save(context, AppLocale.SYSTEM)
         assertSame(context, AppLocale.wrap(context))
     }
+
+    @Test fun firstLaunchKeepsASupportedSystemLanguage() {
+        AppLocale.wrap(context)
+        assertTrue(manager.applicationLocales.isEmpty)
+        assertEquals(AppLocale.SYSTEM, AppLocale.preference(context))
+    }
+
+    @Test @Config(sdk = [28], qualifiers = "ja")
+    fun firstLaunchOnUnsupportedLanguageDefaultsToSimplifiedChinese() {
+        AppLocale.wrap(context)
+        val wrapped = AppLocale.wrap(context)
+        assertEquals(Locale.SIMPLIFIED_CHINESE.language, wrapped.resources.configuration.locales[0].language)
+    }
 }

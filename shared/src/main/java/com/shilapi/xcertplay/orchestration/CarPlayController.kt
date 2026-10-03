@@ -1298,8 +1298,12 @@ class CarPlayController(
                     phase != Phase.WIRELESS ||
                     generation != wirelessGeneration.get() ||
                     !wirelessHandoffRequested.get() ||
-                    wirelessActiveReported.get()
+                    wirelessActiveReported.get() ||
+                    activeSession != null
                 ) {
+                    if (activeSession != null && !wirelessActiveReported.get()) {
+                        debugLog("wireless handoff watchdog skipped; AirPlay session is already active")
+                    }
                     return@postDelayed
                 }
                 debugLog("wireless handoff timed out waiting for tunnel iAP2 readiness")

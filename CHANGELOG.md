@@ -1,3 +1,10 @@
+CN 相对官方的改动见 [docs/CN_OPTIMIZATIONS.md](docs/CN_OPTIMIZATIONS.md)。下载与每次发版说明见 [GitHub Releases](https://github.com/serein-morii/DiPlay-CN/releases)。
+
+# DiPlay CN 0.2.10-cn.1 — 2026-10-02
+
+- Rebase onto upstream v0.2.10 (video player, artwork, AirPlay port fallback, USB without hotspot, diagnostics, and the centre-map sync switch from PR #133 — now upstream).
+- Keep all CN dashboard modes and the movable custom turn card.
+
 # DiPlay 0.2.10 — 2026-10-03
 
 - Publish CarPlay song metadata, position and artwork to Android media sessions; bound artwork queues and reject stale work across sessions (#82).

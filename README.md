@@ -1,12 +1,22 @@
-# DiPlay
+# DiPlay CN
 
-**CarPlay for compatible BYD Android head units.** Wired and wireless, with the familiar DiAuto interface. Independent app: `com.shihab.diplay`.
+> 简体中文说明见 [README.zh-CN.md](README.zh-CN.md)。本仓库基于上游 DiPlay `v0.2.10`。
+
+**CarPlay for compatible BYD Android head units.** Wired and wireless, with the familiar DiAuto interface. Independent app: `com.shihab.diplay.cn`; installs alongside official DiPlay.
 
 > **BYD support scope:** These projects focus on BYD cars. They may work on other brands, but other brands are unsupported and there are no plans to add support or fix brand-specific incompatibilities.
 
-[Download & website](https://shihabal3amri.github.io/DiPlay/) · [Release](https://github.com/shihabal3amri/DiPlay/releases/tag/v0.2.10) · [Report a problem](https://github.com/shihabal3amri/DiPlay/issues/new/choose)
+[Download CN 0.2.10](https://github.com/serein-morii/DiPlay-CN/releases/tag/v0.2.10-cn.1) · [CN optimization log](docs/CN_OPTIMIZATIONS.md) · [All CN releases](https://github.com/serein-morii/DiPlay-CN/releases) · [Upstream DiPlay](https://github.com/shihabal3amri/DiPlay/releases/tag/v0.2.10)
 
 ![DiPlay home](site/assets/home.png)
+
+## What CN adds on top of upstream
+
+Every CN change is written down in the **[CN optimization log](docs/CN_OPTIMIZATIONS.md)** — each release, what changed and why. Current base: upstream `v0.2.10`.
+
+- Four dashboard modes: map only, official turn card only, map + official glass card, and map + a movable custom turn card (2 % steps, left/right and up/down; shows on straight-ahead too).
+- Simplified Chinese by default when the car's language is unsupported; the wireless handoff watchdog steps aside once AirPlay is already active.
+- Release APK built as a release variant with the official identity, sized like the official package.
 
 ## 0.2.10 — public preview
 
@@ -45,6 +55,7 @@ Optional video requires network ADB and a valid parked-gear reading. Battery, da
 - [Build from source](docs/BUILD.md)
 - [Validation](docs/VALIDATION.md)
 - [Release notes](CHANGELOG.md)
+- [CN optimization log](docs/CN_OPTIMIZATIONS.md)
 - [Credits and licenses](docs/THIRD_PARTY_NOTICES.md)
 
 The website is available in English, Arabic, Russian, Ukrainian, Spanish and Simplified Chinese. The app interface supports those same six languages. Choose the app language in Settings; on Android 13+, it stays synchronized with Android’s per-app language setting.
