@@ -132,7 +132,7 @@ internal class ClusterTurnCardView(context: Context) : View(context) {
         val text = parts.joinToString(separator)
         val textWidth = paintMeasure(text)
         // Wider than the card is fine: the strip centers on the card and may reach the panel edges.
-        val maxStrip = width - dp(8f) * 2
+        val maxStrip = width - (dp(8f) * 2).toInt()
         val stripWidth = maxOf(width, (textWidth + h * 0.9f).toInt()).coerceAtMost(maxStrip)
         val stripLeft = (left + width / 2f - stripWidth / 2f).toInt().coerceIn(4, (width - stripWidth - 4).coerceAtLeast(4))
         rect.set(stripLeft.toFloat(), top.toFloat(), (stripLeft + stripWidth).toFloat(), top + h)

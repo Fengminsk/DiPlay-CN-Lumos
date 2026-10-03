@@ -511,6 +511,16 @@ object AirPlayPersistence {
         overlaySettingsListener?.invoke()
     }
 
+    /** Optional: park the car Bluetooth while CarPlay runs so calls ring on CarPlay only. */
+    fun loadBtSuspendDuringCarplay(context: Context): Boolean =
+        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+            .getBoolean(KEY_BT_SUSPEND_DURING_CARPLAY, false)
+
+    fun saveBtSuspendDuringCarplay(context: Context, enabled: Boolean) {
+        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit()
+            .putBoolean(KEY_BT_SUSPEND_DURING_CARPLAY, enabled).apply()
+    }
+
     /** Fingers for the swipe-down that opens settings; BYD's AC panel takes three. */
     fun loadSettingsGestureFingers(context: Context): Int =
         context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
