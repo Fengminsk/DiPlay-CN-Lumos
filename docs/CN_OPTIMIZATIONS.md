@@ -157,4 +157,9 @@
 
 - 基于官方 v0.2.7 的第一版 CN 构建。
 - 独立包名、简体中文回退、无线 watchdog 跳过、从官方 APK 抽取 identity 发版。
-- APK：[DiPlay-cn-v0.2.7-cn.1.apk](https://github.com/serein-morii/DiPlay-CN/releases/download/v0.2.7-cn.1/DiPlay-cn-v0.2.7-cn.1.apk)
+- APK：[DiPlay-cn-v0.2.7-cn.1.apk](https://github.com/serein-morii/DiPlay-CN/releases/download/v0.2.7-cn.1/DiPlay-cn-v0.2.7-cn.1.apk)## 0.2.10-cn.20 — 2026-10-03
+
+- 检查更新支持**更新通道**选择：GitHub 直连 / 国内加速镜像（gh-proxy.com / ghproxy.net，默认镜像）。检查与下载都走所选通道，解决国内直连 GitHub 不可用的问题。位置：关于 → 更新通道。
+- APK：见 [v0.2.10-cn.20](https://github.com/serein-morii/DiPlay-CN/releases/tag/v0.2.10-cn.20)
+
+

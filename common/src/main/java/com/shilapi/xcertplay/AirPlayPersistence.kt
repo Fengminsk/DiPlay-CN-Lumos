@@ -73,6 +73,7 @@ object AirPlayPersistence {
     private const val KEY_CLUSTER_TURN_CARD_OVERLAY_Y = "cluster_turn_card_overlay_y_percent"
     private const val KEY_CENTER_MAP_FOLLOWS_DASHBOARD = "center_map_follows_dashboard"
     private const val KEY_SETTINGS_GESTURE_FINGERS = "settings_gesture_fingers"
+    private const val KEY_UPDATE_CHANNEL = "update_channel"
     private const val KEY_BT_SUSPEND_DURING_CARPLAY = "bt_suspend_during_carplay"
     private const val KEY_WIDTH_PHYSICAL_MM = "display_width_physical_mm"
     private const val KEY_PHYSICAL_SIZE_BASIS = "display_physical_size_basis"
@@ -519,6 +520,15 @@ object AirPlayPersistence {
     fun saveBtSuspendDuringCarplay(context: Context, enabled: Boolean) {
         context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit()
             .putBoolean(KEY_BT_SUSPEND_DURING_CARPLAY, enabled).apply()
+    }
+
+    /** 0 = direct GitHub, 1/2 = acceleration proxies that relay GitHub in China. */
+    fun loadUpdateChannel(context: Context): Int =
+        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).getInt(KEY_UPDATE_CHANNEL, 1).coerceIn(0, 2)
+
+    fun saveUpdateChannel(context: Context, channel: Int) {
+        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit()
+            .putInt(KEY_UPDATE_CHANNEL, channel.coerceIn(0, 2)).apply()
     }
 
     /** Fingers for the swipe-down that opens settings; BYD's AC panel takes three. */

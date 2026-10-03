@@ -516,4 +516,8 @@
     <string name="turn_card_info_km">%1$.1f km</string>
     <string name="bt_suspend_during_carplay">Pause car Bluetooth during CarPlay · needs ADB</string>
     <string name="bt_suspend_during_carplay_description">The phone keeps its hands-free link to the car, so a call rings on both the car Bluetooth phone and CarPlay. While CarPlay runs, pause the car Bluetooth over ADB so calls ring on CarPlay only; it turns back on when CarPlay ends and before the next wireless handshake. Pairing is never touched. Changes apply on the next connection.</string>
+    <string name="update_channel">Update channel</string>
+    <string name="update_channel_github">GitHub direct</string>
+    <string name="update_channel_mirror1">Acceleration mirror (gh-proxy.com)</string>
+    <string name="update_channel_mirror2">Acceleration mirror (ghproxy.net)</string>
 </resources>

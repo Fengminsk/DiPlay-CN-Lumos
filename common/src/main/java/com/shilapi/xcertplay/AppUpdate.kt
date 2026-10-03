@@ -19,7 +19,10 @@ import java.util.concurrent.Executors
  * project's stable key, so the installer updates the installed app in place and keeps settings.
  */
 object AppUpdate {
-    private const val LATEST_URL = "https://api.github.com/repos/serein-morii/DiPlay-CN/releases/latest"
+    private const val REPO_PATH = "serein-morii/DiPlay-CN"
+    private const val LATEST_PATH = "https://api.github.com/repos/$REPO_PATH/releases/latest"
+    /** Proxies that relay api.github.com and release downloads inside China. */
+    private val MIRRORS = listOf("", "https://gh-proxy.com/", "https://ghproxy.net/")
     private const val ACCEPT = "application/vnd.github+json"
     private const val USER_AGENT = "DiPlay-CN-Updater"
     private const val CONNECT_TIMEOUT = 10_000
@@ -39,6 +42,16 @@ object AppUpdate {
         Thread(task, "diplay-update").apply { isDaemon = true }
     }
 
+    /** The saved proxy prefix; empty means downloading straight from GitHub. */
+    private fun mirrorPrefix(): String = mirror ?: ""
+
+    @Volatile private var mirror: String? = null
+
+    /** The settings page stores the chosen channel; the updater picks it up before each call. */
+    fun setChannel(channel: Int) {
+        mirror = MIRRORS[channel.coerceIn(0, MIRRORS.size - 1)]
+    }
+
     fun currentVersion(context: Context): String =
         context.packageManager.getPackageInfo(context.packageName, 0).versionName ?: ""
 
@@ -51,7 +64,8 @@ object AppUpdate {
             var result: Release? = null
             var failure: String? = null
             runCatching {
-                val connection = URL(LATEST_URL).openConnection() as HttpURLConnection
+                val mirror = mirrorPrefix()
+                val connection = URL(mirror + LATEST_PATH).openConnection() as HttpURLConnection
                 connection.connectTimeout = CONNECT_TIMEOUT
                 connection.readTimeout = READ_TIMEOUT
                 connection.setRequestProperty("Accept", ACCEPT)
@@ -97,7 +111,7 @@ object AppUpdate {
             runCatching {
                 val directory = File(context.cacheDir, "updates").apply { mkdirs() }
                 val target = File(directory, "diplay-plus-${release.tag}.apk")
-                val connection = URL(release.apkUrl).openConnection() as HttpURLConnection
+                val connection = URL(mirrorPrefix() + release.apkUrl).openConnection() as HttpURLConnection
                 connection.connectTimeout = CONNECT_TIMEOUT
                 connection.readTimeout = 60_000
                 connection.setRequestProperty("User-Agent", USER_AGENT)
