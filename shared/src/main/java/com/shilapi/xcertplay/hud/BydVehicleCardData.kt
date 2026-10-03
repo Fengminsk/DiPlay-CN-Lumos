@@ -82,7 +82,7 @@ object BydVehicleCardData {
         shell.close()
     }
 
-    private fun speed(raw: Long): Double? = raw.toDouble().let {
+    private fun speed(raw: Int): Double? = raw.toLong().let {
         // The float arrives as raw bits in the parcel value on some builds; both shapes stay sane here.
         val kmh = Float.fromBits(raw.toInt()).toDouble()
         if (kmh in 0.0..300.0) kmh else null
