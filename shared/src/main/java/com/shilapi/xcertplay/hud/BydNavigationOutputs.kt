@@ -98,10 +98,13 @@ object BydNavigationOutputs {
     /** The dashboard song setting changed; applies at once. */
     fun clusterSongChanged(enabled: Boolean) = BydClusterSong.settingChanged(enabled)
 
-    /** Best effort while alive; Android does not guarantee callbacks before force-stop. */
+    /**
+     * Best effort while alive; Android does not guarantee callbacks before force-stop. The overlay
+     * route cache is deliberately kept: session ends include the brief drops of a wireless
+     * handoff, and clearing here made the turn card vanish until the iPhone happened to resend
+     * the full guidance. The overlay's own staleness window retires a truly dead route.
+     */
     fun endNow() {
         standalone.clear(); hud.clear(); cluster.clear(); BydClusterSong.end()
-        synchronized(overlayLock) { overlayRoute.clear() }
-        overlayListener?.invoke(null)
     }
 }
