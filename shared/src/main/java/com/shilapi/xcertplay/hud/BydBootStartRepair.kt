@@ -11,7 +11,7 @@ import com.shilapi.xcertplay.adb.LocalAdb
  * changes BYD's private autostart manager; that whitelist, when a firmware has one, stays a
  * manual step in the car's settings.
  */
-internal object BydBootStartRepair {
+object BydBootStartRepair {
     /** One line per attempted fix: the short name plus ✓ or the failure text. */
     class Result(val lines: List<String>) {
         val applied: Boolean get() = lines.any { it.endsWith("✓") }
