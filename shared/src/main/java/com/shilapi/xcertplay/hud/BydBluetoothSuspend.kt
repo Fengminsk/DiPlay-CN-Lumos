@@ -17,24 +17,38 @@ object BydBluetoothSuspend {
     private const val KEY_SUSPENDED_BY_US = "suspended_by_us"
 
     private val shell = BydAdbShell(TAG)
+    private val worker = java.util.concurrent.Executors.newSingleThreadScheduledExecutor { task ->
+        Thread(task, "diplay-bt-suspend").apply { isDaemon = true }
+    }
+    @Volatile private var pending: java.util.concurrent.ScheduledFuture<*>? = null
 
-    /** Disable the car's Bluetooth over adb; remembered so only our own suspension is undone. */
-    fun suspend(context: Context) {
+    /**
+     * Disable the car's Bluetooth over adb after [delayMillis]. Suspending the instant the
+     * session reports active races the phone's Wi-Fi association: some units drop CarPlay
+     * entirely when Bluetooth vanishes that early, so the default waits ten seconds.
+     */
+    fun suspend(context: Context, delayMillis: Long = 10_000L) {
         val app = context.applicationContext
         if (isSuspendedByUs(app)) return
-        val done = shell.run(app, "svc bluetooth disable") != null
-        if (!done) {
-            Log.w(TAG, "could not suspend the car Bluetooth; is ADB over network on?")
-            return
-        }
-        app.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit()
-            .putBoolean(KEY_SUSPENDED_BY_US, true).apply()
-        Log.i(TAG, "car Bluetooth suspended for the CarPlay session")
+        pending?.cancel(false)
+        pending = worker.schedule({
+            if (isSuspendedByUs(app)) return@schedule
+            val done = shell.run(app, "svc bluetooth disable") != null
+            if (!done) {
+                Log.w(TAG, "could not suspend the car Bluetooth; is ADB over network on?")
+                return@schedule
+            }
+            app.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit()
+                .putBoolean(KEY_SUSPENDED_BY_US, true).apply()
+            Log.i(TAG, "car Bluetooth suspended ${delayMillis}ms after the session became active")
+        }, delayMillis, java.util.concurrent.TimeUnit.MILLISECONDS)
     }
 
     /** Re-enable the car's Bluetooth if we suspended it; safe to call repeatedly. */
     fun resume(context: Context) {
         val app = context.applicationContext
+        pending?.cancel(false)
+        pending = null
         if (!isSuspendedByUs(app)) return
         val done = shell.run(app, "svc bluetooth enable") != null
         if (done) {

@@ -258,9 +258,9 @@ class CarPlayController(
         override fun onSessionActive(session: AirPlaySession) {
             if (activeSession !== session) {
                 BydNavigationOutputs.start(appContext)
-                if (appContext.getSharedPreferences("xcertplay_airplay", android.content.Context.MODE_PRIVATE)
-                    .getBoolean("bt_suspend_during_carplay", false)) {
-                    BydBluetoothSuspend.suspend(appContext)
+                val btPrefs = appContext.getSharedPreferences("xcertplay_airplay", android.content.Context.MODE_PRIVATE)
+                if (btPrefs.getBoolean("bt_suspend_during_carplay", false)) {
+                    BydBluetoothSuspend.suspend(appContext, btSuspendDelayMs(btPrefs))
                 }
                 com.shilapi.xcertplay.glance.CarPlayGlance.setConnected(true)
                 // The gear may have changed since /info.
@@ -1352,6 +1352,15 @@ class CarPlayController(
             WIRELESS_HANDOFF_TIMEOUT_MILLIS,
         )
     }
+
+    /** The user's grace period before Bluetooth is suspended: 5–30 s, 10 s by default. */
+    private fun btSuspendDelayMs(prefs: android.content.SharedPreferences): Long =
+        when (prefs.getInt("bt_suspend_delay_seconds", 10)) {
+            5 -> 5_000L
+            15 -> 15_000L
+            30 -> 30_000L
+            else -> 10_000L
+        }
 
     private fun closeBluetoothBootstrapTransport() {
         val activeCsm = csm
