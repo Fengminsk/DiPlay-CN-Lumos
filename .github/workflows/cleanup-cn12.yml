@@ -1,0 +1,15 @@
+name: Remove bad cn.12 release
+on:
+  push:
+    branches: [main]
+permissions:
+  contents: write
+jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Delete v0.2.10-cn.12 release and tag
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release delete v0.2.10-cn.12 --repo "$GITHUB_REPOSITORY" --yes --cleanup-tag || echo "already gone"
