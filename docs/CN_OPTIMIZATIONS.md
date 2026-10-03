@@ -4,6 +4,11 @@
 
 覆盖安装：包名始终为 `com.shihab.diplay.cn`；自 0.2.10-cn.4 起所有 CN 版本使用同一把固定签名密钥，`versionCode` 更大即可直接覆盖安装并保留设置。0.2.10-cn.3 及更早版本签名各不相同，升到 cn.4 需最后一次卸载重装。不能覆盖官方 `com.shihab.diplay`。
 
+## 0.2.10-cn.9 — 2026-10-03
+
+- 自定义转向卡图标换为 **Material Symbols**（Apache 2.0，google/material-design-icons）：转向/缓转/急转/掉头/直行/环岛/终点全套矢量，系统蓝着色；环岛出口号改为图标右下角的圆形角标。新资源使用 `ic_turn_card_` 前缀，不与官方小组件的 `ic_maneuver_` 图标混用。
+- APK：见 [v0.2.10-cn.9](https://github.com/serein-morii/DiPlay-CN/releases/tag/v0.2.10-cn.9)
+
 ## 0.2.10-cn.8 — 2026-10-03
 
 - 应用内更新：关于页「检查更新」读取 GitHub 最新 Release，弹窗后直接下载 APK 并调起系统安装器；同签名覆盖安装，设置保留。`versionName` 改为完整标签（如 0.2.10-cn.8）以便比对。

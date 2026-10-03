@@ -1,4 +1,4 @@
-# DiPlay Plus 0.2.10-cn.8
+# DiPlay Plus 0.2.10-cn.9
 
 基于官方 DiPlay v0.2.10，桌面名 DiPlay Plus。包名保持 `com.shihab.diplay.cn`（沿用旧包名以便覆盖升级），可与官方版并存。自本版（cn.4）起 CN 使用固定签名，之后新版本可直接覆盖安装并保留设置；从 cn.3 及更早版本升级需最后一次卸载重装。
 
@@ -8,13 +8,14 @@
 - 应用内「关于 → 检查更新」可直接下载并安装新版本（同签名覆盖安装，设置保留）
 - 完整优化记录：[docs/CN_OPTIMIZATIONS.md](https://github.com/serein-morii/DiPlay-CN/blob/main/docs/CN_OPTIMIZATIONS.md)
 
-**这一版（0.2.10-cn.8）**
+**这一版（0.2.10-cn.9）**
 
 - 同步官方 0.2.10：车载视频播放器（Media3/时间条）、专辑封面、AirPlay 端口回退、无热点 USB 连接、麦克风/连接诊断，以及十项社区修复。
 - 「主屏幕地图与仪表盘同步」开关已由官方合入（PR #133，来自本仓库贡献）。
 - 保留 CN 差异：仪表盘四种显示（含可挪自定义转向卡，2% 步进，直行也显示）、简体中文回退、无线看门狗跳过。
 - 设置手势可配置（2/3/4 指下滑，默认 3 指），避开比亚迪三指下滑的空调面板；在 DiPlay 应用「设置 → CarPlay 操作」里即可修改，无需先打开 CarPlay。
 - 自定义转向卡按 Apple 语义重画（急转/缓转区分），卡片为 iOS 玻璃胶囊风格。
+- 转向图标采用 Material Symbols（Apache 2.0）全套矢量，环岛出口号为角标显示。
 
 请安装在车机上，不要安装在 iPhone 上。车机必须允许安装 APK。有线连接需要 Android 9 及以上，无线 Wi-Fi Direct 需要 Android 10 及以上。
 
