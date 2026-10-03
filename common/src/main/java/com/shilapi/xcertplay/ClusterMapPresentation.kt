@@ -26,7 +26,6 @@ import android.widget.FrameLayout
 import android.widget.TextView
 import com.shilapi.xcertplay.airplay.CarPlayClusterDisplay
 import com.shilapi.xcertplay.host.R
-import com.shilapi.xcertplay.hud.BydVehicleCardData
 import com.shilapi.xcertplay.hud.ClusterTurnGuidance
 
 /**
@@ -44,7 +43,6 @@ internal class ClusterMapPresentation(
 ) : Presentation(context, display) {
     private var waitingLabel: TextView? = null
     private var turnCardView: ClusterTurnCardView? = null
-    private var vehicleCardView: ClusterVehicleCardView? = null
     var outputSurface: Surface? = null
         private set
 
@@ -122,8 +120,6 @@ internal class ClusterMapPresentation(
         root.addView(waitingLabel, FrameLayout.LayoutParams(videoParams))
         turnCardView = ClusterTurnCardView(context).apply { visibility = View.GONE }
         root.addView(turnCardView, FrameLayout.LayoutParams(-1, -1))
-        vehicleCardView = ClusterVehicleCardView(context).apply { visibility = View.GONE }
-        root.addView(vehicleCardView, FrameLayout.LayoutParams(-1, -1))
         setContentView(root)
     }
 
@@ -146,19 +142,6 @@ internal class ClusterMapPresentation(
 
     fun setTurnCardGuidance(guidance: ClusterTurnGuidance?) {
         turnCardView?.setGuidance(guidance)
-    }
-
-    fun setVehicleCard(
-        content: ClusterVehicleCardView.Content,
-        xPercent: Int,
-        yPercent: Int,
-        sizePercent: Int,
-    ) {
-        vehicleCardView?.setLayout(content, xPercent, yPercent, sizePercent)
-    }
-
-    fun setVehicleSnapshot(snapshot: BydVehicleCardData.Snapshot?) {
-        vehicleCardView?.setSnapshot(snapshot)
     }
 
     companion object {

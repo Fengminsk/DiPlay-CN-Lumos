@@ -737,15 +737,6 @@ class CarPlayHostActivity : ComponentActivity() {
         applyClusterTurnOverlay()
     }
 
-    private val vehicleSnapshotListener: (com.shilapi.xcertplay.hud.BydVehicleCardData.Snapshot?) -> Unit = { snapshot ->
-        runOnUiThread { applyVehicleSnapshot(snapshot) }
-    }
-
-    private fun applyVehicleSnapshot(snapshot: com.shilapi.xcertplay.hud.BydVehicleCardData.Snapshot?) {
-        val presentations = (clusterLayers.values + listOfNotNull(clusterPresentation)).distinct()
-        for (presentation in presentations) presentation.setVehicleSnapshot(snapshot)
-    }
-
     private fun applyClusterTurnOverlay() {
         val overlay = CarPlayClusterDisplay.usesCustomTurnCard(AirPlayPersistence.loadClusterContent(this))
         val presentations = (clusterLayers.values + listOfNotNull(clusterPresentation)).distinct()
@@ -756,18 +747,6 @@ class CarPlayHostActivity : ComponentActivity() {
                 AirPlayPersistence.loadClusterTurnCardOverlaySizePercent(this),
             )
             presentation.setTurnCardGuidance(if (overlay) clusterTurnGuidance else null)
-            val contents = ClusterVehicleCardView.Content.entries
-            presentation.setVehicleCard(
-                contents.getOrElse(AirPlayPersistence.loadVehicleCardContent(this)) { ClusterVehicleCardView.Content.OFF },
-                AirPlayPersistence.loadVehicleCardXPercent(this),
-                AirPlayPersistence.loadVehicleCardYPercent(this),
-                AirPlayPersistence.loadVehicleCardSizePercent(this),
-            )
-        }
-        if (AirPlayPersistence.loadVehicleCardContent(this) != 0) {
-            com.shilapi.xcertplay.hud.BydVehicleCardData.start(applicationContext, vehicleSnapshotListener)
-        } else {
-            com.shilapi.xcertplay.hud.BydVehicleCardData.stop()
         }
     }
 
@@ -904,7 +883,6 @@ class CarPlayHostActivity : ComponentActivity() {
     override fun onDestroy() {
         AirPlayPersistence.overlaySettingsListener = null
         com.shilapi.xcertplay.hud.BydNavigationOutputs.setTurnOverlayListener(null)
-        com.shilapi.xcertplay.hud.BydVehicleCardData.stop()
         clusterMonitor?.stop()
         mainHandler.removeCallbacks(hideIdleCenterMap)
         homeMonitor?.stop()

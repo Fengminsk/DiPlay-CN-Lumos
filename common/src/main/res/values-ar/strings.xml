@@ -494,14 +494,4 @@
     <string name="turn_card_info_km">%1$.1f كم</string>
     <string name="bt_suspend_during_carplay">إيقاف بلوتوث السيارة أثناء CarPlay · يتطلب ADB</string>
     <string name="bt_suspend_during_carplay_description">يبقى الهاتف متصلًا بنظام التحدث الحر في السيارة، فرنين المكالمة يظهر على هاتف السيارة وعلى CarPlay معًا. عند التشغيل: يُوقف بلوتوث السيارة مؤقتًا عبر ADB طوال جلسة CarPlay فترد المكالمات على CarPlay فقط، ويُعاد تشغيله عند انتهاء الجلسة وقبل مصافحة الاتصال اللاسلكي التالية. لا يتأثر الاقتران. يسري التغيير عند الاتصال التالي.</string>
-    <string name="vehicle_card_content">بطاقة حالة السيارة</string>
-    <string name="vehicle_card_off">إيقاف</string>
-    <string name="vehicle_card_speed_gear">السرعة والناقل</string>
-    <string name="vehicle_card_battery_range">البطارية والمدى</string>
-    <string name="vehicle_card_clock_battery">الساعة والبطارية</string>
-    <string name="vehicle_card_charging">حالة الشحن</string>
-    <string name="vehicle_card_size">حجم البطاقة</string>
-    <string name="vehicle_card_horizontal">البطاقة · يسار / يمين</string>
-    <string name="vehicle_card_vertical">البطاقة · أعلى / أسفل</string>
-    <string name="vehicle_card_note">بطاقة زجاجية توأم لبطاقة الانعطاف تعرض بيانات السيارة مباشرة في أي موضع على لوحة العدادات. السرعة والناقل والبطارية والمدى والشحن تتطلب ADB؛ الساعة تعمل بدونه. التغييرات فورية.</string>
 </resources>

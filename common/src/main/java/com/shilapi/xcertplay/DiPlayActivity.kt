@@ -434,38 +434,6 @@ class DiPlayActivity : ComponentActivity() {
                         }, matchButton(10, 56))
                         card.addView(label(getString(R.string.turn_card_overlay_note), 14, MUTED))
                     }
-                    val vehicleContents = ClusterVehicleCardView.Content.entries
-                    choice(card, getString(R.string.vehicle_card_content), listOf(
-                        getString(R.string.vehicle_card_off),
-                        getString(R.string.vehicle_card_speed_gear),
-                        getString(R.string.vehicle_card_battery_range),
-                        getString(R.string.vehicle_card_clock_battery),
-                        getString(R.string.vehicle_card_charging),
-                    ), vehicleContents.indexOf(ClusterVehicleCardView.Content.entries.getOrElse(AirPlayPersistence.loadVehicleCardContent(this)) { ClusterVehicleCardView.Content.OFF }).coerceAtLeast(0), reconnects = false) {
-                        AirPlayPersistence.saveVehicleCardContent(this, it)
-                        render()
-                    }
-                    if (AirPlayPersistence.loadVehicleCardContent(this) != 0) {
-                        card.addView(overlaySliderRow(
-                            getString(R.string.vehicle_card_size),
-                            ClusterTurnCardOverlay.sizePercents,
-                            AirPlayPersistence.loadVehicleCardSizePercent(this),
-                        ) { it -> getString(R.string.turn_card_overlay_size_option, it) }
-                            .also { it.onSave = { v -> AirPlayPersistence.saveVehicleCardSizePercent(this, v) } })
-                        card.addView(overlaySliderRow(
-                            getString(R.string.vehicle_card_horizontal),
-                            ClusterTurnCardOverlay.xPercents,
-                            AirPlayPersistence.loadVehicleCardXPercent(this),
-                        ) { it -> overlayOffsetLabel(it, getString(R.string.marker_left), getString(R.string.marker_right), 50) }
-                            .also { it.onSave = { v -> AirPlayPersistence.saveVehicleCardXPercent(this, v) } })
-                        card.addView(overlaySliderRow(
-                            getString(R.string.vehicle_card_vertical),
-                            ClusterTurnCardOverlay.yPercents,
-                            AirPlayPersistence.loadVehicleCardYPercent(this),
-                        ) { it -> overlayOffsetLabel(it, getString(R.string.marker_up), getString(R.string.marker_down), 40) }
-                            .also { it.onSave = { v -> AirPlayPersistence.saveVehicleCardYPercent(this, v) } })
-                        card.addView(label(getString(R.string.vehicle_card_note), 14, MUTED))
-                    }
                     val turnCard = officialCardOnly
                     choice(card, getString(if (turnCard) R.string.turn_card_size else R.string.cluster_map_size),
                         listOf(getString(R.string.cluster_size_standard), getString(R.string.cluster_size_larger), getString(R.string.cluster_size_largest)),

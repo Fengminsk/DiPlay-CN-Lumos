@@ -516,14 +516,4 @@
     <string name="turn_card_info_km">%1$.1f km</string>
     <string name="bt_suspend_during_carplay">Pause car Bluetooth during CarPlay · needs ADB</string>
     <string name="bt_suspend_during_carplay_description">The phone keeps its hands-free link to the car, so a call rings on both the car Bluetooth phone and CarPlay. While CarPlay runs, pause the car Bluetooth over ADB so calls ring on CarPlay only; it turns back on when CarPlay ends and before the next wireless handshake. Pairing is never touched. Changes apply on the next connection.</string>
-    <string name="vehicle_card_content">Vehicle status card</string>
-    <string name="vehicle_card_off">Off</string>
-    <string name="vehicle_card_speed_gear">Speed and gear</string>
-    <string name="vehicle_card_battery_range">Battery and range</string>
-    <string name="vehicle_card_clock_battery">Clock and battery</string>
-    <string name="vehicle_card_charging">Charging state</string>
-    <string name="vehicle_card_size">Vehicle card size</string>
-    <string name="vehicle_card_horizontal">Vehicle card · left / right</string>
-    <string name="vehicle_card_vertical">Vehicle card · up / down</string>
-    <string name="vehicle_card_note">A glass twin of the turn card with live vehicle data, placed anywhere on the cluster. Speed, gear, battery, range and charging need ADB over network; the clock works without it. Changes apply without reconnecting.</string>
 </resources>
