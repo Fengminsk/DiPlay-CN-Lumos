@@ -551,11 +551,10 @@ class DiPlayActivity : ComponentActivity() {
             card.addView(updateStatus)
             val channels = listOf(
                 getString(R.string.update_channel_github),
-                getString(R.string.update_channel_mirror1),
-                getString(R.string.update_channel_mirror2),
+                getString(R.string.update_channel_gitee),
             )
             choice(card, getString(R.string.update_channel), channels,
-                AirPlayPersistence.loadUpdateChannel(this).coerceIn(0, 2), reconnects = false) {
+                AirPlayPersistence.loadUpdateChannel(this).coerceIn(0, 1), reconnects = false) {
                 AirPlayPersistence.saveUpdateChannel(this, it)
                 AppUpdate.setChannel(it)
             }

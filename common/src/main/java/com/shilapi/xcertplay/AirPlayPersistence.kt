@@ -522,13 +522,13 @@ object AirPlayPersistence {
             .putBoolean(KEY_BT_SUSPEND_DURING_CARPLAY, enabled).apply()
     }
 
-    /** 0 = direct GitHub, 1/2 = acceleration proxies that relay GitHub in China. */
+    /** 0 = GitHub, 1 = Gitee (default: reachable from cars in China). */
     fun loadUpdateChannel(context: Context): Int =
-        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).getInt(KEY_UPDATE_CHANNEL, 1).coerceIn(0, 2)
+        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).getInt(KEY_UPDATE_CHANNEL, 1).coerceIn(0, 1)
 
     fun saveUpdateChannel(context: Context, channel: Int) {
         context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit()
-            .putInt(KEY_UPDATE_CHANNEL, channel.coerceIn(0, 2)).apply()
+            .putInt(KEY_UPDATE_CHANNEL, channel.coerceIn(0, 1)).apply()
     }
 
     /** Fingers for the swipe-down that opens settings; BYD's AC panel takes three. */
