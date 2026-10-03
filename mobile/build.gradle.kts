@@ -17,8 +17,8 @@ android {
         applicationId = "com.shihab.diplay.cn"
         minSdk = 28
         targetSdk = 37
-        versionCode = 51
-        versionName = "0.2.10-cn.17"
+        versionCode = 52
+        versionName = "0.2.10-cn.18"
 
     }
 
