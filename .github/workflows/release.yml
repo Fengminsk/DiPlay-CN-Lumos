@@ -36,6 +36,8 @@ jobs:
           curl -fsSL -o "$apk" "$OFFICIAL_APK_URL"
           python3 scripts/extract_official_identity.py "$apk" "$assets" "$OFFICIAL_APK_SHA256"
           echo "DIPLAY_AUTH_ASSETS_DIR=$assets" >> "$GITHUB_ENV"
+      - name: The release notes must use the version placeholder
+        run: grep -q '{{VERSION}}' docs/GITHUB_RELEASE.md
       - name: The tag must match the app versionName
         run: |
           version=$(grep -o 'versionName = "[^"]*"' mobile/build.gradle.kts | cut -d'"' -f2)
@@ -59,6 +61,7 @@ jobs:
           cp mobile/build/outputs/apk/release/mobile-release.apk "$apk"
           sha256sum "$apk" > "$apk.sha256"
           cp docs/GITHUB_RELEASE.md release-notes.md
+          sed -i "s/{{VERSION}}/${GITHUB_REF_NAME#v}/g" release-notes.md
       - name: Publish GitHub Release
         env:
           GH_TOKEN: ${{ github.token }}
@@ -72,5 +75,5 @@ jobs:
             "$apk.sha256#SHA-256" \
             --repo "$GITHUB_REPOSITORY" \
             --verify-tag \
-            --title "DiPlay CN 0.2.10" \
+            --title "DiPlay CN ${GITHUB_REF_NAME#v}" \
             --notes-file release-notes.md
