@@ -420,13 +420,13 @@ class DiPlayActivity : ComponentActivity() {
                             ClusterTurnCardOverlay.xPercents,
                             AirPlayPersistence.loadClusterTurnCardOverlayXPercent(this),
                         ) { it -> overlayOffsetLabel(it, getString(R.string.marker_left), getString(R.string.marker_right), 50) }
-                            .also { it.slider.onSave = { v -> AirPlayPersistence.saveClusterTurnCardOverlayXPercent(this, v) } })
+                            .also { it.onSave = { v -> AirPlayPersistence.saveClusterTurnCardOverlayXPercent(this, v) } })
                         card.addView(overlaySliderRow(
                             getString(R.string.turn_card_overlay_vertical),
                             ClusterTurnCardOverlay.yPercents,
                             AirPlayPersistence.loadClusterTurnCardOverlayYPercent(this),
                         ) { it -> overlayOffsetLabel(it, getString(R.string.marker_up), getString(R.string.marker_down), 40) }
-                            .also { it.slider.onSave = { v -> AirPlayPersistence.saveClusterTurnCardOverlayYPercent(this, v) } })
+                            .also { it.onSave = { v -> AirPlayPersistence.saveClusterTurnCardOverlayYPercent(this, v) } })
                         card.addView(button(getString(R.string.reset_turn_card_overlay), false) {
                             AirPlayPersistence.saveClusterTurnCardOverlayXPercent(this, ClusterTurnCardOverlay.DEFAULT_X_PERCENT)
                             AirPlayPersistence.saveClusterTurnCardOverlayYPercent(this, ClusterTurnCardOverlay.DEFAULT_Y_PERCENT)
