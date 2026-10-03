@@ -11,37 +11,45 @@ import android.view.View
 import com.shilapi.xcertplay.airplay.CarPlayClusterDisplay
 import com.shilapi.xcertplay.airplay.ClusterTurnCardOverlay
 import com.shilapi.xcertplay.hud.ClusterTurnGuidance
-import kotlin.math.min
+import kotlin.math.cos
+import kotlin.math.sin
 
-/** Instruction card drawn by DiPlay on top of the dashboard map stream. */
+/**
+ * Instruction card drawn by DiPlay on top of the dashboard map.
+ *
+ * Visual language follows Apple's turn banners: a dark glass capsule with a hairline stroke,
+ * the maneuver glyph in a soft chip on the left, distance and road stacked on the right.
+ * Arrow geometry matches CarPlay semantics — slight is a shallow diagonal, turn is a right
+ * angle, sharp bends past ninety degrees and points slightly downward.
+ */
 internal class ClusterTurnCardView(context: Context) : View(context) {
     private var guidance: ClusterTurnGuidance? = null
     private var xPercent = ClusterTurnCardOverlay.DEFAULT_X_PERCENT
     private var yPercent = ClusterTurnCardOverlay.DEFAULT_Y_PERCENT
     private var size = CarPlayClusterDisplay.OverlaySize.MEDIUM
-    private val cardPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply { color = Color.argb(230, 22, 26, 34) }
-    private val barPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply { color = Color.rgb(90, 168, 255) }
-    private val accentPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-        color = Color.rgb(90, 168, 255)
+
+    private val glassPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply { color = Color.argb(232, 28, 28, 30) }
+    private val strokePaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        color = Color.argb(38, 255, 255, 255); style = Paint.Style.STROKE; strokeWidth = 2f
+    }
+    private val chipPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply { color = Color.argb(38, 255, 255, 255) }
+    private val arrowPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        color = Color.rgb(10, 132, 255)
         style = Paint.Style.STROKE
         strokeCap = Paint.Cap.ROUND
         strokeJoin = Paint.Join.ROUND
     }
     private val fillPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-        color = Color.rgb(90, 168, 255)
-        style = Paint.Style.FILL
+        color = Color.rgb(10, 132, 255); style = Paint.Style.FILL
     }
-    private val textPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-        color = Color.WHITE
-        typeface = Typeface.create("sans-serif-medium", Typeface.NORMAL)
+    private val distancePaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        color = Color.WHITE; typeface = Typeface.create("sans-serif-medium", Typeface.NORMAL)
     }
-    private val mutedPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-        color = Color.argb(210, 186, 198, 210)
-        typeface = Typeface.create("sans-serif", Typeface.NORMAL)
+    private val roadPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        color = Color.argb(179, 199, 199, 204); typeface = Typeface.create("sans-serif", Typeface.NORMAL)
     }
-    private val arrowPath = Path()
-    private val cardRect = RectF()
-    private val barRect = RectF()
+    private val path = Path()
+    private val rect = RectF()
 
     fun setLayout(xPercent: Int, yPercent: Int, size: CarPlayClusterDisplay.OverlaySize) {
         this.xPercent = xPercent
@@ -62,169 +70,171 @@ internal class ClusterTurnCardView(context: Context) : View(context) {
     }
 
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
-        val panelWidth = MeasureSpec.getSize(widthMeasureSpec).coerceAtLeast(1)
-        val panelHeight = MeasureSpec.getSize(heightMeasureSpec).coerceAtLeast(1)
-        setMeasuredDimension(panelWidth, panelHeight)
+        setMeasuredDimension(
+            MeasureSpec.getSize(widthMeasureSpec).coerceAtLeast(1),
+            MeasureSpec.getSize(heightMeasureSpec).coerceAtLeast(1),
+        )
     }
 
     override fun onDraw(canvas: Canvas) {
         super.onDraw(canvas)
         val next = guidance ?: return
         val card = ClusterTurnCardOverlay.card(width, height, xPercent, yPercent, size)
-        val radius = card.height * 0.18f
-        cardRect.set(card.left.toFloat(), card.top.toFloat(), (card.left + card.width).toFloat(), (card.top + card.height).toFloat())
-        canvas.drawRoundRect(cardRect, radius, radius, cardPaint)
-        barRect.set(card.left.toFloat(), card.top.toFloat(), card.left + card.height * 0.08f, (card.top + card.height).toFloat())
-        canvas.drawRoundRect(barRect, radius * 0.4f, radius * 0.4f, barPaint)
+        val h = card.height.toFloat()
+        val w = card.width.toFloat()
 
-        val padding = card.height * 0.12f
-        val arrowBox = card.height - padding * 2f
-        val arrowLeft = card.left + card.height * 0.12f
-        val arrowTop = card.top + padding
-        drawManeuver(canvas, next, arrowLeft, arrowTop, arrowBox)
+        val radius = h * 0.30f
+        rect.set(card.left.toFloat(), card.top.toFloat(), card.left + w, card.top + h)
+        canvas.drawRoundRect(rect, radius, radius, glassPaint)
+        canvas.drawRoundRect(rect, radius, radius, strokePaint)
 
-        val textLeft = arrowLeft + arrowBox + padding * 0.6f
-        val textWidth = card.left + card.width - padding - textLeft
+        val chip = h * 0.76f
+        val chipLeft = card.left + h * 0.12f
+        val chipTop = card.top + (h - chip) / 2f
+        rect.set(chipLeft, chipTop, chipLeft + chip, chipTop + chip)
+        canvas.drawRoundRect(rect, chip * 0.26f, chip * 0.26f, chipPaint)
+        drawManeuver(canvas, next, chipLeft + chip * 0.08f, chipTop + chip * 0.08f, chip * 0.84f)
+
+        val textLeft = chipLeft + chip + h * 0.14f
+        val textWidth = card.left + w - h * 0.10f - textLeft
         if (textWidth <= 0f) return
-        textPaint.textSize = card.height * 0.32f
-        mutedPaint.textSize = card.height * 0.18f
-        val distanceY = card.top + card.height * 0.42f
-        canvas.drawText(ellipsize(distanceLabel(next.distanceMeters), textWidth, textPaint), textLeft, distanceY, textPaint)
+        distancePaint.textSize = h * 0.30f
+        roadPaint.textSize = h * 0.17f
+        canvas.drawText(
+            ellipsize(distanceLabel(next.distanceMeters), textWidth, distancePaint),
+            textLeft, card.top + h * 0.44f, distancePaint,
+        )
         val road = roadLabel(next)
         if (road.isNotEmpty()) {
             canvas.drawText(
-                ellipsize(road, textWidth, mutedPaint),
-                textLeft,
-                card.top + card.height * 0.72f,
-                mutedPaint,
+                ellipsize(road, textWidth, roadPaint),
+                textLeft, card.top + h * 0.72f, roadPaint,
             )
         }
     }
 
-    private fun drawManeuver(canvas: Canvas, next: ClusterTurnGuidance, left: Float, top: Float, box: Float) {
-        val stroke = box * 0.12f
-        accentPaint.strokeWidth = stroke
-        val cx = left + box / 2f
-        val cy = top + box / 2f
-        val m = box * 0.16f
-        val head = box * 0.20f
-        arrowPath.reset()
+    // ---- maneuver glyphs: s = box side, m = margin, head = arrowhead size, degrees measured
+    // from the +x axis so headAt() can rotate the filled triangle along the travel direction.
+    private fun drawManeuver(canvas: Canvas, next: ClusterTurnGuidance, left: Float, top: Float, s: Float) {
+        arrowPaint.strokeWidth = s * 0.11f
+        val cx = left + s / 2f
+        val cy = top + s / 2f
+        val m = s * 0.14f
+        val head = s * 0.19f
+        val bottom = top + s - m
+        val topEdge = top + m
         when (next.icon) {
-            2 -> drawTurn(canvas, cx, cy, box, m, head, leftTurn = true) // left
-            3 -> drawTurn(canvas, cx, cy, box, m, head, leftTurn = false) // right
-            4 -> drawSlight(canvas, cx, cy, box, m, head, leftTurn = true)
-            5 -> drawSlight(canvas, cx, cy, box, m, head, leftTurn = false)
-            6 -> drawSharp(canvas, cx, cy, box, m, head, leftTurn = true)
-            7 -> drawSharp(canvas, cx, cy, box, m, head, leftTurn = false)
-            8 -> drawUTurn(canvas, cx, cy, box, m, head, leftTurn = true)
-            19 -> drawUTurn(canvas, cx, cy, box, m, head, leftTurn = false)
-            11, 12, 17, 18 -> drawRoundabout(canvas, cx, cy, box, next.roundaboutExit)
-            15 -> drawDestination(canvas, cx, cy, box, m)
-            else -> drawStraight(canvas, cx, cy, box, m, head)
+            2 -> turn(canvas, cx, cy, s, m, head, bottom, mirror = true)
+            3 -> turn(canvas, cx, cy, s, m, head, bottom, mirror = false)
+            4 -> slight(canvas, cx, s, m, head, bottom, topEdge, mirror = true)
+            5 -> slight(canvas, cx, s, m, head, bottom, topEdge, mirror = false)
+            6 -> sharp(canvas, cx, cy, s, m, head, bottom, mirror = true)
+            7 -> sharp(canvas, cx, cy, s, m, head, bottom, mirror = false)
+            8 -> uTurn(canvas, cx, cy, s, m, head, bottom, mirror = true)
+            19 -> uTurn(canvas, cx, cy, s, m, head, bottom, mirror = false)
+            11, 12, 17, 18 -> roundabout(canvas, cx, cy, s, m, head, next.roundaboutExit)
+            15 -> destination(canvas, cx, cy, s, m)
+            else -> {
+                canvas.drawLine(cx, bottom, cx, topEdge + head * 0.5f, arrowPaint)
+                headAt(canvas, cx, topEdge, -90f, head)
+            }
         }
     }
 
-    private fun drawStraight(canvas: Canvas, cx: Float, cy: Float, box: Float, m: Float, head: Float) {
-        val top = cy - box / 2f + m
-        val bottom = cy + box / 2f - m
-        canvas.drawLine(cx, bottom, cx, top + head * 0.35f, accentPaint)
-        triangle(canvas, cx, top, cx - head, top + head * 1.1f, cx + head, top + head * 1.1f)
+    private fun turn(canvas: Canvas, cx: Float, cy: Float, s: Float, m: Float, head: Float, bottom: Float, mirror: Boolean) {
+        val dir = if (mirror) -1f else 1f
+        val stemX = cx - dir * s * 0.10f
+        val elbowY = cy
+        val endX = cx + dir * (s / 2f - m - head * 0.2f)
+        canvas.drawLine(stemX, bottom, stemX, elbowY, arrowPaint)
+        canvas.drawLine(stemX, elbowY, endX, elbowY, arrowPaint)
+        headAt(canvas, cx + dir * (s / 2f - m), elbowY, if (mirror) 180f else 0f, head)
     }
 
-    private fun drawTurn(canvas: Canvas, cx: Float, cy: Float, box: Float, m: Float, head: Float, leftTurn: Boolean) {
-        val stemX = if (leftTurn) cx + box * 0.18f else cx - box * 0.18f
-        val bottom = cy + box / 2f - m
-        val tipX = if (leftTurn) cx - box / 2f + m else cx + box / 2f - m
-        canvas.drawLine(stemX, bottom, stemX, cy, accentPaint)
-        canvas.drawLine(stemX, cy, tipX + if (leftTurn) head * 0.35f else -head * 0.35f, cy, accentPaint)
-        if (leftTurn) {
-            triangle(canvas, tipX, cy, tipX + head * 1.15f, cy - head, tipX + head * 1.15f, cy + head)
-        } else {
-            triangle(canvas, tipX, cy, tipX - head * 1.15f, cy - head, tipX - head * 1.15f, cy + head)
-        }
+    private fun slight(canvas: Canvas, cx: Float, s: Float, m: Float, head: Float, bottom: Float, topEdge: Float, mirror: Boolean) {
+        val dir = if (mirror) -1f else 1f
+        // A shallow diagonal — about 30 degrees off vertical.
+        val endX = cx + dir * (s / 2f - m - head * 0.3f)
+        val endY = topEdge + s * 0.30f
+        canvas.drawLine(cx - dir * s * 0.10f, bottom, endX, endY, arrowPaint)
+        val angle = Math.toDegrees(kotlin.math.atan2((endY - bottom).toDouble(), (endX - (cx - dir * s * 0.10f)).toDouble())).toFloat()
+        headAt(canvas, endX + dir * head * 0.2f, endY, angle, head)
     }
 
-    private fun drawSlight(canvas: Canvas, cx: Float, cy: Float, box: Float, m: Float, head: Float, leftTurn: Boolean) {
-        val bottom = cy + box / 2f - m
-        val tipX = cx + if (leftTurn) -box * 0.28f else box * 0.28f
-        val tipY = cy - box / 2f + m
-        val midX = cx + if (leftTurn) -box * 0.06f else box * 0.06f
-        canvas.drawLine(cx, bottom, midX, cy + box * 0.02f, accentPaint)
-        canvas.drawLine(midX, cy + box * 0.02f, tipX, tipY + head * 0.45f, accentPaint)
-        val dx = if (leftTurn) -1f else 1f
-        triangle(
-            canvas,
-            tipX, tipY,
-            tipX - dx * head * 0.95f, tipY + head * 1.05f,
-            tipX + dx * head * 0.35f, tipY + head * 1.15f,
-        )
+    private fun sharp(canvas: Canvas, cx: Float, cy: Float, s: Float, m: Float, head: Float, bottom: Float, mirror: Boolean) {
+        val dir = if (mirror) -1f else 1f
+        val stemX = cx - dir * s * 0.04f
+        val elbowY = cy - s * 0.06f
+        val endX = cx + dir * (s / 2f - m - head * 0.2f)
+        val endY = elbowY + s * 0.26f // bends past ninety degrees and points slightly down
+        canvas.drawLine(stemX, bottom, stemX, elbowY, arrowPaint)
+        canvas.drawLine(stemX, elbowY, endX, endY, arrowPaint)
+        val angle = Math.toDegrees(kotlin.math.atan2((endY - elbowY).toDouble(), (endX - stemX).toDouble())).toFloat()
+        headAt(canvas, cx + dir * (s / 2f - m), endY + s * 0.02f, angle, head)
     }
 
-    private fun drawSharp(canvas: Canvas, cx: Float, cy: Float, box: Float, m: Float, head: Float, leftTurn: Boolean) {
-        val bottom = cy + box / 2f - m
-        val tipX = if (leftTurn) cx - box / 2f + m else cx + box / 2f - m
-        val tipY = cy - box * 0.18f
-        canvas.drawLine(cx, bottom, cx, cy + box * 0.08f, accentPaint)
-        canvas.drawLine(cx, cy + box * 0.08f, tipX + if (leftTurn) head * 0.3f else -head * 0.3f, tipY, accentPaint)
-        if (leftTurn) {
-            triangle(canvas, tipX, tipY, tipX + head * 1.05f, tipY - head * 0.55f, tipX + head * 0.75f, tipY + head * 0.85f)
-        } else {
-            triangle(canvas, tipX, tipY, tipX - head * 1.05f, tipY - head * 0.55f, tipX - head * 0.75f, tipY + head * 0.85f)
-        }
+    private fun uTurn(canvas: Canvas, cx: Float, cy: Float, s: Float, m: Float, head: Float, bottom: Float, mirror: Boolean) {
+        val dir = if (mirror) -1f else 1f
+        val stemX = cx - dir * s * 0.14f
+        val otherX = cx + dir * s * 0.14f
+        val arcTop = cy - s * 0.22f
+        val r = kotlin.math.abs(otherX - stemX) / 2f
+        canvas.drawLine(stemX, bottom, stemX, arcTop + r, arrowPaint)
+        rect.set(minOf(stemX, otherX), arcTop, minOf(stemX, otherX) + r * 2f, arcTop + r * 2f)
+        canvas.drawArc(rect, 180f, 180f, false, arrowPaint)
+        canvas.drawLine(otherX, arcTop + r, otherX, bottom - head * 0.4f, arrowPaint)
+        headAt(canvas, otherX, bottom, 90f, head)
     }
 
-    private fun drawUTurn(canvas: Canvas, cx: Float, cy: Float, box: Float, m: Float, head: Float, leftTurn: Boolean) {
-        val stem = if (leftTurn) cx + box * 0.14f else cx - box * 0.14f
-        val other = if (leftTurn) cx - box * 0.14f else cx + box * 0.14f
-        val bottom = cy + box / 2f - m
-        val top = cy - box * 0.16f
-        val radius = kotlin.math.abs(stem - other) / 2f
-        canvas.drawLine(stem, bottom, stem, top + radius, accentPaint)
-        val arc = RectF(min(stem, other), top, min(stem, other) + radius * 2f, top + radius * 2f)
-        canvas.drawArc(arc, 180f, 180f, false, accentPaint)
-        canvas.drawLine(other, top + radius, other, bottom - head * 0.15f, accentPaint)
-        triangle(canvas, other, bottom, other - head, bottom - head * 1.05f, other + head, bottom - head * 1.05f)
-    }
-
-    private fun drawRoundabout(canvas: Canvas, cx: Float, cy: Float, box: Float, exit: Int) {
-        val radius = box * 0.28f
-        canvas.drawArc(RectF(cx - radius, cy - radius, cx + radius, cy + radius), 40f, 280f, false, accentPaint)
-        val head = box * 0.16f
-        triangle(canvas, cx + radius + head * 0.2f, cy, cx + radius - head * 0.4f, cy - head, cx + radius - head * 0.15f, cy + head * 0.55f)
+    private fun roundabout(canvas: Canvas, cx: Float, cy: Float, s: Float, m: Float, head: Float, exit: Int) {
+        val r = s * 0.26f
+        canvas.drawArc(cx - r, cy - r, cx + r, cy + r, 130f, 280f, false, arrowPaint)
+        val exitX = cx + r + s * 0.06f
+        val exitY = cy - s * 0.02f
+        headAt(canvas, exitX, exitY, -35f, head)
         if (exit in 1..9) {
-            textPaint.textSize = box * 0.28f
+            distancePaint.textSize = s * 0.26f
             val label = exit.toString()
-            canvas.drawText(label, cx - textPaint.measureText(label) / 2f, cy + textPaint.textSize * 0.35f, textPaint)
+            canvas.drawText(label, cx - distancePaint.measureText(label) / 2f, cy + distancePaint.textSize * 0.35f, distancePaint)
         }
     }
 
-    private fun drawDestination(canvas: Canvas, cx: Float, cy: Float, box: Float, m: Float) {
-        val pole = cx - box * 0.08f
-        canvas.drawLine(pole, cy + box / 2f - m, pole, cy - box / 2f + m, accentPaint)
-        arrowPath.reset()
-        arrowPath.moveTo(pole, cy - box / 2f + m)
-        arrowPath.lineTo(pole + box * 0.36f, cy - box * 0.08f)
-        arrowPath.lineTo(pole, cy + box * 0.02f)
-        arrowPath.close()
-        canvas.drawPath(arrowPath, fillPaint)
+    private fun destination(canvas: Canvas, cx: Float, cy: Float, s: Float, m: Float) {
+        val pole = cx - s * 0.06f
+        canvas.drawLine(pole, cy + s / 2f - m, pole, cy - s / 2f + m, arrowPaint)
+        path.reset()
+        path.moveTo(pole, cy - s / 2f + m)
+        path.lineTo(pole + s * 0.36f, cy - s * 0.08f)
+        path.lineTo(pole, cy + s * 0.02f)
+        path.close()
+        canvas.drawPath(path, fillPaint)
     }
 
-    private fun triangle(canvas: Canvas, x1: Float, y1: Float, x2: Float, y2: Float, x3: Float, y3: Float) {
-        arrowPath.reset()
-        arrowPath.moveTo(x1, y1)
-        arrowPath.lineTo(x2, y2)
-        arrowPath.lineTo(x3, y3)
-        arrowPath.close()
-        canvas.drawPath(arrowPath, fillPaint)
+    /** Filled triangle with its tip at (x, y), pointing along [angleDeg] from the +x axis. */
+    private fun headAt(canvas: Canvas, x: Float, y: Float, angleDeg: Float, size: Float) {
+        val rad = Math.toRadians(angleDeg.toDouble())
+        val tipX = x + (size * 0.42 * cos(rad)).toFloat()
+        val tipY = y + (size * 0.42 * sin(rad)).toFloat()
+        val back = size * 0.58
+        val half = size * 0.46
+        val bx = x - (back * cos(rad)).toFloat()
+        val by = y - (back * sin(rad)).toFloat()
+        val nx = (-sin(rad) * half).toFloat()
+        val ny = (cos(rad) * half).toFloat()
+        path.reset()
+        path.moveTo(tipX, tipY)
+        path.lineTo(bx + nx, by + ny)
+        path.lineTo(bx - nx, by - ny)
+        path.close()
+        canvas.drawPath(path, fillPaint)
     }
 
     private fun distanceLabel(meters: Int): String = when {
         meters <= 20 -> context.getString(com.shilapi.xcertplay.host.R.string.turn_card_now)
         meters < 1000 -> context.getString(com.shilapi.xcertplay.host.R.string.turn_card_distance_m, meters)
-        else -> {
-            val km = meters / 100 / 10f
-            context.getString(com.shilapi.xcertplay.host.R.string.turn_card_distance_km, km)
-        }
+        else -> context.getString(
+            com.shilapi.xcertplay.host.R.string.turn_card_distance_km, meters / 100 / 10f,
+        )
     }
 
     private fun roadLabel(next: ClusterTurnGuidance): String =

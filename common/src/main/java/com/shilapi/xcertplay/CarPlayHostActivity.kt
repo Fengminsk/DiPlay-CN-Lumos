@@ -357,6 +357,7 @@ class CarPlayHostActivity : ComponentActivity() {
     private var restartGeneration = 0
     private var reconnectScheduled = false
     private var sessionLog: SessionLogFile? = null
+    private var gestureFingerCount = THREE_FINGER_COUNT
     private var gestureSequenceActive = false
     private var gestureTracking = false
     private var gestureStartX = 0f
@@ -639,6 +640,7 @@ class CarPlayHostActivity : ComponentActivity() {
             clusterMonitor?.stop()
             clusterMonitor = null
         }
+        gestureFingerCount = AirPlayPersistence.loadSettingsGestureFingers(this)
         ensureClusterPresentation()
         AirPlayPersistence.overlaySettingsListener = { runOnUiThread { applyClusterTurnOverlay() } }
         com.shilapi.xcertplay.hud.BydNavigationOutputs.setTurnOverlayListener(clusterTurnOverlayListener)
@@ -918,31 +920,6 @@ class CarPlayHostActivity : ComponentActivity() {
         }
         root.addView(video, FrameLayout.LayoutParams(-1, -1))
         root.addView(gestureLayer, FrameLayout.LayoutParams(-1, -1))
-        // The BYD system takes three-finger swipe-down for its AC panel, so the same gesture
-        // cannot reliably open DiPlay's settings there. A quiet corner button always works.
-        val settingsGear = TextView(this).apply {
-            text = "⚙"
-            textSize = 24f
-            setTextColor(Color.argb(200, 235, 241, 250))
-            gravity = Gravity.CENTER
-            contentDescription = getString(R.string.app_settings)
-            isClickable = true
-            alpha = 0.35f
-            setOnTouchListener { _, event ->
-                if (event.actionMasked == MotionEvent.ACTION_DOWN) alpha = 0.9f
-                if (event.actionMasked == MotionEvent.ACTION_UP || event.actionMasked == MotionEvent.ACTION_CANCEL) {
-                    alpha = 0.35f
-                    if (event.actionMasked == MotionEvent.ACTION_UP) openSettingsMenu()
-                }
-                true
-            }
-        }
-        root.addView(
-            settingsGear,
-            FrameLayout.LayoutParams(dp(52), dp(52), Gravity.BOTTOM or Gravity.END).apply {
-                marginEnd = dp(18); bottomMargin = dp(18)
-            },
-        )
         val panel = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
             gravity = Gravity.CENTER
@@ -982,7 +959,7 @@ class CarPlayHostActivity : ComponentActivity() {
             setOnClickListener { showDiPlayHome() }
         }, LinearLayout.LayoutParams(dp(300), dp(64)))
         panel.addView(TextView(this).apply {
-            text = getString(R.string.open_diplay_settings_hint)
+            text = getString(R.string.open_diplay_settings_hint, gestureFingerCount)
             textSize = 13f; gravity = Gravity.CENTER; setTextColor(Color.rgb(168, 182, 202)); setPadding(0, dp(20), 0, 0)
         })
         root.addView(panel, FrameLayout.LayoutParams(-1, -1))
@@ -1541,6 +1518,17 @@ class CarPlayHostActivity : ComponentActivity() {
             isAllCaps = false
             setOnClickListener { AppLocale.showPicker(this@CarPlayHostActivity) }
         }, LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(12) })
+
+        val gestureButton = Button(this).apply {
+            isAllCaps = false
+            setOnClickListener {
+                gestureFingerCount = if (gestureFingerCount >= 4) 2 else gestureFingerCount + 1
+                AirPlayPersistence.saveSettingsGestureFingers(this@CarPlayHostActivity, gestureFingerCount)
+                text = getString(R.string.settings_gesture_fingers, gestureFingerCount)
+            }
+        }
+        gestureButton.text = getString(R.string.settings_gesture_fingers, gestureFingerCount)
+        content.addView(gestureButton, LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(12) })
 
         val scroll = ScrollView(this).apply {
             isFillViewport = true
@@ -3667,7 +3655,7 @@ class CarPlayHostActivity : ComponentActivity() {
                 gestureTracking = false
             }
             MotionEvent.ACTION_POINTER_DOWN -> {
-                if (event.pointerCount == THREE_FINGER_COUNT && !gestureSequenceActive) {
+                if (event.pointerCount == gestureFingerCount && !gestureSequenceActive) {
                     gestureSequenceActive = true
                     gestureTracking = true
                     gestureStartX = pointerCentroid(event, horizontal = true)
@@ -3680,7 +3668,7 @@ class CarPlayHostActivity : ComponentActivity() {
         }
 
         if (gestureSequenceActive) {
-            if (!gestureTracking || event.pointerCount != THREE_FINGER_COUNT) {
+            if (!gestureTracking || event.pointerCount != gestureFingerCount) {
                 if (event.actionMasked == MotionEvent.ACTION_UP ||
                     event.actionMasked == MotionEvent.ACTION_CANCEL
                 ) {
