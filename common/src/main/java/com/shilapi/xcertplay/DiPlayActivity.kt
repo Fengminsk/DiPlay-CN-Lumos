@@ -854,34 +854,43 @@ class DiPlayActivity : ComponentActivity() {
     }
 
     /** A 2%-step slider row for overlay placement; every step saves, so the card moves live. */
-    private fun overlaySliderRow(title: String, values: List<Int>, current: Int, describe: (Int) -> String): LinearLayout {
-        val valueView = label(describe(current), 16, ACCENT, true)
-        val container = column()
-        val head = row().apply { gravity = Gravity.CENTER_VERTICAL; setPadding(0, dp(12), 0, 0) }
-        head.addView(label(title, 16, TEXT, true), LinearLayout.LayoutParams(0, -2, 1f))
-        head.addView(valueView)
-        container.addView(head)
-        val slider = object : SeekBar(this) {
-            val steps = values
-            override fun onProgressChanged(seekBar: SeekBar, progress: Int, fromUser: Boolean) {
-                val value = steps[progress.coerceIn(steps.indices)]
-                valueView.text = describe(value)
-                if (fromUser) onSave(value)
-            }
-            var onSave: (Int) -> Unit = {}
-        }.apply {
-            max = values.lastIndex
-            progress = values.indexOf(current).coerceIn(values.indices)
-            minHeight = dp(44)
-        }
-        container.addView(slider, LinearLayout.LayoutParams(-1, dp(44)))
-        container.slider = slider
-        return container
-    }
+    private fun overlaySliderRow(title: String, values: List<Int>, current: Int, describe: (Int) -> String): OverlaySliderRow =
+        OverlaySliderRow(this, title, values, current, describe)
 
-    private var LinearLayout.slider: SeekBar
-        get() = tag as? SeekBar ?: error("missing slider")
-        set(value) { tag = value }
+    private inner class OverlaySliderRow(
+        context: android.content.Context,
+        title: String,
+        private val steps: List<Int>,
+        current: Int,
+        private val describe: (Int) -> String,
+    ) : LinearLayout(context) {
+        var onSave: (Int) -> Unit = {}
+        val slider: SeekBar
+
+        init {
+            orientation = VERTICAL
+            val valueView = label(describe(current), 16, ACCENT, true)
+            val head = row().apply { gravity = Gravity.CENTER_VERTICAL; setPadding(0, dp(12), 0, 0) }
+            head.addView(label(title, 16, TEXT, true), LinearLayout.LayoutParams(0, -2, 1f))
+            head.addView(valueView)
+            addView(head)
+            slider = SeekBar(context).apply {
+                max = steps.lastIndex
+                progress = steps.indexOf(current).coerceIn(steps.indices)
+                minHeight = dp(44)
+                setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
+                    override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
+                        val value = steps[progress.coerceIn(steps.indices)]
+                        valueView.text = describe(value)
+                        if (fromUser) onSave(value)
+                    }
+                    override fun onStartTrackingTouch(seekBar: SeekBar?) {}
+                    override fun onStopTrackingTouch(seekBar: SeekBar?) {}
+                })
+            }
+            addView(slider, LinearLayout.LayoutParams(-1, dp(44)))
+        }
+    }
 
     private fun overlayOffsetLabel(percent: Int, negative: String, positive: String, centre: Int): String {
         val delta = percent - centre
