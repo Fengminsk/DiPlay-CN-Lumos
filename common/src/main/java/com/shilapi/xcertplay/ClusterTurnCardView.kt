@@ -117,7 +117,7 @@ internal class ClusterTurnCardView(context: Context) : View(context) {
                 textLeft, card.top + h * 0.72f, roadPaint,
             )
         }
-        drawInfoStrip(canvas, next, card.left, (card.top + h).toInt(), w, h)
+        drawInfoStrip(canvas, next, card.left, (card.top + h).toInt(), w.toInt(), h.toInt())
     }
 
     /** The arrival/duration/distance pill that hangs under the card, like the stock nav bar. */
