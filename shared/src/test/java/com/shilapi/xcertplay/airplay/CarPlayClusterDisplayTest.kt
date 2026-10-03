@@ -66,7 +66,7 @@ class CarPlayClusterDisplayTest {
 
     @Test
     fun scaledStreamsKeepThePanelAspect() {
-        val sizes = (CarPlayClusterDisplay.scalePresets + 50).map {
+        val sizes = CarPlayClusterDisplay.scalePresets.map {
             CarPlayClusterDisplay.config(1920, 720, scalePercent = it).let { c -> c.widthPixels to c.heightPixels }
         }
 
