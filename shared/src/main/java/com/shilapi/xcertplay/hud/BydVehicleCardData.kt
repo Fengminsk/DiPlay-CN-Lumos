@@ -55,8 +55,9 @@ object BydVehicleCardData {
         while (running) {
             val app = appContext ?: break
             val now = System.currentTimeMillis()
-            val speed = BydParcel.value(shell.run(app, BydWheelSpeed.SPEED))?.let(::speed)
-            val gear = BydWheelSpeed.gear(shell.run(app, BydWheelSpeed.GEAR))
+            val speedRaw = BydParcel.value(shell.run(app, BydWheelSpeed.SPEED))
+            val speed = if (speedRaw != null) speed(speedRaw) else null
+            val gear = BydWheelSpeed.gear(shell.run(app, BydWheelSpeed.GEAR))?.name?.substring(0, 1)
             var snapshot = latest.copy(speedKmh = speed, gear = gear)
             if (now - batteryAt >= BATTERY_MILLIS) {
                 runCatching { BydBattery.read { command -> shell.run(app, command) } }
