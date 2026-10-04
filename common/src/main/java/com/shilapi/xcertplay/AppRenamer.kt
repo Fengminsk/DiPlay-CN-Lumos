@@ -12,6 +12,7 @@ import android.content.pm.PackageManager
 object AppRenamer {
     private val ALIASES = listOf(
         "LauncherAliasCn",
+        "LauncherAliasDiplayCn",
         "LauncherAliasDiplay",
         "LauncherAliasCarplay",
         "LauncherAliasNavi",
