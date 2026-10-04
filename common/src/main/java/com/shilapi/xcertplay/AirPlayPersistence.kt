@@ -101,7 +101,9 @@ object AirPlayPersistence {
 
     private const val KEY_CLUSTER_TURN_CARD_OVERLAY_SIZE_PERCENT = "cluster_turn_card_overlay_size_percent"
     private const val KEY_CLUSTER_TURN_CARD_OPACITY = "cluster_turn_card_opacity_percent"
+    private const val KEY_CLUSTER_TURN_CARD_THEME = "cluster_turn_card_theme"
     private const val KEY_CLUSTER_SMALL_WINDOW_MARKER = "cluster_small_window_marker"
+    private const val KEY_CLUSTER_SMALL_WINDOW_MODE = "cluster_small_window_mode"
     private const val KEY_CLUSTER_SMALL_WINDOW_MARKER_X = "cluster_small_window_marker_x"
     private const val KEY_CLUSTER_SMALL_WINDOW_MARKER_Y = "cluster_small_window_marker_y"
     private const val KEY_CLUSTER_SMALL_WINDOW_MARKER_X_PERCENT = "cluster_small_window_marker_x_percent"
@@ -625,18 +627,25 @@ object AirPlayPersistence {
     }
 
     /**
-     * DiLink 5 small-window navi: while the small window is on, the cluster shows only part of the
-     * panel, so the marker keeps a second position that lands inside that window. The verified
-     * 5.1 profile has its own viewport layout and never reads these.
+     * Small-window navi mode: 0 off, 1 always use the small-window positions, 2 follow the
+     * cluster automatically (experimental, needs Usage Access, applies on the next connection).
      */
-    fun loadClusterSmallWindowMarker(context: Context): Boolean =
-        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
-            .getBoolean(KEY_CLUSTER_SMALL_WINDOW_MARKER, false)
-
-    fun saveClusterSmallWindowMarker(context: Context, enabled: Boolean) {
-        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit()
-            .putBoolean(KEY_CLUSTER_SMALL_WINDOW_MARKER, enabled).apply()
+    fun loadClusterSmallWindowMode(context: Context): Int {
+        val prefs = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+        if (prefs.contains(KEY_CLUSTER_SMALL_WINDOW_MODE)) {
+            return prefs.getInt(KEY_CLUSTER_SMALL_WINDOW_MODE, 0).coerceIn(0, 2)
+        }
+        return if (prefs.getBoolean(KEY_CLUSTER_SMALL_WINDOW_MARKER, false)) 1 else 0
     }
+
+    fun saveClusterSmallWindowMode(context: Context, mode: Int) {
+        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit()
+            .putInt(KEY_CLUSTER_SMALL_WINDOW_MODE, mode.coerceIn(0, 2)).apply()
+    }
+
+    /** Keep the cn.3–cn.6 boolean API working for callers that have not migrated. */
+    fun loadClusterSmallWindowMarker(context: Context): Boolean =
+        loadClusterSmallWindowMode(context) != 0
 
     /**
      * Right of centre by default: the small navi window sits on the right half of the panel.
@@ -678,6 +687,17 @@ object AirPlayPersistence {
         context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit()
             .putInt(KEY_CLUSTER_SMALL_WINDOW_MARKER_Y_PERCENT,
                 ClusterTurnCardOverlay.snap(percent, CarPlayClusterDisplay.smallWindowYPercents)).apply()
+    }
+
+    /** Turn-card glass theme: 0 follow the head unit, 1 always day, 2 always night. */
+    fun loadClusterTurnCardTheme(context: Context): Int =
+        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+            .getInt(KEY_CLUSTER_TURN_CARD_THEME, 0).coerceIn(0, 2)
+
+    fun saveClusterTurnCardTheme(context: Context, theme: Int) {
+        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit()
+            .putInt(KEY_CLUSTER_TURN_CARD_THEME, theme.coerceIn(0, 2)).apply()
+        overlaySettingsListener?.invoke()
     }
 
     /** The custom turn card also keeps a second rect for the small window: x/y/size, panel percents. */

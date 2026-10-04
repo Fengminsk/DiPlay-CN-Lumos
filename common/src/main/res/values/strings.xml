@@ -561,6 +561,16 @@
     <string name="update_details_title">Update %1$s</string>
     <string name="update_notes_missing">No release notes were published for this version.</string>
     <string name="cluster_size_smallest">Smaller · more map, finer detail</string>
+    <string name="app_rename_title">App name (car app list)</string>
+    <string name="app_rename_note">Switches between preset names; Android cannot set free text. Takes effect at once — if the car list still shows the old name, reopen the app list or restart the head unit.</string>
+    <string name="update_auto_found">New version %1$s available · tap Check for updates to install.</string>
+    <string name="turn_card_theme">Turn card theme</string>
+    <string name="turn_card_theme_auto">Auto · follow the head unit</string>
+    <string name="turn_card_theme_day">Always day</string>
+    <string name="turn_card_theme_night">Always night</string>
+    <string name="cluster_small_window_off">Off</string>
+    <string name="cluster_small_window_on">On · use small-window positions</string>
+    <string name="cluster_small_window_auto">Auto · experimental</string>
     <string name="cluster_small_window_marker">Small-window navi · separate positions</string>
     <string name="cluster_small_window_card_size">Small-window turn card · size</string>
     <string name="cluster_small_window_card_horizontal">Small-window turn card · left/right</string>

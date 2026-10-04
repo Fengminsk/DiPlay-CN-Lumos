@@ -21,13 +21,33 @@ class ClusterSmallWindowPersistenceTest {
 
     @Test fun defaultsAreOffAndRightOfCentre() {
         assertFalse(AirPlayPersistence.loadClusterSmallWindowMarker(context))
+        assertEquals(0, AirPlayPersistence.loadClusterSmallWindowMode(context))
         assertEquals(80, AirPlayPersistence.loadClusterSmallWindowMarkerXPercent(context))
         assertEquals(45, AirPlayPersistence.loadClusterSmallWindowMarkerYPercent(context))
     }
 
+    @Test fun booleanSettingMigratesOntoTheThreeWayMode() {
+        val prefs = context.getSharedPreferences("xcertplay_airplay", 0)
+        prefs.edit().putBoolean("cluster_small_window_marker", true).apply()
+        assertEquals(1, AirPlayPersistence.loadClusterSmallWindowMode(context))
+        prefs.edit().putBoolean("cluster_small_window_marker", false).apply()
+        assertEquals(0, AirPlayPersistence.loadClusterSmallWindowMode(context))
+        AirPlayPersistence.saveClusterSmallWindowMode(context, 2)
+        assertEquals(2, AirPlayPersistence.loadClusterSmallWindowMode(context))
+        assertTrue(AirPlayPersistence.loadClusterSmallWindowMarker(context))
+    }
+
+    @Test fun turnCardThemeDefaultsToAutoAndRoundTrips() {
+        assertEquals(0, AirPlayPersistence.loadClusterTurnCardTheme(context))
+        AirPlayPersistence.saveClusterTurnCardTheme(context, 2)
+        assertEquals(2, AirPlayPersistence.loadClusterTurnCardTheme(context))
+        AirPlayPersistence.saveClusterTurnCardTheme(context, 9)
+        assertEquals(2, AirPlayPersistence.loadClusterTurnCardTheme(context))
+    }
+
     @Test fun markerPercentsRoundTripIndependentlyOfTheFullScreenMarker() {
         AirPlayPersistence.saveClusterMarkerHorizontalStep(context, -2)
-        AirPlayPersistence.saveClusterSmallWindowMarker(context, true)
+        AirPlayPersistence.saveClusterSmallWindowMode(context, 1)
         AirPlayPersistence.saveClusterSmallWindowMarkerXPercent(context, 95)
         AirPlayPersistence.saveClusterSmallWindowMarkerYPercent(context, 20)
 

@@ -2,7 +2,12 @@ package com.shilapi.xcertplay
 
 /** Only these stock cluster activities affect our overlay; head-unit apps are irrelevant. */
 internal class ClusterActivityState {
-    data class Snapshot(val theme: DiLink51ClusterLayout.Theme?, val mapVisible: Boolean)
+    data class Snapshot(
+        val theme: DiLink51ClusterLayout.Theme?,
+        val mapVisible: Boolean,
+        /** The small navi window (not the full map) is the newest visible map activity. */
+        val smallWindow: Boolean = false,
+    )
     private data class Activity(val name: String, val instance: Int)
     private val visible = mutableMapOf<Activity, Long>()
 
@@ -22,8 +27,15 @@ internal class ClusterActivityState {
     fun snapshot(): Snapshot {
         val theme = visible.entries.filter { themeOf(it.key.name) != null }
             .maxByOrNull { it.value }?.key?.name?.let(::themeOf)
+        val latestMap = visible.entries
+            .filter { it.key.name == FULL_MAP || it.key.name == MINI_MAP }
+            .maxByOrNull { it.value }?.key?.name
         val miniMap = visible.keys.any { it.name == MINI_MAP }
-        return Snapshot(theme, theme != null && (theme == DiLink51ClusterLayout.Theme.MAP || miniMap))
+        return Snapshot(
+            theme,
+            theme != null && (theme == DiLink51ClusterLayout.Theme.MAP || miniMap),
+            latestMap == MINI_MAP,
+        )
     }
 
     private fun themeOf(name: String) = when (name) {

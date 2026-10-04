@@ -420,6 +420,14 @@ class DiPlayActivity : ComponentActivity() {
         }
         bydAdbSettings(content)
         section(content, getString(R.string.display_and_performance), R.drawable.ic_dp_display) { card ->
+            if (AppRenamer.available(this)) {
+                choice(card, getString(R.string.app_rename_title), AppRenamer.labels(this),
+                    AppRenamer.current(this), reconnects = false) {
+                    AppRenamer.apply(this, it)
+                    render()
+                }
+                card.addView(label(getString(R.string.app_rename_note), 14, MUTED).apply { setPadding(0, dp(8), 0, dp(6)) })
+            }
             carPlaySizeControl(card)
             choice(card, getString(R.string.resolution), listOf(getString(R.string.resolution_native), getString(R.string.s_80_lighter_load), getString(R.string.s_60_lightest_load)), listOf(10, 8, 6).indexOf(AirPlayPersistence.loadDisplayScaleTenths(this)).coerceAtLeast(0)) { AirPlayPersistence.saveDisplayScaleTenths(this, listOf(10, 8, 6)[it]) }
             val bufferPresets = com.shilapi.xcertplay.media.MediaAudioBuffer.presets
@@ -552,6 +560,13 @@ class DiPlayActivity : ComponentActivity() {
                             AirPlayPersistence.loadClusterTurnCardOpacityPercent(this),
                         ) { it -> getString(R.string.turn_card_overlay_opacity_option, it) }
                             .also { it.onSave = { v -> AirPlayPersistence.saveClusterTurnCardOpacityPercent(this, v) } })
+                        choice(card, getString(R.string.turn_card_theme), listOf(
+                            getString(R.string.turn_card_theme_auto),
+                            getString(R.string.turn_card_theme_day),
+                            getString(R.string.turn_card_theme_night),
+                        ), AirPlayPersistence.loadClusterTurnCardTheme(this), reconnects = false) {
+                            AirPlayPersistence.saveClusterTurnCardTheme(this, it)
+                        }
                         card.addView(overlaySliderRow(
                             getString(R.string.turn_card_overlay_horizontal),
                             ClusterTurnCardOverlay.xPercents,
@@ -605,14 +620,18 @@ class DiPlayActivity : ComponentActivity() {
                         render()
                         reconnectForClusterMap()
                     }, matchButton(10, 56))
-                    toggle(card, getString(R.string.cluster_small_window_marker),
-                        getString(R.string.cluster_small_window_marker_description),
-                        AirPlayPersistence.loadClusterSmallWindowMarker(this)) {
-                        AirPlayPersistence.saveClusterSmallWindowMarker(this, it)
+                    choice(card, getString(R.string.cluster_small_window_marker), listOf(
+                        getString(R.string.cluster_small_window_off),
+                        getString(R.string.cluster_small_window_on),
+                        getString(R.string.cluster_small_window_auto),
+                    ), AirPlayPersistence.loadClusterSmallWindowMode(this)) {
+                        AirPlayPersistence.saveClusterSmallWindowMode(this, it)
                         render()
-                        reconnectForClusterMap()
                     }
-                    if (AirPlayPersistence.loadClusterSmallWindowMarker(this)) {
+                    card.addView(label(getString(R.string.cluster_small_window_marker_description), 14, MUTED).apply {
+                        setPadding(0, dp(8), 0, dp(6))
+                    })
+                    if (AirPlayPersistence.loadClusterSmallWindowMode(this) != 0) {
                         card.addView(overlaySliderRow(
                             getString(R.string.cluster_small_window_horizontal),
                             CarPlayClusterDisplay.smallWindowXPercents,
@@ -726,6 +745,15 @@ class DiPlayActivity : ComponentActivity() {
                 setPadding(0, dp(10), 0, 0)
             }
             card.addView(updateStatus)
+            // A silent background check pre-fills the status line; the button still installs.
+            AppUpdate.autoCheck(this) { release ->
+                runOnUiThread {
+                    if (release == null || isFinishing || isDestroyed) return@runOnUiThread
+                    if (AppUpdate.isAvailable(release, this)) {
+                        updateStatus.text = getString(R.string.update_auto_found, release.tag)
+                    }
+                }
+            }
             val channels = listOf(
                 getString(R.string.update_channel_github),
                 getString(R.string.update_channel_gitee),
@@ -1147,14 +1175,15 @@ class DiPlayActivity : ComponentActivity() {
         if (value == previous) return
         AirPlayPersistence.saveMediaAudioChannel(this, value)
         control.text = summary(value)
-        if (CarPlayBackgroundSession.hasSession()) connect(AirPlayPersistence.loadWirelessEnabled(this))
+        // The sink bakes the channel into its AudioTrack, so the session must restart to apply it.
+        connect(AirPlayPersistence.loadWirelessEnabled(this))
     }
 
     private fun applyNavigationChannel(value: Int, previous: Int, control: Button, summary: (Int) -> String) {
         if (value == previous) return
         AirPlayPersistence.saveNavigationAudioChannel(this, value)
         control.text = summary(value)
-        if (CarPlayBackgroundSession.hasSession()) connect(AirPlayPersistence.loadWirelessEnabled(this))
+        connect(AirPlayPersistence.loadWirelessEnabled(this))
     }
 
     private fun channelLabel(value: Int): String = value.toString()

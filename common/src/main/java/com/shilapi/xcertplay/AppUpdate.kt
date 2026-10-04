@@ -47,6 +47,10 @@ object AppUpdate {
     private const val CHANNEL_MIRROR1 = 2
     private const val CHANNEL_MIRROR2 = 3
 
+    private const val AUTO_PREFS = "diplay_update"
+    private const val KEY_LAST_AUTO_CHECK = "last_auto_check_ms"
+    private const val AUTO_CHECK_INTERVAL_MS = 30L * 60 * 1000
+
     /** GitHub-relaying proxies that also front api.github.com. */
     private val mirrorPrefixes = mapOf(
         CHANNEL_MIRROR1 to "https://gh-proxy.com/",
@@ -69,6 +73,23 @@ object AppUpdate {
     internal fun normalizeTag(value: String): String = UpdateText.normalizeTag(value)
 
     fun plainNotes(markdown: String, limit: Int = 1800): String = UpdateText.plainNotes(markdown, limit)
+
+    /**
+     * Silent background check for the About page, throttled to one attempt per 30 minutes.
+     * Reports the release only when it is newer than the installed build.
+     */
+    fun autoCheck(context: Context, onResult: (Release?) -> Unit) {
+        val app = context.applicationContext
+        val prefs = app.getSharedPreferences(AUTO_PREFS, Context.MODE_PRIVATE)
+        val now = System.currentTimeMillis()
+        if (now - prefs.getLong(KEY_LAST_AUTO_CHECK, 0L) < AUTO_CHECK_INTERVAL_MS) return
+        prefs.edit().putLong(KEY_LAST_AUTO_CHECK, now).apply()
+        setChannel(AirPlayPersistence.loadUpdateChannel(app))
+        check { release, _ ->
+            val newer = release?.takeIf { isAvailable(it, app) }
+            main.post { onResult(newer) }
+        }
+    }
 
     /** Fetches the latest full release (drafts and prereleases are excluded by GitHub). */
     fun check(onResult: (Release?, String?) -> Unit) {

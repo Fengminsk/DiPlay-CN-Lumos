@@ -9,6 +9,16 @@
     <string name="hotspot_hint_local">Откройте настройки подключения, чтобы сохранить данные встроенной точки доступа.</string>
     <string name="hotspot_hint_p2p">Wi-Fi Direct · Держите переключатель Wi-Fi автомобиля, Bluetooth и Wi-Fi iPhone включёнными.</string>
     <string name="cluster_size_smallest">Меньше · больше карты и мельче детали</string>
+    <string name="app_rename_title">Имя приложения (список приложений авто)</string>
+    <string name="app_rename_note">Переключение между готовыми именами; произвольный текст в Android невозможен. Применяется сразу — если в списке осталось старое имя, откройте список заново или перезапустите головное устройство.</string>
+    <string name="update_auto_found">Доступна новая версия %1$s · нажмите «Проверить обновления» для установки.</string>
+    <string name="turn_card_theme">Тема карточки поворота</string>
+    <string name="turn_card_theme_auto">Авто · следовать за головным устройством</string>
+    <string name="turn_card_theme_day">Всегда день</string>
+    <string name="turn_card_theme_night">Всегда ночь</string>
+    <string name="cluster_small_window_off">Выкл</string>
+    <string name="cluster_small_window_on">Вкл · положения малого окна</string>
+    <string name="cluster_small_window_auto">Авто · экспериментально</string>
     <string name="cluster_small_window_marker">Навигация в малом окне · отдельные положения</string>
     <string name="cluster_small_window_card_size">Карточка в малом окне · размер</string>
     <string name="cluster_small_window_card_horizontal">Карточка в малом окне · влево / вправо</string>

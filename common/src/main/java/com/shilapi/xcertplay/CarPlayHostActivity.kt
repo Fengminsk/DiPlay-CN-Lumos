@@ -646,9 +646,12 @@ class CarPlayHostActivity : ComponentActivity() {
         advancedAudioChannelMapping =
             advancedAudioChannelMappingSupported &&
                 AirPlayPersistence.loadAdvancedAudioChannelMapping(this)
-        if (DiLink51ClusterLayout.automatic(this) && clusterMonitor == null) {
+        // The usage monitor feeds both the 5.1 theme follow and the experimental small-window auto.
+        val followClusterUsage = DiLink51ClusterLayout.automatic(this) ||
+            AirPlayPersistence.loadClusterSmallWindowMode(this) == CLUSTER_SMALL_WINDOW_AUTO
+        if (followClusterUsage && clusterMonitor == null) {
             clusterMonitor = DiLink51ClusterMonitor(this, ::onClusterActivityState).also { it.start() }
-        } else if (!DiLink51ClusterLayout.automatic(this)) {
+        } else if (!followClusterUsage) {
             clusterMonitor?.stop()
             clusterMonitor = null
         }
@@ -750,21 +753,33 @@ class CarPlayHostActivity : ComponentActivity() {
         applyClusterTurnOverlay()
     }
 
+    /** Small-window positions apply when forced on, or when the cluster reports the small navi. */
+    private fun smallWindowActive(): Boolean = when (AirPlayPersistence.loadClusterSmallWindowMode(this)) {
+        CLUSTER_SMALL_WINDOW_ON -> true
+        CLUSTER_SMALL_WINDOW_AUTO -> detectedCluster.smallWindow
+        else -> false
+    }
+
     private fun applyClusterTurnOverlay() {
         val overlay = CarPlayClusterDisplay.usesCustomTurnCard(AirPlayPersistence.loadClusterContent(this))
         // Small-window navi keeps a second card rect, same as the car marker.
-        val smallWindow = AirPlayPersistence.loadClusterSmallWindowMarker(this)
+        val smallWindow = smallWindowActive()
         val xPercent = if (smallWindow) AirPlayPersistence.loadClusterSmallWindowCardXPercent(this)
             else AirPlayPersistence.loadClusterTurnCardOverlayXPercent(this)
         val yPercent = if (smallWindow) AirPlayPersistence.loadClusterSmallWindowCardYPercent(this)
             else AirPlayPersistence.loadClusterTurnCardOverlayYPercent(this)
         val sizePercent = if (smallWindow) AirPlayPersistence.loadClusterSmallWindowCardSizePercent(this)
             else AirPlayPersistence.loadClusterTurnCardOverlaySizePercent(this)
+        val cardNight = when (AirPlayPersistence.loadClusterTurnCardTheme(this)) {
+            1 -> false
+            2 -> true
+            else -> darkMode
+        }
         val presentations = (clusterLayers.values + listOfNotNull(clusterPresentation)).distinct()
         for (presentation in presentations) {
             presentation.setTurnCardOverlay(xPercent, yPercent, sizePercent)
             presentation.setTurnCardOpacity(AirPlayPersistence.loadClusterTurnCardOpacityPercent(this))
-            presentation.setTurnCardNightMode(darkMode)
+            presentation.setTurnCardNightMode(cardNight)
             presentation.setTurnCardGuidance(if (overlay) clusterTurnGuidance else null)
         }
     }
@@ -805,7 +820,7 @@ class CarPlayHostActivity : ComponentActivity() {
         }
         // In small-window navi the cluster shows only part of the panel; a second marker position
         // keeps the iPhone's route inside the visible window instead of the panel centre.
-        val smallWindow = AirPlayPersistence.loadClusterSmallWindowMarker(this)
+        val smallWindow = smallWindowActive()
         return CarPlayClusterDisplay.config(
             size.x,
             size.y,
@@ -3988,6 +4003,8 @@ class CarPlayHostActivity : ComponentActivity() {
         const val TAG = "xcertplay-usb"
         const val SCREEN_TYPE_MAIN = 110
         const val SCREEN_TYPE_ALT = 111
+        const val CLUSTER_SMALL_WINDOW_ON = 1
+        const val CLUSTER_SMALL_WINDOW_AUTO = 2
         private const val CENTER_MAP_IDLE_MILLIS = 3_000L // a reconnect is quicker; a session end is not
         const val LOG_RETENTION_MILLIS = 5 * 60_000L
         const val DISPLAY_CHANGE_DEBOUNCE_MILLIS = 500L
