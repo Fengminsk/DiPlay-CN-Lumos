@@ -589,6 +589,7 @@
     <string name="turn_card_overlay_size_option">%1$d %%</string>
     <string name="up_to_date">You are on the latest version.</string>
     <string name="update_available">New version %1$s available (%2$s).</string>
+    <string name="update_available_no_size">New version %1$s available.</string>
     <string name="update_channel">Update channel</string>
     <string name="update_channel_gitee">Gitee (China)</string>
     <string name="update_channel_github">GitHub direct</string>

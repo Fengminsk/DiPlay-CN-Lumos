@@ -589,6 +589,7 @@
     <string name="turn_card_overlay_size_option">%1$d %%</string>
     <string name="up_to_date">已经是最新版本。</string>
     <string name="update_available">有新版本 %1$s（%2$s）。</string>
+    <string name="update_available_no_size">有新版本 %1$s。</string>
     <string name="update_channel">更新通道</string>
     <string name="update_channel_gitee">Gitee（国内）</string>
     <string name="update_channel_github">GitHub 直连</string>

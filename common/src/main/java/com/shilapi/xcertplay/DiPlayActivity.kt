@@ -691,9 +691,14 @@ class DiPlayActivity : ComponentActivity() {
     }
 
     private fun offerUpdate(release: AppUpdate.Release) {
-        val size = if (release.apkBytes > 0) "${release.apkBytes / 1024 / 1024} MB" else "?"
         val notes = AppUpdate.plainNotes(release.notes).ifBlank { getString(R.string.update_notes_missing) }
-        val message = getString(R.string.update_available, release.tag, size) + "\n\n" + notes
+        // Channels like Gitee often omit the asset size; then the brackets are dropped entirely.
+        val headline = if (release.apkBytes > 0) {
+            getString(R.string.update_available, release.tag, "${release.apkBytes / 1024 / 1024} MB")
+        } else {
+            getString(R.string.update_available_no_size, release.tag)
+        }
+        val message = headline + "\n\n" + notes
         val view = ScrollView(this).apply {
             addView(label(message, 16, TEXT).apply { setPadding(dp(24), dp(8), dp(24), dp(8)) })
             isFillViewport = true

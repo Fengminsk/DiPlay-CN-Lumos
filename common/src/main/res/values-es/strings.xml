@@ -578,6 +578,7 @@
     <string name="turn_card_info_km">%1$.1f km</string>
     <string name="up_to_date">Ya tienes la última versión.</string>
     <string name="update_available">Nueva versión %1$s disponible (%2$s).</string>
+    <string name="update_available_no_size">Nueva versión %1$s disponible.</string>
     <string name="update_channel">Canal de actualización</string>
     <string name="update_channel_gitee">Gitee (China)</string>
     <string name="update_channel_mirror1">Espejo de aceleración (gh-proxy.com)</string>

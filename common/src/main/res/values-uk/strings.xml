@@ -590,6 +590,7 @@
     <string name="turn_card_info_km">%1$.1f км</string>
     <string name="up_to_date">У вас найновіша версія.</string>
     <string name="update_available">Доступна нова версія %1$s (%2$s).</string>
+    <string name="update_available_no_size">Доступна нова версія %1$s.</string>
     <string name="update_channel">Канал оновлень</string>
     <string name="update_channel_gitee">Gitee (Китай)</string>
     <string name="update_channel_mirror1">Дзеркало прискорення (gh-proxy.com)</string>

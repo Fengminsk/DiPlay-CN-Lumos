@@ -578,6 +578,7 @@
     <string name="turn_card_info_km">%1$.1f كم</string>
     <string name="up_to_date">أنت على أحدث إصدار.</string>
     <string name="update_available">يتوفر إصدار جديد %1$s (%2$s).</string>
+    <string name="update_available_no_size">يتوفر إصدار جديد %1$s.</string>
     <string name="update_channel">قناة التحديث</string>
     <string name="update_channel_gitee">Gitee (الصين)</string>
     <string name="update_channel_mirror1">مرآة التسريع (gh-proxy.com)</string>
