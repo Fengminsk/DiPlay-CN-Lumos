@@ -90,13 +90,16 @@ jobs:
           api="https://gitee.com/api/v5/repos/oneeyear/DiPlay-CN"
           id="$(curl -fsS "$api/releases/tags/$GITHUB_REF_NAME?access_token=$GITEE_TOKEN" | python3 -c 'import json,sys; print(json.load(sys.stdin).get("id") or "")' || true)"
           if [ -z "$id" ]; then
-            id="$(curl -fsS -X POST "$api/releases" \
+            code="$(curl -sS -o /tmp/gitee-create.json -w '%{http_code}' -X POST "$api/releases" \
               --data-urlencode "access_token=$GITEE_TOKEN" \
               --data-urlencode "tag_name=$GITHUB_REF_NAME" \
               --data-urlencode "name=DiPlay CN ${GITHUB_REF_NAME#v}" \
               --data-urlencode "target_commitish=main" \
-              --data-urlencode "body=$(cat release-notes.md)" \
-              | python3 -c 'import json,sys; print(json.load(sys.stdin).get("id") or "")' || true)"
+              --data-urlencode "body=$(cat release-notes.md)")"
+            id="$(python3 -c 'import json; print(json.load(open("/tmp/gitee-create.json")).get("id") or "")' 2>/dev/null || true)"
+            if [ -z "$id" ]; then
+              echo "::warning::Gitee release creation failed (HTTP $code): $(head -c 400 /tmp/gitee-create.json 2>/dev/null)"
+            fi
           fi
           if [ -z "$id" ]; then
             echo "::warning::could not create or find the Gitee release; skipping"
