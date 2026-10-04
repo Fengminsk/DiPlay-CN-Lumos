@@ -14,8 +14,8 @@
     <string name="cluster_small_window_card_horizontal">Tarjeta en ventana pequeña · izquierda / derecha</string>
     <string name="cluster_small_window_card_vertical">Tarjeta en ventana pequeña · arriba / abajo</string>
     <string name="cluster_small_window_marker_description">Al cambiar el cuadro a su ventana de navegación pequeña solo se ve parte del panel. Se guarda una segunda posición del marcador para esa ventana (predeterminada: a la derecha del centro) para que la ruta aparezca dentro, y la tarjeta personalizada tiene su propio tamaño y posición en la ventana; las posiciones de pantalla completa no cambian. Los cambios reconectan el mapa del cuadro.</string>
-    <string name="cluster_small_window_horizontal">Ventana pequeña · izquierda / derecha</string>
-    <string name="cluster_small_window_vertical">Ventana pequeña · arriba / abajo</string>
+    <string name="cluster_small_window_horizontal">Marcador en ventana pequeña · izquierda / derecha</string>
+    <string name="cluster_small_window_vertical">Marcador en ventana pequeña · arriba / abajo</string>
     <string name="cluster_small_window_hint">Predeterminado: tres pasos (30 %) a la derecha del centro. Ajusta según dónde esté la ventana en tu cuadro.</string>
     <string name="cluster_size_standard">Estándar · máxima nitidez</string>
     <string name="cluster_size_larger">Más grande · predeterminado</string>

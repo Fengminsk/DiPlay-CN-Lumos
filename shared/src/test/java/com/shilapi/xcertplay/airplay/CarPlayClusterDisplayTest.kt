@@ -95,6 +95,19 @@ class CarPlayClusterDisplayTest {
     }
 
     @Test
+    fun smallWindowMarkerPercentPlacesTheSafeAreaCentre() {
+        val area = CarPlayClusterDisplay.config(
+            1920, 720, scalePercent = 100, markerXPercent = 80, markerYPercent = 45,
+        ).safeArea!!
+
+        // The safe area stays centred on the requested 5 %-grid position.
+        val centreX = (area.left + (1920 - area.right)) / 2.0
+        val centreY = (area.top + (720 - area.bottom)) / 2.0
+        assertEquals(1920 * 0.80, centreX, 1.0)
+        assertEquals(720 * 0.45, centreY, 1.0)
+    }
+
+    @Test
     fun nearAnEdgeTheSafeAreaShrinksAroundTheMarker() {
         val top = CarPlayClusterDisplay.config(1000, 1000, scalePercent = 100, verticalStep = -3).safeArea!!
 

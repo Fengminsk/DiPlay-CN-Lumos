@@ -104,6 +104,8 @@ object AirPlayPersistence {
     private const val KEY_CLUSTER_SMALL_WINDOW_MARKER = "cluster_small_window_marker"
     private const val KEY_CLUSTER_SMALL_WINDOW_MARKER_X = "cluster_small_window_marker_x"
     private const val KEY_CLUSTER_SMALL_WINDOW_MARKER_Y = "cluster_small_window_marker_y"
+    private const val KEY_CLUSTER_SMALL_WINDOW_MARKER_X_PERCENT = "cluster_small_window_marker_x_percent"
+    private const val KEY_CLUSTER_SMALL_WINDOW_MARKER_Y_PERCENT = "cluster_small_window_marker_y_percent"
     private const val KEY_CLUSTER_SMALL_WINDOW_CARD_X = "cluster_small_window_card_x"
     private const val KEY_CLUSTER_SMALL_WINDOW_CARD_Y = "cluster_small_window_card_y"
     private const val KEY_CLUSTER_SMALL_WINDOW_CARD_SIZE = "cluster_small_window_card_size"
@@ -636,49 +638,70 @@ object AirPlayPersistence {
             .putBoolean(KEY_CLUSTER_SMALL_WINDOW_MARKER, enabled).apply()
     }
 
-    /** Right of centre by default: the small navi window sits on the right half of the panel. */
-    fun loadClusterSmallWindowMarkerHorizontalStep(context: Context): Int =
-        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
-            .getInt(KEY_CLUSTER_SMALL_WINDOW_MARKER_X, 3)
-            .coerceIn(CarPlayClusterDisplay.horizontalSteps)
-
-    fun saveClusterSmallWindowMarkerHorizontalStep(context: Context, step: Int) {
-        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit()
-            .putInt(KEY_CLUSTER_SMALL_WINDOW_MARKER_X, step.coerceIn(CarPlayClusterDisplay.horizontalSteps)).apply()
+    /**
+     * Right of centre by default: the small navi window sits on the right half of the panel.
+     * Placement is a 5 % grid; the cn.3/cn.4 step values migrate onto it.
+     */
+    fun loadClusterSmallWindowMarkerXPercent(context: Context): Int {
+        val prefs = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+        if (prefs.contains(KEY_CLUSTER_SMALL_WINDOW_MARKER_X_PERCENT)) {
+            return ClusterTurnCardOverlay.snap(
+                prefs.getInt(KEY_CLUSTER_SMALL_WINDOW_MARKER_X_PERCENT, 80),
+                CarPlayClusterDisplay.smallWindowXPercents,
+            )
+        }
+        val legacyStep = prefs.getInt(KEY_CLUSTER_SMALL_WINDOW_MARKER_X, 3)
+        val legacyPercent = (Math.round((49.5 + legacyStep * 10) / 5) * 5).toInt()
+        return ClusterTurnCardOverlay.snap(legacyPercent, CarPlayClusterDisplay.smallWindowXPercents)
     }
 
-    fun loadClusterSmallWindowMarkerVerticalStep(context: Context): Int =
-        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
-            .getInt(KEY_CLUSTER_SMALL_WINDOW_MARKER_Y, 0)
-            .coerceIn(CarPlayClusterDisplay.verticalSteps)
-
-    fun saveClusterSmallWindowMarkerVerticalStep(context: Context, step: Int) {
+    fun saveClusterSmallWindowMarkerXPercent(context: Context, percent: Int) {
         context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit()
-            .putInt(KEY_CLUSTER_SMALL_WINDOW_MARKER_Y, step.coerceIn(CarPlayClusterDisplay.verticalSteps)).apply()
+            .putInt(KEY_CLUSTER_SMALL_WINDOW_MARKER_X_PERCENT,
+                ClusterTurnCardOverlay.snap(percent, CarPlayClusterDisplay.smallWindowXPercents)).apply()
+    }
+
+    fun loadClusterSmallWindowMarkerYPercent(context: Context): Int {
+        val prefs = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+        if (prefs.contains(KEY_CLUSTER_SMALL_WINDOW_MARKER_Y_PERCENT)) {
+            return ClusterTurnCardOverlay.snap(
+                prefs.getInt(KEY_CLUSTER_SMALL_WINDOW_MARKER_Y_PERCENT, 45),
+                CarPlayClusterDisplay.smallWindowYPercents,
+            )
+        }
+        val legacyStep = prefs.getInt(KEY_CLUSTER_SMALL_WINDOW_MARKER_Y, 0)
+        val legacyPercent = (Math.round((45.5 + legacyStep * 10) / 5) * 5).toInt()
+        return ClusterTurnCardOverlay.snap(legacyPercent, CarPlayClusterDisplay.smallWindowYPercents)
+    }
+
+    fun saveClusterSmallWindowMarkerYPercent(context: Context, percent: Int) {
+        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit()
+            .putInt(KEY_CLUSTER_SMALL_WINDOW_MARKER_Y_PERCENT,
+                ClusterTurnCardOverlay.snap(percent, CarPlayClusterDisplay.smallWindowYPercents)).apply()
     }
 
     /** The custom turn card also keeps a second rect for the small window: x/y/size, panel percents. */
     fun loadClusterSmallWindowCardXPercent(context: Context): Int = ClusterTurnCardOverlay.snap(
         context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
-            .getInt(KEY_CLUSTER_SMALL_WINDOW_CARD_X, ClusterTurnCardOverlay.DEFAULT_X_PERCENT),
-        ClusterTurnCardOverlay.xPercents,
+            .getInt(KEY_CLUSTER_SMALL_WINDOW_CARD_X, 80),
+        ClusterTurnCardOverlay.smallWindowXPercents,
     )
 
     fun saveClusterSmallWindowCardXPercent(context: Context, percent: Int) {
         context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit()
-            .putInt(KEY_CLUSTER_SMALL_WINDOW_CARD_X, ClusterTurnCardOverlay.snap(percent, ClusterTurnCardOverlay.xPercents)).apply()
+            .putInt(KEY_CLUSTER_SMALL_WINDOW_CARD_X, ClusterTurnCardOverlay.snap(percent, ClusterTurnCardOverlay.smallWindowXPercents)).apply()
         overlaySettingsListener?.invoke()
     }
 
     fun loadClusterSmallWindowCardYPercent(context: Context): Int = ClusterTurnCardOverlay.snap(
         context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
-            .getInt(KEY_CLUSTER_SMALL_WINDOW_CARD_Y, 24),
-        ClusterTurnCardOverlay.yPercents,
+            .getInt(KEY_CLUSTER_SMALL_WINDOW_CARD_Y, 25),
+        ClusterTurnCardOverlay.smallWindowYPercents,
     )
 
     fun saveClusterSmallWindowCardYPercent(context: Context, percent: Int) {
         context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit()
-            .putInt(KEY_CLUSTER_SMALL_WINDOW_CARD_Y, ClusterTurnCardOverlay.snap(percent, ClusterTurnCardOverlay.yPercents)).apply()
+            .putInt(KEY_CLUSTER_SMALL_WINDOW_CARD_Y, ClusterTurnCardOverlay.snap(percent, ClusterTurnCardOverlay.smallWindowYPercents)).apply()
         overlaySettingsListener?.invoke()
     }
 

@@ -570,26 +570,6 @@ class DiPlayActivity : ComponentActivity() {
                             render()
                         }, matchButton(10, 56))
                         card.addView(label(getString(R.string.turn_card_overlay_note), 14, MUTED))
-                        if (AirPlayPersistence.loadClusterSmallWindowMarker(this)) {
-                            card.addView(overlaySliderRow(
-                                getString(R.string.cluster_small_window_card_size),
-                                ClusterTurnCardOverlay.sizePercents,
-                                AirPlayPersistence.loadClusterSmallWindowCardSizePercent(this),
-                            ) { it -> getString(R.string.turn_card_overlay_size_option, it) }
-                                .also { it.onSave = { v -> AirPlayPersistence.saveClusterSmallWindowCardSizePercent(this, v) } })
-                            card.addView(overlaySliderRow(
-                                getString(R.string.cluster_small_window_card_horizontal),
-                                ClusterTurnCardOverlay.xPercents,
-                                AirPlayPersistence.loadClusterSmallWindowCardXPercent(this),
-                            ) { it -> overlayOffsetLabel(it, getString(R.string.marker_left), getString(R.string.marker_right), 50) }
-                                .also { it.onSave = { v -> AirPlayPersistence.saveClusterSmallWindowCardXPercent(this, v) } })
-                            card.addView(overlaySliderRow(
-                                getString(R.string.cluster_small_window_card_vertical),
-                                ClusterTurnCardOverlay.yPercents,
-                                AirPlayPersistence.loadClusterSmallWindowCardYPercent(this),
-                            ) { it -> overlayOffsetLabel(it, getString(R.string.marker_up), getString(R.string.marker_down), 40) }
-                                .also { it.onSave = { v -> AirPlayPersistence.saveClusterSmallWindowCardYPercent(this, v) } })
-                        }
                     }
                     val turnCard = officialCardOnly
                     card.addView(overlaySliderRow(
@@ -635,18 +615,38 @@ class DiPlayActivity : ComponentActivity() {
                     if (AirPlayPersistence.loadClusterSmallWindowMarker(this)) {
                         card.addView(overlaySliderRow(
                             getString(R.string.cluster_small_window_horizontal),
-                            across,
-                            AirPlayPersistence.loadClusterSmallWindowMarkerHorizontalStep(this),
-                        ) { it -> markerStepLabel(it, getString(R.string.marker_left), getString(R.string.marker_right)) }
-                            .also { it.onSave = { v -> AirPlayPersistence.saveClusterSmallWindowMarkerHorizontalStep(this, v) } }
+                            CarPlayClusterDisplay.smallWindowXPercents,
+                            AirPlayPersistence.loadClusterSmallWindowMarkerXPercent(this),
+                        ) { it -> overlayOffsetLabel(it, getString(R.string.marker_left), getString(R.string.marker_right), 50) }
+                            .also { it.onSave = { v -> AirPlayPersistence.saveClusterSmallWindowMarkerXPercent(this, v) } }
                             .also { it.onCommit = { reconnectForClusterMap() } })
                         card.addView(overlaySliderRow(
                             getString(R.string.cluster_small_window_vertical),
-                            upDown,
-                            AirPlayPersistence.loadClusterSmallWindowMarkerVerticalStep(this),
-                        ) { it -> markerStepLabel(it, getString(R.string.marker_up), getString(R.string.marker_down)) }
-                            .also { it.onSave = { v -> AirPlayPersistence.saveClusterSmallWindowMarkerVerticalStep(this, v) } }
+                            CarPlayClusterDisplay.smallWindowYPercents,
+                            AirPlayPersistence.loadClusterSmallWindowMarkerYPercent(this),
+                        ) { it -> overlayOffsetLabel(it, getString(R.string.marker_up), getString(R.string.marker_down), 45) }
+                            .also { it.onSave = { v -> AirPlayPersistence.saveClusterSmallWindowMarkerYPercent(this, v) } }
                             .also { it.onCommit = { reconnectForClusterMap() } })
+                        if (customCard) {
+                            card.addView(overlaySliderRow(
+                                getString(R.string.cluster_small_window_card_size),
+                                ClusterTurnCardOverlay.sizePercents,
+                                AirPlayPersistence.loadClusterSmallWindowCardSizePercent(this),
+                            ) { it -> getString(R.string.turn_card_overlay_size_option, it) }
+                                .also { it.onSave = { v -> AirPlayPersistence.saveClusterSmallWindowCardSizePercent(this, v) } })
+                            card.addView(overlaySliderRow(
+                                getString(R.string.cluster_small_window_card_horizontal),
+                                ClusterTurnCardOverlay.smallWindowXPercents,
+                                AirPlayPersistence.loadClusterSmallWindowCardXPercent(this),
+                            ) { it -> overlayOffsetLabel(it, getString(R.string.marker_left), getString(R.string.marker_right), 50) }
+                                .also { it.onSave = { v -> AirPlayPersistence.saveClusterSmallWindowCardXPercent(this, v) } })
+                            card.addView(overlaySliderRow(
+                                getString(R.string.cluster_small_window_card_vertical),
+                                ClusterTurnCardOverlay.smallWindowYPercents,
+                                AirPlayPersistence.loadClusterSmallWindowCardYPercent(this),
+                            ) { it -> overlayOffsetLabel(it, getString(R.string.marker_up), getString(R.string.marker_down), 40) }
+                                .also { it.onSave = { v -> AirPlayPersistence.saveClusterSmallWindowCardYPercent(this, v) } })
+                        }
                         card.addView(label(getString(R.string.cluster_small_window_hint), 14, MUTED).apply { setPadding(0, dp(10), 0, 0) })
                     }
                     toggle(card, getString(R.string.dashboard_map_only_in_small_and_full_navi),

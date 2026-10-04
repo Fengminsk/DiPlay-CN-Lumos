@@ -42,6 +42,10 @@ object CarPlayClusterDisplay {
     val horizontalSteps = -4..4 // negative = left
     val verticalSteps = -3..3 // negative = up
 
+    /** Small-window navi placement: the marker lands on a 5 % grid anywhere on the panel. */
+    val smallWindowXPercents = (5..95 step 5).toList()
+    val smallWindowYPercents = (5..95 step 5).toList()
+
     /** Where the car marker lands, in percent of the panel (x from the left, y from the top). */
     fun markerPercent(horizontalStep: Int, verticalStep: Int): Pair<Double, Double> {
         val area = SAFE_AREA_PERCENT
@@ -73,6 +77,8 @@ object CarPlayClusterDisplay {
         horizontalStep: Int = 0,
         verticalStep: Int = 0,
         content: Content = Content.MAP,
+        markerXPercent: Int? = null,
+        markerYPercent: Int? = null,
     ): AirPlayDisplayConfig {
         // Height rounds to a multiple of 8 and width follows it, so the panel's aspect is kept
         // (83 % of 1920x720 gives exactly 1600x600). The cluster scales the stream to the panel.
@@ -88,16 +94,27 @@ object CarPlayClusterDisplay {
             primaryInputDevice = 0,
             features = 0,
             initialUrl = content.url,
-            safeArea = safeArea(width, height, horizontalStep, verticalStep),
+            safeArea = safeArea(width, height, horizontalStep, verticalStep, markerXPercent, markerYPercent),
             safeAreaDrawOutside = true,
         )
     }
 
     // The safe area keeps its measured size around the marker and shrinks only where the marker
     // comes close to a panel edge, so the marker always sits at its centre.
-    private fun safeArea(width: Int, height: Int, horizontalStep: Int, verticalStep: Int): AirPlayInsets {
+    private fun safeArea(
+        width: Int,
+        height: Int,
+        horizontalStep: Int,
+        verticalStep: Int,
+        markerXPercent: Int? = null,
+        markerYPercent: Int? = null,
+    ): AirPlayInsets {
         val area = SAFE_AREA_PERCENT
-        val (x, y) = markerPercent(horizontalStep, verticalStep)
+        val (x, y) = if (markerXPercent != null && markerYPercent != null) {
+            markerXPercent.coerceIn(5, 95).toDouble() to markerYPercent.coerceIn(5, 95).toDouble()
+        } else {
+            markerPercent(horizontalStep, verticalStep)
+        }
         val halfWidth = minOf((100 - area.left - area.right) / 2.0, x, 100 - x)
         val halfHeight = minOf((100 - area.top - area.bottom) / 2.0, y, 100 - y)
         return AirPlayInsets(

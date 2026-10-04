@@ -21,41 +21,55 @@ class ClusterSmallWindowPersistenceTest {
 
     @Test fun defaultsAreOffAndRightOfCentre() {
         assertFalse(AirPlayPersistence.loadClusterSmallWindowMarker(context))
-        assertEquals(3, AirPlayPersistence.loadClusterSmallWindowMarkerHorizontalStep(context))
-        assertEquals(0, AirPlayPersistence.loadClusterSmallWindowMarkerVerticalStep(context))
+        assertEquals(80, AirPlayPersistence.loadClusterSmallWindowMarkerXPercent(context))
+        assertEquals(45, AirPlayPersistence.loadClusterSmallWindowMarkerYPercent(context))
     }
 
-    @Test fun stepsRoundTripIndependentlyOfTheFullScreenMarker() {
+    @Test fun markerPercentsRoundTripIndependentlyOfTheFullScreenMarker() {
         AirPlayPersistence.saveClusterMarkerHorizontalStep(context, -2)
         AirPlayPersistence.saveClusterSmallWindowMarker(context, true)
-        AirPlayPersistence.saveClusterSmallWindowMarkerHorizontalStep(context, 4)
-        AirPlayPersistence.saveClusterSmallWindowMarkerVerticalStep(context, -3)
+        AirPlayPersistence.saveClusterSmallWindowMarkerXPercent(context, 95)
+        AirPlayPersistence.saveClusterSmallWindowMarkerYPercent(context, 20)
 
         assertTrue(AirPlayPersistence.loadClusterSmallWindowMarker(context))
-        assertEquals(4, AirPlayPersistence.loadClusterSmallWindowMarkerHorizontalStep(context))
-        assertEquals(-3, AirPlayPersistence.loadClusterSmallWindowMarkerVerticalStep(context))
+        assertEquals(95, AirPlayPersistence.loadClusterSmallWindowMarkerXPercent(context))
+        assertEquals(20, AirPlayPersistence.loadClusterSmallWindowMarkerYPercent(context))
         assertEquals(-2, AirPlayPersistence.loadClusterMarkerHorizontalStep(context))
     }
 
-    @Test fun outOfRangeStepsClampToTheMarkerGrid() {
-        AirPlayPersistence.saveClusterSmallWindowMarkerHorizontalStep(context, 99)
-        AirPlayPersistence.saveClusterSmallWindowMarkerVerticalStep(context, -99)
-        assertEquals(4, AirPlayPersistence.loadClusterSmallWindowMarkerHorizontalStep(context))
-        assertEquals(-3, AirPlayPersistence.loadClusterSmallWindowMarkerVerticalStep(context))
+    @Test fun markerSnapsOntoTheFivePercentGrid() {
+        AirPlayPersistence.saveClusterSmallWindowMarkerXPercent(context, 87)
+        AirPlayPersistence.saveClusterSmallWindowMarkerYPercent(context, 3)
+        assertEquals(85, AirPlayPersistence.loadClusterSmallWindowMarkerXPercent(context))
+        assertEquals(5, AirPlayPersistence.loadClusterSmallWindowMarkerYPercent(context))
+    }
+
+    @Test fun legacyStepSettingsMigrateToPercents() {
+        val prefs = context.getSharedPreferences("xcertplay_airplay", 0)
+        // cn.3/cn.4 saved 10%-steps around the panel centre (x 49.5, y 45.5).
+        prefs.edit().putInt("cluster_small_window_marker_x", 3).apply()
+        prefs.edit().putInt("cluster_small_window_marker_y", -3).apply()
+        assertEquals(80, AirPlayPersistence.loadClusterSmallWindowMarkerXPercent(context))
+        assertEquals(15, AirPlayPersistence.loadClusterSmallWindowMarkerYPercent(context))
+
+        prefs.edit().putInt("cluster_small_window_marker_x", 0).apply()
+        prefs.edit().putInt("cluster_small_window_marker_y", 0).apply()
+        assertEquals(50, AirPlayPersistence.loadClusterSmallWindowMarkerXPercent(context))
+        assertEquals(45, AirPlayPersistence.loadClusterSmallWindowMarkerYPercent(context))
     }
 
     @Test fun turnCardKeepsASecondRectForTheSmallWindow() {
-        assertEquals(76, AirPlayPersistence.loadClusterSmallWindowCardXPercent(context))
-        assertEquals(24, AirPlayPersistence.loadClusterSmallWindowCardYPercent(context))
+        assertEquals(80, AirPlayPersistence.loadClusterSmallWindowCardXPercent(context))
+        assertEquals(25, AirPlayPersistence.loadClusterSmallWindowCardYPercent(context))
         assertEquals(40, AirPlayPersistence.loadClusterSmallWindowCardSizePercent(context))
 
         AirPlayPersistence.saveClusterTurnCardOverlayXPercent(context, 20)
         AirPlayPersistence.saveClusterSmallWindowCardXPercent(context, 88)
-        AirPlayPersistence.saveClusterSmallWindowCardYPercent(context, 18)
+        AirPlayPersistence.saveClusterSmallWindowCardYPercent(context, 14)
         AirPlayPersistence.saveClusterSmallWindowCardSizePercent(context, 35)
 
-        assertEquals(88, AirPlayPersistence.loadClusterSmallWindowCardXPercent(context))
-        assertEquals(18, AirPlayPersistence.loadClusterSmallWindowCardYPercent(context))
+        assertEquals(90, AirPlayPersistence.loadClusterSmallWindowCardXPercent(context))
+        assertEquals(15, AirPlayPersistence.loadClusterSmallWindowCardYPercent(context))
         assertEquals(35, AirPlayPersistence.loadClusterSmallWindowCardSizePercent(context))
         assertEquals(20, AirPlayPersistence.loadClusterTurnCardOverlayXPercent(context))
     }

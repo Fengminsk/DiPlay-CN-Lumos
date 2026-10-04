@@ -810,11 +810,11 @@ class CarPlayHostActivity : ComponentActivity() {
             size.x,
             size.y,
             AirPlayPersistence.loadClusterMapScalePercent(this),
-            if (smallWindow) AirPlayPersistence.loadClusterSmallWindowMarkerHorizontalStep(this)
-            else AirPlayPersistence.loadClusterMarkerHorizontalStep(this),
-            if (smallWindow) AirPlayPersistence.loadClusterSmallWindowMarkerVerticalStep(this)
-            else AirPlayPersistence.loadClusterMarkerVerticalStep(this),
+            if (smallWindow) 0 else AirPlayPersistence.loadClusterMarkerHorizontalStep(this),
+            if (smallWindow) 0 else AirPlayPersistence.loadClusterMarkerVerticalStep(this),
             AirPlayPersistence.loadClusterContent(this),
+            markerXPercent = if (smallWindow) AirPlayPersistence.loadClusterSmallWindowMarkerXPercent(this) else null,
+            markerYPercent = if (smallWindow) AirPlayPersistence.loadClusterSmallWindowMarkerYPercent(this) else null,
         ).also {
             appendLog("Cluster map: requesting ${it.widthPixels}x${it.heightPixels} on ${size.x}x${size.y} smallWindow=$smallWindow safeArea=${it.safeArea} url=${it.initialUrl}")
         }
