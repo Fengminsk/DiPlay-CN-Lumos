@@ -20,26 +20,41 @@ object AppRenamer {
         "LauncherAliasMedia",
     )
 
-    private fun components(context: Context): List<ComponentName> = ALIASES
-        .map { ComponentName(context.packageName, "com.shilapi.xcertplay.$it") }
-        .filter { runCatching { context.packageManager.getActivityInfo(it, 0) }.isSuccess }
-
-    fun available(context: Context): Boolean = components(context).isNotEmpty()
-
-    fun labels(context: Context): List<String> {
+    /**
+     * Disabled aliases are invisible to plain queries on Android — without this flag only the
+     * currently enabled name resolves and the picker collapses to one entry.
+     */
+    private fun aliasesInfo(context: Context): List<android.content.pm.ActivityInfo> {
         val manager = context.packageManager
-        return components(context).map { manager.getActivityInfo(it, 0).loadLabel(manager).toString() }
+        return ALIASES
+            .map { ComponentName(context.packageName, "com.shilapi.xcertplay.$it") }
+            .mapNotNull { component ->
+                runCatching {
+                    manager.getActivityInfo(component, PackageManager.MATCH_DISABLED_COMPONENTS)
+                }.getOrNull()
+            }
     }
+
+    fun available(context: Context): Boolean = aliasesInfo(context).isNotEmpty()
+
+    fun labels(context: Context): List<String> =
+        aliasesInfo(context).map { it.loadLabel(context.packageManager).toString() }
 
     /** The chosen index lives beside the component states so both stay in sync. */
     fun current(context: Context): Int {
         val prefs = context.getSharedPreferences(RENAME_PREFS, Context.MODE_PRIVATE)
-        return prefs.getInt(KEY_NAME_INDEX, 0).coerceIn(0, (components(context).size - 1).coerceAtLeast(0))
+        return prefs.getInt(KEY_NAME_INDEX, 0).coerceIn(0, (aliasesInfo(context).size - 1).coerceAtLeast(0))
     }
 
     fun apply(context: Context, index: Int) {
         val app = context.applicationContext
-        val list = components(app)
+        val list = ALIASES
+            .map { ComponentName(app.packageName, "com.shilapi.xcertplay.$it") }
+            .filter { component ->
+                runCatching {
+                    app.packageManager.getActivityInfo(component, PackageManager.MATCH_DISABLED_COMPONENTS)
+                }.isSuccess
+            }
         if (list.isEmpty()) return
         val chosen = index.coerceIn(0, list.lastIndex)
         list.forEachIndexed { i, component ->
