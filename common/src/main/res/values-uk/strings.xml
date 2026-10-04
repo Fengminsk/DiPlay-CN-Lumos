@@ -10,6 +10,11 @@
     <string name="hotspot_hint_local">Відкрийте налаштування підключення, щоб зберегти дані вбудованої точки доступу.</string>
     <string name="hotspot_hint_p2p">Wi-Fi Direct · Тримайте Wi-Fi автомобіля, Bluetooth і Wi-Fi на iPhone увімкненими.</string>
     <string name="cluster_size_smallest">Менше · більше карти та дрібніші деталі</string>
+    <string name="cluster_small_window_marker">Навігація в малому вікні · окрема мітка</string>
+    <string name="cluster_small_window_marker_description">Коли панель приладів перемикається на мале вікно навігації, видно лише частину екрана. Зберігається друге положення мітки авто для цього вікна (стандартно: праворуч від центру), щоб маршрут показувався всередині; положення для повного екрана не змінюється. Зміни перепідключають карту панелі.</string>
+    <string name="cluster_small_window_horizontal">Мале вікно · ліворуч / праворуч</string>
+    <string name="cluster_small_window_vertical">Мале вікно · вгору / вниз</string>
+    <string name="cluster_small_window_hint">Стандартно три кроки (30 %) праворуч від центру. Налаштуйте під фактичне положення вікна на вашій панелі.</string>
     <string name="cluster_size_standard">Стандартний · найчіткіший</string>
     <string name="cluster_size_larger">Більший · типовий</string>
     <string name="cluster_size_largest">Найбільший</string>

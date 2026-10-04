@@ -799,15 +799,20 @@ class CarPlayHostActivity : ComponentActivity() {
                 appendLog("Cluster map: fixed 1920x720 stream; layout=$theme viewport=$plan")
             }
         }
+        // In small-window navi the cluster shows only part of the panel; a second marker position
+        // keeps the iPhone's route inside the visible window instead of the panel centre.
+        val smallWindow = AirPlayPersistence.loadClusterSmallWindowMarker(this)
         return CarPlayClusterDisplay.config(
             size.x,
             size.y,
             AirPlayPersistence.loadClusterMapScalePercent(this),
-            AirPlayPersistence.loadClusterMarkerHorizontalStep(this),
-            AirPlayPersistence.loadClusterMarkerVerticalStep(this),
+            if (smallWindow) AirPlayPersistence.loadClusterSmallWindowMarkerHorizontalStep(this)
+            else AirPlayPersistence.loadClusterMarkerHorizontalStep(this),
+            if (smallWindow) AirPlayPersistence.loadClusterSmallWindowMarkerVerticalStep(this)
+            else AirPlayPersistence.loadClusterMarkerVerticalStep(this),
             AirPlayPersistence.loadClusterContent(this),
         ).also {
-            appendLog("Cluster map: requesting ${it.widthPixels}x${it.heightPixels} on ${size.x}x${size.y} safeArea=${it.safeArea} url=${it.initialUrl}")
+            appendLog("Cluster map: requesting ${it.widthPixels}x${it.heightPixels} on ${size.x}x${size.y} smallWindow=$smallWindow safeArea=${it.safeArea} url=${it.initialUrl}")
         }
     }
 

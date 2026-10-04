@@ -101,6 +101,9 @@ object AirPlayPersistence {
 
     private const val KEY_CLUSTER_TURN_CARD_OVERLAY_SIZE_PERCENT = "cluster_turn_card_overlay_size_percent"
     private const val KEY_CLUSTER_TURN_CARD_OPACITY = "cluster_turn_card_opacity_percent"
+    private const val KEY_CLUSTER_SMALL_WINDOW_MARKER = "cluster_small_window_marker"
+    private const val KEY_CLUSTER_SMALL_WINDOW_MARKER_X = "cluster_small_window_marker_x"
+    private const val KEY_CLUSTER_SMALL_WINDOW_MARKER_Y = "cluster_small_window_marker_y"
     private const val KEY_UPDATE_CHANNEL = "update_channel"
     private const val KEY_BT_SUSPEND_DURING_CARPLAY = "bt_suspend_during_carplay"
     private const val KEY_BT_SUSPEND_DELAY = "bt_suspend_delay_seconds"
@@ -614,6 +617,41 @@ object AirPlayPersistence {
     fun saveClusterMarkerVerticalStep(context: Context, step: Int) {
         context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit()
             .putInt(KEY_CLUSTER_MARKER_Y, step.coerceIn(CarPlayClusterDisplay.verticalSteps)).apply()
+    }
+
+    /**
+     * DiLink 5 small-window navi: while the small window is on, the cluster shows only part of the
+     * panel, so the marker keeps a second position that lands inside that window. The verified
+     * 5.1 profile has its own viewport layout and never reads these.
+     */
+    fun loadClusterSmallWindowMarker(context: Context): Boolean =
+        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+            .getBoolean(KEY_CLUSTER_SMALL_WINDOW_MARKER, false)
+
+    fun saveClusterSmallWindowMarker(context: Context, enabled: Boolean) {
+        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit()
+            .putBoolean(KEY_CLUSTER_SMALL_WINDOW_MARKER, enabled).apply()
+    }
+
+    /** Right of centre by default: the small navi window sits on the right half of the panel. */
+    fun loadClusterSmallWindowMarkerHorizontalStep(context: Context): Int =
+        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+            .getInt(KEY_CLUSTER_SMALL_WINDOW_MARKER_X, 3)
+            .coerceIn(CarPlayClusterDisplay.horizontalSteps)
+
+    fun saveClusterSmallWindowMarkerHorizontalStep(context: Context, step: Int) {
+        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit()
+            .putInt(KEY_CLUSTER_SMALL_WINDOW_MARKER_X, step.coerceIn(CarPlayClusterDisplay.horizontalSteps)).apply()
+    }
+
+    fun loadClusterSmallWindowMarkerVerticalStep(context: Context): Int =
+        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+            .getInt(KEY_CLUSTER_SMALL_WINDOW_MARKER_Y, 0)
+            .coerceIn(CarPlayClusterDisplay.verticalSteps)
+
+    fun saveClusterSmallWindowMarkerVerticalStep(context: Context, step: Int) {
+        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit()
+            .putInt(KEY_CLUSTER_SMALL_WINDOW_MARKER_Y, step.coerceIn(CarPlayClusterDisplay.verticalSteps)).apply()
     }
 
     fun loadRightHandDrive(context: Context): Boolean =

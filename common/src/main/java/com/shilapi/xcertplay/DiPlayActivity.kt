@@ -598,6 +598,24 @@ class DiPlayActivity : ComponentActivity() {
                         render()
                         reconnectForClusterMap()
                     }, matchButton(10, 56))
+                    toggle(card, getString(R.string.cluster_small_window_marker),
+                        getString(R.string.cluster_small_window_marker_description),
+                        AirPlayPersistence.loadClusterSmallWindowMarker(this)) {
+                        AirPlayPersistence.saveClusterSmallWindowMarker(this, it)
+                        render()
+                        reconnectForClusterMap()
+                    }
+                    if (AirPlayPersistence.loadClusterSmallWindowMarker(this)) {
+                        choice(card, getString(R.string.cluster_small_window_horizontal), across.map { markerStepLabel(it, getString(R.string.marker_left), getString(R.string.marker_right)) },
+                            across.indexOf(AirPlayPersistence.loadClusterSmallWindowMarkerHorizontalStep(this)).coerceAtLeast(0)) {
+                            AirPlayPersistence.saveClusterSmallWindowMarkerHorizontalStep(this, across[it])
+                        }
+                        choice(card, getString(R.string.cluster_small_window_vertical), upDown.map { markerStepLabel(it, getString(R.string.marker_up), getString(R.string.marker_down)) },
+                            upDown.indexOf(AirPlayPersistence.loadClusterSmallWindowMarkerVerticalStep(this)).coerceAtLeast(0)) {
+                            AirPlayPersistence.saveClusterSmallWindowMarkerVerticalStep(this, upDown[it])
+                        }
+                        card.addView(label(getString(R.string.cluster_small_window_hint), 14, MUTED).apply { setPadding(0, dp(10), 0, 0) })
+                    }
                     toggle(card, getString(R.string.dashboard_map_only_in_small_and_full_navi),
                         getString(R.string.dashboard_map_only_in_small_and_full_navi_description),
                         BydOutputSettings.clusterStreamPause(this)) {

@@ -561,6 +561,11 @@
     <string name="update_details_title">Update %1$s</string>
     <string name="update_notes_missing">No release notes were published for this version.</string>
     <string name="cluster_size_smallest">Smaller · more map, finer detail</string>
+    <string name="cluster_small_window_marker">Small-window navi · separate marker</string>
+    <string name="cluster_small_window_marker_description">When the cluster switches to its small navi window, only part of the panel is visible. This keeps a second car-marker position for that window (default: right of centre) so the route shows inside it; the full-screen position is unchanged. Changes reconnect the cluster map.</string>
+    <string name="cluster_small_window_horizontal">Small window · left/right</string>
+    <string name="cluster_small_window_vertical">Small window · up/down</string>
+    <string name="cluster_small_window_hint">Default is three steps (30 %) right of centre. Adjust to wherever the small window sits on your cluster.</string>
     <string name="download_and_install">Download and install</string>
     <string name="turn_card_info_arrival">Arrive %1$s</string>
     <string name="turn_card_info_duration_hm">%1$dh %2$dmin</string>
