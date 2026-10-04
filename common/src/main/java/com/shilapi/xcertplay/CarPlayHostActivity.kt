@@ -759,6 +759,8 @@ class CarPlayHostActivity : ComponentActivity() {
                 AirPlayPersistence.loadClusterTurnCardOverlayYPercent(this),
                 AirPlayPersistence.loadClusterTurnCardOverlaySizePercent(this),
             )
+            presentation.setTurnCardOpacity(AirPlayPersistence.loadClusterTurnCardOpacityPercent(this))
+            presentation.setTurnCardNightMode(darkMode)
             presentation.setTurnCardGuidance(if (overlay) clusterTurnGuidance else null)
         }
     }
@@ -3415,6 +3417,7 @@ class CarPlayHostActivity : ComponentActivity() {
         darkMode = night
         logThemeState(source, newConfig)
         appendLog("Head unit switched to ${if (night) "night" else "day"} mode")
+        applyClusterTurnOverlay()
         syncAirPlayDarkMode(source)
     }
 

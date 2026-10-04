@@ -29,11 +29,12 @@ object AppUpdate {
     private const val MAX_APK_BYTES = 200L * 1024 * 1024
 
     data class Release(
-        /** The release tag, e.g. v0.2.10-cn.8 — must match this build's versionName. */
+        /** The release tag, e.g. v0.2.10-cn.8. Compared without a leading v. */
         val tag: String,
         val apkUrl: String,
         val apkBytes: Long,
         val notesUrl: String,
+        val notes: String,
     )
 
     private val main = Handler(Looper.getMainLooper())
@@ -63,7 +64,20 @@ object AppUpdate {
         context.packageManager.getPackageInfo(context.packageName, 0).versionName ?: ""
 
     fun isAvailable(latest: Release, context: Context): Boolean =
-        latest.tag != currentVersion(context)
+        normalizeTag(latest.tag) != normalizeTag(currentVersion(context))
+
+    internal fun normalizeTag(value: String): String =
+        value.trim().removePrefix("v").removePrefix("V")
+
+    /** Strip markdown so the in-app dialog stays readable on the head unit. */
+    fun plainNotes(markdown: String, limit: Int = 1800): String {
+        val text = markdown
+            .replace(Regex("""\[([^\]]+)]\([^)]*\)"""), "$1")
+            .replace(Regex("""[*_`#>-]+"""), " ")
+            .replace(Regex("""\n{3,}"""), "\n\n")
+            .trim()
+        return if (text.length <= limit) text else text.take(limit).trimEnd() + "…"
+    }
 
     /** Fetches the latest full release (drafts and prereleases are excluded by GitHub). */
     fun check(onResult: (Release?, String?) -> Unit) {
@@ -98,6 +112,7 @@ object AppUpdate {
                             apkUrl = asset.optString("browser_download_url"),
                             apkBytes = asset.optLong("size", 0L),
                             notesUrl = json.optString("html_url"),
+                            notes = json.optString("body").orEmpty(),
                         )
                     }
                 }
@@ -122,7 +137,7 @@ object AppUpdate {
         worker.execute {
             runCatching {
                 val directory = File(context.cacheDir, "updates").apply { mkdirs() }
-                val target = File(directory, "diplay-plus-${release.tag}.apk")
+                val target = File(directory, "diplay-cn-${release.tag}.apk")
                 val downloadUrl = mirrorPrefixes[channel]?.let { it + release.apkUrl } ?: release.apkUrl
                 val connection = URL(downloadUrl).openConnection() as HttpURLConnection
                 connection.connectTimeout = CONNECT_TIMEOUT

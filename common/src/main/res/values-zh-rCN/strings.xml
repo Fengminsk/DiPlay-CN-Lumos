@@ -555,6 +555,12 @@
     <string name="bt_suspend_during_carplay">CarPlay 期间暂停车机蓝牙 · 需要 ADB</string>
     <string name="bt_suspend_during_carplay_description">手机与车机保持免提连接时，来电会同时弹出车机蓝牙电话和 CarPlay 电话。开启后：CarPlay 连接期间通过 ADB 暂停车机蓝牙，来电只在 CarPlay 响应；CarPlay 结束或下次无线连接握手前会自动恢复蓝牙。配对不受影响。更改在下次连接时生效。</string>
     <string name="check_for_updates">检查更新</string>
+    <string name="cn_changelog_missing">本包未附带 CN 更新日志。</string>
+    <string name="cn_changelog_title">CN 各版更新日志</string>
+    <string name="cn_features_body">相对官方 DiPlay，CN 额外提供：应用内检查更新（0.2.10-cn.8 起）、四通道更新、开机自启 ADB 修复、CarPlay 期间延时暂停蓝牙、自定义转向卡（大小/透明度滑块、昼夜玻璃、行程信息条、重连不清卡）、仪表地图「更小更全」档、不支持的车机语言默认简体中文。</string>
+    <string name="cn_features_title">CN 特性</string>
+    <string name="update_details_title">更新 %1$s</string>
+    <string name="update_notes_missing">该版本没有发布说明。</string>
     <string name="download_and_install">下载并安装</string>
     <string name="turn_card_info_arrival">%1$s到达</string>
     <string name="turn_card_info_duration_hm">%1$d小时%2$d分</string>

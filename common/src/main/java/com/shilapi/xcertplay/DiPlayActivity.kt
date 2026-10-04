@@ -622,8 +622,15 @@ class DiPlayActivity : ComponentActivity() {
 
     private fun offerUpdate(release: AppUpdate.Release) {
         val size = if (release.apkBytes > 0) "${release.apkBytes / 1024 / 1024} MB" else "?"
+        val notes = AppUpdate.plainNotes(release.notes).ifBlank { getString(R.string.update_notes_missing) }
+        val message = getString(R.string.update_available, release.tag, size) + "\n\n" + notes
+        val view = ScrollView(this).apply {
+            addView(label(message, 16, TEXT).apply { setPadding(dp(24), dp(8), dp(24), dp(8)) })
+            isFillViewport = true
+        }
         AlertDialog.Builder(this)
-            .setTitle(getString(R.string.update_available, release.tag, size))
+            .setTitle(getString(R.string.update_details_title, release.tag))
+            .setView(view)
             .setPositiveButton(getString(R.string.download_and_install)) { _, _ -> downloadUpdate(release) }
             .setNegativeButton(getString(R.string.common_cancel), null)
             .show()
@@ -696,9 +703,24 @@ class DiPlayActivity : ComponentActivity() {
                 }
             }, matchButton(10, 56))
         }
+        section(content, getString(R.string.cn_features_title)) { card ->
+            card.addView(label(getString(R.string.cn_features_body), 16, TEXT).apply {
+                setPadding(0, 0, 0, dp(8))
+            })
+        }
+        section(content, getString(R.string.cn_changelog_title)) { card ->
+            card.addView(label(cnChangelogText(), 15, MUTED))
+        }
         section(content, getString(R.string.made_possible_by_open_source)) { card ->
             card.addView(label(getString(R.string.receiver_based_on_xcertplay_licensed_under_gpl_3_0_diplay), 16, MUTED))
         }
+    }
+
+    private fun cnChangelogText(): String {
+        val raw = runCatching {
+            assets.open("CN_OPTIMIZATIONS.md").bufferedReader().use { it.readText() }
+        }.getOrNull().orEmpty()
+        return AppUpdate.plainNotes(raw, limit = 8000).ifBlank { getString(R.string.cn_changelog_missing) }
     }
 
     private fun repairBootStart() {

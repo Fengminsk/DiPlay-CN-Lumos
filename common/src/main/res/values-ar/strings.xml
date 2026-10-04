@@ -547,6 +547,12 @@
     <string name="bt_suspend_during_carplay">إيقاف بلوتوث السيارة أثناء CarPlay · يتطلب ADB</string>
     <string name="bt_suspend_during_carplay_description">يبقى الهاتف متصلًا بنظام التحدث الحر في السيارة، فرنين المكالمة يظهر على هاتف السيارة وعلى CarPlay معًا. عند التشغيل: يُوقف بلوتوث السيارة مؤقتًا عبر ADB طوال جلسة CarPlay فترد المكالمات على CarPlay فقط، ويُعاد تشغيله عند انتهاء الجلسة وقبل مصافحة الاتصال اللاسلكي التالية. لا يتأثر الاقتران. يسري التغيير عند الاتصال التالي.</string>
     <string name="check_for_updates">التحقق من التحديثات</string>
+    <string name="cn_changelog_missing">سجل تغييرات CN غير مرفق في هذا الإصدار.</string>
+    <string name="cn_changelog_title">سجل إصدارات CN</string>
+    <string name="cn_features_body">إضافات CN فوق DiPlay الرسمي: تحديث من داخل التطبيق (من 0.2.10-cn.8)، أربع قنوات تحديث، إصلاح تشغيل تلقائي عبر ADB، إيقاف بلوتوث السيارة بتأخير أثناء CarPlay، بطاقة انعطاف بحجم/شفافية ويوم/ليل وشريط الرحلة، الإبقاء على البطاقة بعد إعادة الاتصال، خريطة لوحة أصغر بتفاصيل أكثر، الصينية المبسطة عند عدم دعم لغة السيارة.</string>
+    <string name="cn_features_title">ما يضيفه CN</string>
+    <string name="update_details_title">تحديث %1$s</string>
+    <string name="update_notes_missing">لا توجد ملاحظات إصدار لهذه النسخة.</string>
     <string name="download_and_install">تنزيل وتثبيت</string>
     <string name="turn_card_info_arrival">الوصول %1$s</string>
     <string name="turn_card_info_duration_hm">%1$d س %2$d د</string>

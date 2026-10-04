@@ -559,6 +559,12 @@
     <string name="bt_suspend_during_carplay">Призупинити Bluetooth авто під час CarPlay · потрібен ADB</string>
     <string name="bt_suspend_during_carplay_description">Телефон тримає hands-free звʼязок з авто, тому вхідний дзвінок звучить і в телефоні авто, і в CarPlay. Після ввімкнення: Bluetooth авто призупиняється через ADB на час сеансу CarPlay — дзвінки йдуть лише в CarPlay; вмикається назад після сеансу і перед наступним бездротовим зʼєднанням. Пара не змінюється. Застосується з наступного підключення.</string>
     <string name="check_for_updates">Перевірити оновлення</string>
+    <string name="cn_changelog_missing">Журнал CN не включено в цю збірку.</string>
+    <string name="cn_changelog_title">Історія версій CN</string>
+    <string name="cn_features_body">Додатки CN поверх офіційного DiPlay: оновлення з програми (з 0.2.10-cn.8), чотири канали, ремонт автозапуску через ADB, відкладена пауза Bluetooth під час CarPlay, картка повороту з розміром/прозорістю, день/ніч і смугою маршруту, картка лишається після перепідключення, менша карта щитка з більшою деталізацією, спрощена китайська якщо мова авто не підтримується.</string>
+    <string name="cn_features_title">Що додає CN</string>
+    <string name="update_details_title">Оновлення %1$s</string>
+    <string name="update_notes_missing">Для цієї версії немає приміток.</string>
     <string name="download_and_install">Завантажити та встановити</string>
     <string name="turn_card_info_arrival">Прибуття %1$s</string>
     <string name="turn_card_info_duration_hm">%1$d год %2$d хв</string>
