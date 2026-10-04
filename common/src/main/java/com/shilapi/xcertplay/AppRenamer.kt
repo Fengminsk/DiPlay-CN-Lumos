@@ -14,7 +14,6 @@ object AppRenamer {
         "LauncherAliasCn",
         "LauncherAliasDiplay",
         "LauncherAliasCarplay",
-        "LauncherAliasAppleCarplay",
         "LauncherAliasNavi",
         "LauncherAliasMap",
         "LauncherAliasLink",

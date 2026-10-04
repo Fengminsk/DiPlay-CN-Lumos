@@ -63,17 +63,6 @@
             </intent-filter>
         </activity-alias>
         <activity-alias
-            android:name="com.shilapi.xcertplay.LauncherAliasAppleCarplay"
-            android:label="@string/alias_label_apple_carplay"
-            android:enabled="false"
-            android:exported="true"
-            android:targetActivity="com.shilapi.xcertplay.DiPlayActivity">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
-        </activity-alias>
-        <activity-alias
             android:name="com.shilapi.xcertplay.LauncherAliasNavi"
             android:label="@string/alias_label_navi"
             android:enabled="false"
