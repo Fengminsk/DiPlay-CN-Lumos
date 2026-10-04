@@ -570,6 +570,26 @@ class DiPlayActivity : ComponentActivity() {
                             render()
                         }, matchButton(10, 56))
                         card.addView(label(getString(R.string.turn_card_overlay_note), 14, MUTED))
+                        if (AirPlayPersistence.loadClusterSmallWindowMarker(this)) {
+                            card.addView(overlaySliderRow(
+                                getString(R.string.cluster_small_window_card_size),
+                                ClusterTurnCardOverlay.sizePercents,
+                                AirPlayPersistence.loadClusterSmallWindowCardSizePercent(this),
+                            ) { it -> getString(R.string.turn_card_overlay_size_option, it) }
+                                .also { it.onSave = { v -> AirPlayPersistence.saveClusterSmallWindowCardSizePercent(this, v) } })
+                            card.addView(overlaySliderRow(
+                                getString(R.string.cluster_small_window_card_horizontal),
+                                ClusterTurnCardOverlay.xPercents,
+                                AirPlayPersistence.loadClusterSmallWindowCardXPercent(this),
+                            ) { it -> overlayOffsetLabel(it, getString(R.string.marker_left), getString(R.string.marker_right), 50) }
+                                .also { it.onSave = { v -> AirPlayPersistence.saveClusterSmallWindowCardXPercent(this, v) } })
+                            card.addView(overlaySliderRow(
+                                getString(R.string.cluster_small_window_card_vertical),
+                                ClusterTurnCardOverlay.yPercents,
+                                AirPlayPersistence.loadClusterSmallWindowCardYPercent(this),
+                            ) { it -> overlayOffsetLabel(it, getString(R.string.marker_up), getString(R.string.marker_down), 40) }
+                                .also { it.onSave = { v -> AirPlayPersistence.saveClusterSmallWindowCardYPercent(this, v) } })
+                        }
                     }
                     val turnCard = officialCardOnly
                     choice(card, getString(if (turnCard) R.string.turn_card_size else R.string.cluster_map_size),

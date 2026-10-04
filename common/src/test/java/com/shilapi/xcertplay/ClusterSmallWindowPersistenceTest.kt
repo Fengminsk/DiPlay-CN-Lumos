@@ -43,4 +43,33 @@ class ClusterSmallWindowPersistenceTest {
         assertEquals(4, AirPlayPersistence.loadClusterSmallWindowMarkerHorizontalStep(context))
         assertEquals(-3, AirPlayPersistence.loadClusterSmallWindowMarkerVerticalStep(context))
     }
+
+    @Test fun turnCardKeepsASecondRectForTheSmallWindow() {
+        assertEquals(76, AirPlayPersistence.loadClusterSmallWindowCardXPercent(context))
+        assertEquals(24, AirPlayPersistence.loadClusterSmallWindowCardYPercent(context))
+        assertEquals(40, AirPlayPersistence.loadClusterSmallWindowCardSizePercent(context))
+
+        AirPlayPersistence.saveClusterTurnCardOverlayXPercent(context, 20)
+        AirPlayPersistence.saveClusterSmallWindowCardXPercent(context, 88)
+        AirPlayPersistence.saveClusterSmallWindowCardYPercent(context, 18)
+        AirPlayPersistence.saveClusterSmallWindowCardSizePercent(context, 35)
+
+        assertEquals(88, AirPlayPersistence.loadClusterSmallWindowCardXPercent(context))
+        assertEquals(18, AirPlayPersistence.loadClusterSmallWindowCardYPercent(context))
+        assertEquals(35, AirPlayPersistence.loadClusterSmallWindowCardSizePercent(context))
+        assertEquals(20, AirPlayPersistence.loadClusterTurnCardOverlayXPercent(context))
+    }
+
+    @Test fun smallWindowCardSavesNotifyTheHostWithoutReconnecting() {
+        var noticed = 0
+        AirPlayPersistence.overlaySettingsListener = { noticed++ }
+        try {
+            AirPlayPersistence.saveClusterSmallWindowCardXPercent(context, 60)
+            AirPlayPersistence.saveClusterSmallWindowCardYPercent(context, 40)
+            AirPlayPersistence.saveClusterSmallWindowCardSizePercent(context, 50)
+        } finally {
+            AirPlayPersistence.overlaySettingsListener = null
+        }
+        assertEquals(3, noticed)
+    }
 }

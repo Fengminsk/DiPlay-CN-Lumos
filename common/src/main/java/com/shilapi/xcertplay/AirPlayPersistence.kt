@@ -104,6 +104,9 @@ object AirPlayPersistence {
     private const val KEY_CLUSTER_SMALL_WINDOW_MARKER = "cluster_small_window_marker"
     private const val KEY_CLUSTER_SMALL_WINDOW_MARKER_X = "cluster_small_window_marker_x"
     private const val KEY_CLUSTER_SMALL_WINDOW_MARKER_Y = "cluster_small_window_marker_y"
+    private const val KEY_CLUSTER_SMALL_WINDOW_CARD_X = "cluster_small_window_card_x"
+    private const val KEY_CLUSTER_SMALL_WINDOW_CARD_Y = "cluster_small_window_card_y"
+    private const val KEY_CLUSTER_SMALL_WINDOW_CARD_SIZE = "cluster_small_window_card_size"
     private const val KEY_UPDATE_CHANNEL = "update_channel"
     private const val KEY_BT_SUSPEND_DURING_CARPLAY = "bt_suspend_during_carplay"
     private const val KEY_BT_SUSPEND_DELAY = "bt_suspend_delay_seconds"
@@ -652,6 +655,43 @@ object AirPlayPersistence {
     fun saveClusterSmallWindowMarkerVerticalStep(context: Context, step: Int) {
         context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit()
             .putInt(KEY_CLUSTER_SMALL_WINDOW_MARKER_Y, step.coerceIn(CarPlayClusterDisplay.verticalSteps)).apply()
+    }
+
+    /** The custom turn card also keeps a second rect for the small window: x/y/size, panel percents. */
+    fun loadClusterSmallWindowCardXPercent(context: Context): Int = ClusterTurnCardOverlay.snap(
+        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+            .getInt(KEY_CLUSTER_SMALL_WINDOW_CARD_X, ClusterTurnCardOverlay.DEFAULT_X_PERCENT),
+        ClusterTurnCardOverlay.xPercents,
+    )
+
+    fun saveClusterSmallWindowCardXPercent(context: Context, percent: Int) {
+        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit()
+            .putInt(KEY_CLUSTER_SMALL_WINDOW_CARD_X, ClusterTurnCardOverlay.snap(percent, ClusterTurnCardOverlay.xPercents)).apply()
+        overlaySettingsListener?.invoke()
+    }
+
+    fun loadClusterSmallWindowCardYPercent(context: Context): Int = ClusterTurnCardOverlay.snap(
+        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+            .getInt(KEY_CLUSTER_SMALL_WINDOW_CARD_Y, 24),
+        ClusterTurnCardOverlay.yPercents,
+    )
+
+    fun saveClusterSmallWindowCardYPercent(context: Context, percent: Int) {
+        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit()
+            .putInt(KEY_CLUSTER_SMALL_WINDOW_CARD_Y, ClusterTurnCardOverlay.snap(percent, ClusterTurnCardOverlay.yPercents)).apply()
+        overlaySettingsListener?.invoke()
+    }
+
+    fun loadClusterSmallWindowCardSizePercent(context: Context): Int = ClusterTurnCardOverlay.snap(
+        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+            .getInt(KEY_CLUSTER_SMALL_WINDOW_CARD_SIZE, 40),
+        ClusterTurnCardOverlay.sizePercents,
+    )
+
+    fun saveClusterSmallWindowCardSizePercent(context: Context, percent: Int) {
+        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit()
+            .putInt(KEY_CLUSTER_SMALL_WINDOW_CARD_SIZE, ClusterTurnCardOverlay.snap(percent, ClusterTurnCardOverlay.sizePercents)).apply()
+        overlaySettingsListener?.invoke()
     }
 
     fun loadRightHandDrive(context: Context): Boolean =
