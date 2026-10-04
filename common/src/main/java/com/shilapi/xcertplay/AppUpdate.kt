@@ -64,20 +64,11 @@ object AppUpdate {
         context.packageManager.getPackageInfo(context.packageName, 0).versionName ?: ""
 
     fun isAvailable(latest: Release, context: Context): Boolean =
-        normalizeTag(latest.tag) != normalizeTag(currentVersion(context))
+        UpdateText.normalizeTag(latest.tag) != UpdateText.normalizeTag(currentVersion(context))
 
-    internal fun normalizeTag(value: String): String =
-        value.trim().removePrefix("v").removePrefix("V")
+    internal fun normalizeTag(value: String): String = UpdateText.normalizeTag(value)
 
-    /** Strip markdown so the in-app dialog stays readable on the head unit. */
-    fun plainNotes(markdown: String, limit: Int = 1800): String {
-        val text = markdown
-            .replace(Regex("""\[([^\]]+)]\([^)]*\)"""), "$1")
-            .replace(Regex("""[*_`#>-]+"""), " ")
-            .replace(Regex("""\n{3,}"""), "\n\n")
-            .trim()
-        return if (text.length <= limit) text else text.take(limit).trimEnd() + "…"
-    }
+    fun plainNotes(markdown: String, limit: Int = 1800): String = UpdateText.plainNotes(markdown, limit)
 
     /** Fetches the latest full release (drafts and prereleases are excluded by GitHub). */
     fun check(onResult: (Release?, String?) -> Unit) {
