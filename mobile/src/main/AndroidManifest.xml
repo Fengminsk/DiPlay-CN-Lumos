@@ -56,6 +56,7 @@
         </activity-alias>
         <activity-alias
             android:name="com.shilapi.xcertplay.LauncherAliasCarplay"
+            android:icon="@drawable/ic_alias_carpaly"
             android:label="@string/alias_label_carpaly"
             android:enabled="false"
             android:exported="true"
@@ -67,6 +68,7 @@
         </activity-alias>
         <activity-alias
             android:name="com.shilapi.xcertplay.LauncherAliasNavi"
+            android:icon="@drawable/ic_alias_navi"
             android:label="@string/alias_label_navi"
             android:enabled="false"
             android:exported="true"
@@ -78,6 +80,7 @@
         </activity-alias>
         <activity-alias
             android:name="com.shilapi.xcertplay.LauncherAliasMap"
+            android:icon="@drawable/ic_alias_map"
             android:label="@string/alias_label_map"
             android:enabled="false"
             android:exported="true"
@@ -89,6 +92,7 @@
         </activity-alias>
         <activity-alias
             android:name="com.shilapi.xcertplay.LauncherAliasLink"
+            android:icon="@drawable/ic_alias_link"
             android:label="@string/alias_label_link"
             android:enabled="false"
             android:exported="true"
@@ -100,6 +104,7 @@
         </activity-alias>
         <activity-alias
             android:name="com.shilapi.xcertplay.LauncherAliasMedia"
+            android:icon="@drawable/ic_alias_media"
             android:label="@string/alias_label_media"
             android:enabled="false"
             android:exported="true"
