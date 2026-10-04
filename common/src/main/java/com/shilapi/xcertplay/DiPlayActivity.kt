@@ -592,26 +592,33 @@ class DiPlayActivity : ComponentActivity() {
                         }
                     }
                     val turnCard = officialCardOnly
-                    choice(card, getString(if (turnCard) R.string.turn_card_size else R.string.cluster_map_size),
-                        listOf(
-                            getString(R.string.cluster_size_standard),
-                            getString(R.string.cluster_size_larger),
-                            getString(R.string.cluster_size_largest),
-                            getString(R.string.cluster_size_smallest),
-                        ),
-                        sizes.indexOf(AirPlayPersistence.loadClusterMapScalePercent(this)).coerceAtLeast(0)) {
-                        AirPlayPersistence.saveClusterMapScalePercent(this, sizes[it])
-                    }
+                    card.addView(overlaySliderRow(
+                        getString(if (turnCard) R.string.turn_card_size else R.string.cluster_map_size),
+                        sizes.sorted(),
+                        AirPlayPersistence.loadClusterMapScalePercent(this),
+                    ) { v -> getString(when (v) {
+                        67 -> R.string.cluster_size_largest
+                        83 -> R.string.cluster_size_larger
+                        125 -> R.string.cluster_size_smallest
+                        else -> R.string.cluster_size_standard }) }
+                        .also { it.onSave = { v -> AirPlayPersistence.saveClusterMapScalePercent(this, v) } }
+                        .also { it.onCommit = { reconnectForClusterMap() } })
                     val across = CarPlayClusterDisplay.horizontalSteps.toList()
-                    choice(card, getString(if (turnCard) R.string.turn_card_horizontal else R.string.car_marker_horizontal), across.map { markerStepLabel(it, getString(R.string.marker_left), getString(R.string.marker_right)) },
-                        across.indexOf(AirPlayPersistence.loadClusterMarkerHorizontalStep(this)).coerceAtLeast(0)) {
-                        AirPlayPersistence.saveClusterMarkerHorizontalStep(this, across[it])
-                    }
+                    card.addView(overlaySliderRow(
+                        getString(if (turnCard) R.string.turn_card_horizontal else R.string.car_marker_horizontal),
+                        across,
+                        AirPlayPersistence.loadClusterMarkerHorizontalStep(this),
+                    ) { it -> markerStepLabel(it, getString(R.string.marker_left), getString(R.string.marker_right)) }
+                        .also { it.onSave = { v -> AirPlayPersistence.saveClusterMarkerHorizontalStep(this, v) } }
+                        .also { it.onCommit = { reconnectForClusterMap() } })
                     val upDown = CarPlayClusterDisplay.verticalSteps.toList()
-                    choice(card, getString(if (turnCard) R.string.turn_card_vertical else R.string.car_marker_vertical), upDown.map { markerStepLabel(it, getString(R.string.marker_up), getString(R.string.marker_down)) },
-                        upDown.indexOf(AirPlayPersistence.loadClusterMarkerVerticalStep(this)).coerceAtLeast(0)) {
-                        AirPlayPersistence.saveClusterMarkerVerticalStep(this, upDown[it])
-                    }
+                    card.addView(overlaySliderRow(
+                        getString(if (turnCard) R.string.turn_card_vertical else R.string.car_marker_vertical),
+                        upDown,
+                        AirPlayPersistence.loadClusterMarkerVerticalStep(this),
+                    ) { it -> markerStepLabel(it, getString(R.string.marker_up), getString(R.string.marker_down)) }
+                        .also { it.onSave = { v -> AirPlayPersistence.saveClusterMarkerVerticalStep(this, v) } }
+                        .also { it.onCommit = { reconnectForClusterMap() } })
                     card.addView(button(getString(if (turnCard) R.string.reset_turn_card_to_centre else R.string.reset_car_marker_to_centre), false) {
                         AirPlayPersistence.saveClusterMarkerHorizontalStep(this, 0)
                         AirPlayPersistence.saveClusterMarkerVerticalStep(this, 0)
@@ -626,14 +633,20 @@ class DiPlayActivity : ComponentActivity() {
                         reconnectForClusterMap()
                     }
                     if (AirPlayPersistence.loadClusterSmallWindowMarker(this)) {
-                        choice(card, getString(R.string.cluster_small_window_horizontal), across.map { markerStepLabel(it, getString(R.string.marker_left), getString(R.string.marker_right)) },
-                            across.indexOf(AirPlayPersistence.loadClusterSmallWindowMarkerHorizontalStep(this)).coerceAtLeast(0)) {
-                            AirPlayPersistence.saveClusterSmallWindowMarkerHorizontalStep(this, across[it])
-                        }
-                        choice(card, getString(R.string.cluster_small_window_vertical), upDown.map { markerStepLabel(it, getString(R.string.marker_up), getString(R.string.marker_down)) },
-                            upDown.indexOf(AirPlayPersistence.loadClusterSmallWindowMarkerVerticalStep(this)).coerceAtLeast(0)) {
-                            AirPlayPersistence.saveClusterSmallWindowMarkerVerticalStep(this, upDown[it])
-                        }
+                        card.addView(overlaySliderRow(
+                            getString(R.string.cluster_small_window_horizontal),
+                            across,
+                            AirPlayPersistence.loadClusterSmallWindowMarkerHorizontalStep(this),
+                        ) { it -> markerStepLabel(it, getString(R.string.marker_left), getString(R.string.marker_right)) }
+                            .also { it.onSave = { v -> AirPlayPersistence.saveClusterSmallWindowMarkerHorizontalStep(this, v) } }
+                            .also { it.onCommit = { reconnectForClusterMap() } })
+                        card.addView(overlaySliderRow(
+                            getString(R.string.cluster_small_window_vertical),
+                            upDown,
+                            AirPlayPersistence.loadClusterSmallWindowMarkerVerticalStep(this),
+                        ) { it -> markerStepLabel(it, getString(R.string.marker_up), getString(R.string.marker_down)) }
+                            .also { it.onSave = { v -> AirPlayPersistence.saveClusterSmallWindowMarkerVerticalStep(this, v) } }
+                            .also { it.onCommit = { reconnectForClusterMap() } })
                         card.addView(label(getString(R.string.cluster_small_window_hint), 14, MUTED).apply { setPadding(0, dp(10), 0, 0) })
                     }
                     toggle(card, getString(R.string.dashboard_map_only_in_small_and_full_navi),
@@ -1230,6 +1243,8 @@ class DiPlayActivity : ComponentActivity() {
         private val describe: (Int) -> String,
     ) : LinearLayout(context) {
         var onSave: (Int) -> Unit = {}
+        /** Fired once when the finger leaves the slider, for saves that need a reconnect. */
+        var onCommit: () -> Unit = {}
         val slider: SeekBar
 
         init {
@@ -1250,7 +1265,7 @@ class DiPlayActivity : ComponentActivity() {
                         if (fromUser) onSave(value)
                     }
                     override fun onStartTrackingTouch(seekBar: SeekBar?) {}
-                    override fun onStopTrackingTouch(seekBar: SeekBar?) {}
+                    override fun onStopTrackingTouch(seekBar: SeekBar?) { onCommit() }
                 })
             }
             addView(slider, LinearLayout.LayoutParams(-1, dp(44)))
