@@ -1,0 +1,79 @@
+name: Release Chinese APK
+
+on:
+  push:
+    tags:
+      - 'v*-cn.*'
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      OFFICIAL_APK_URL: https://github.com/shihabal3amri/DiPlay/releases/download/v0.2.11/DiPlay-0.2.11.apk
+      OFFICIAL_APK_SHA256: 57a3f5daf02af82f636baee26f28a475e04013de8174176c62d97d300498e4c9
+    steps:
+      - uses: actions/checkout@v4
+      - name: Reject credential files in public source
+        run: python3 scripts/check_public_tree.py
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '25'
+      - uses: android-actions/setup-android@v3
+        with:
+          packages: platform-tools platforms;android-37.0 build-tools;36.0.0 ndk;28.2.13676358
+      - uses: gradle/actions/setup-gradle@v4
+      - name: Provision runtime identity from official v0.2.11 APK
+        shell: bash
+        run: |
+          set -euo pipefail
+          apk="$RUNNER_TEMP/DiPlay-0.2.11.apk"
+          assets="$RUNNER_TEMP/auth-assets"
+          curl -fsSL -o "$apk" "$OFFICIAL_APK_URL"
+          python3 scripts/extract_official_identity.py "$apk" "$assets" "$OFFICIAL_APK_SHA256"
+          echo "DIPLAY_AUTH_ASSETS_DIR=$assets" >> "$GITHUB_ENV"
+      - name: The release notes must use the version placeholder
+        run: grep -q '{{VERSION}}' docs/GITHUB_RELEASE.md
+      - name: The tag must match the app versionName
+        run: |
+          version=$(grep -o 'versionName = "[^"]*"' mobile/build.gradle.kts | cut -d'"' -f2)
+          tag="${GITHUB_REF_NAME#v}"
+          if [ "$version" != "$tag" ]; then
+            echo "::error::tag $GITHUB_REF_NAME does not match versionName $version"
+            exit 1
+          fi
+      - name: Test and build standalone release APK
+        run: ./gradlew :shared:testDebugUnitTest :common:testDebugUnitTest :mobile:lintRelease :mobile:assembleStandaloneRelease --stacktrace > gradle.log 2>&1 || { cat gradle.log | tail -120; exit 1; }
+      - name: Verify identity is inside the APK and not in git
+        run: |
+          set -euo pipefail
+          python3 scripts/check_public_tree.py
+          python3 scripts/verify_apk_identity.py mobile/build/outputs/apk/release/mobile-release.apk
+      - name: Prepare release files
+        shell: bash
+        run: |
+          set -euo pipefail
+          apk="DiPlay-cn-${GITHUB_REF_NAME}.apk"
+          cp mobile/build/outputs/apk/release/mobile-release.apk "$apk"
+          sha256sum "$apk" > "$apk.sha256"
+          cp docs/GITHUB_RELEASE.md release-notes.md
+          sed -i "s/{{VERSION}}/${GITHUB_REF_NAME#v}/g" release-notes.md
+      - name: Publish GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          apk="DiPlay-cn-${GITHUB_REF_NAME}.apk"
+          gh release delete "$GITHUB_REF_NAME" --repo "$GITHUB_REPOSITORY" --yes || true
+          gh release create "$GITHUB_REF_NAME" \
+            "$apk#DiPlay CN" \
+            "$apk.sha256#SHA-256" \
+            --repo "$GITHUB_REPOSITORY" \
+            --verify-tag \
+            --title "DiPlay CN ${GITHUB_REF_NAME#v}" \
+            --notes-file release-notes.md

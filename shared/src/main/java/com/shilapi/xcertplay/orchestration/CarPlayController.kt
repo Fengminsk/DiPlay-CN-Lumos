@@ -32,6 +32,7 @@ import com.shilapi.xcertplay.airplay.AirPlaySessionListener
 import com.shilapi.xcertplay.airplay.PairingStore
 import com.shilapi.xcertplay.airplay.VideoInCar
 import com.shilapi.xcertplay.airplay.VideoPlaybackDelivery
+import com.shilapi.xcertplay.hud.BydBluetoothSuspend
 import com.shilapi.xcertplay.hud.BydNavigationOutputs
 import com.shilapi.xcertplay.iap2.session.Iap2Session
 import com.shilapi.xcertplay.mfi.Iap2MfiAuthenticationClient
@@ -261,6 +262,10 @@ class CarPlayController(
 
     private val sessionListener = object : AirPlaySessionListener {
         override fun onSessionActive(session: AirPlaySession) {
+            val btPrefs = appContext.getSharedPreferences("xcertplay_airplay", android.content.Context.MODE_PRIVATE)
+            if (btPrefs.getBoolean("bt_suspend_during_carplay", false)) {
+                BydBluetoothSuspend.suspend(appContext, btSuspendDelayMs(btPrefs))
+            }
             if (activeSession !== session) {
                 BydNavigationOutputs.start(appContext)
                 com.shilapi.xcertplay.glance.CarPlayGlance.setConnected(true)
@@ -282,6 +287,7 @@ class CarPlayController(
             if (activeSession === session) {
                 activeSession = null
                 BydNavigationOutputs.endNow()
+                BydBluetoothSuspend.resume(appContext)
                 com.shilapi.xcertplay.glance.CarPlayGlance.setConnected(false)
                 videoListener?.onVideoSessionEnded()
                 synchronized(playbackStatus) {
@@ -1004,6 +1010,11 @@ class CarPlayController(
 
             val adapter = bluetoothAdapter
                 ?: throw IOException("Bluetooth adapter is unavailable")
+            if (BydBluetoothSuspend.isSuspendedByUs(appContext)) {
+                if (!BydBluetoothSuspend.resumeAndWait(appContext, adapter)) {
+                    debugLog("car Bluetooth did not wake in time for the handshake")
+                }
+            }
             if (!adapter.isEnabled) throw IOException("Bluetooth is not enabled")
             val device = selectWirelessBluetoothDevice(adapter)
             val hostBluetoothMac = accessoryBluetoothMac(adapter)
@@ -1364,8 +1375,12 @@ class CarPlayController(
                     phase != Phase.WIRELESS ||
                     generation != wirelessGeneration.get() ||
                     !wirelessHandoffRequested.get() ||
-                    wirelessActiveReported.get()
+                    wirelessActiveReported.get() ||
+                    activeSession != null
                 ) {
+                    if (activeSession != null && !wirelessActiveReported.get()) {
+                        debugLog("wireless handoff watchdog skipped; AirPlay session is already active")
+                    }
                     return@postDelayed
                 }
                 debugLog("wireless handoff timed out waiting for tunnel iAP2 readiness")
@@ -1403,6 +1418,15 @@ class CarPlayController(
             WIRELESS_HANDOFF_TIMEOUT_MILLIS,
         )
     }
+
+    /** The user's grace period before Bluetooth is suspended: 5–30 s, 10 s by default. */
+    private fun btSuspendDelayMs(prefs: android.content.SharedPreferences): Long =
+        when (prefs.getInt("bt_suspend_delay_seconds", 10)) {
+            5 -> 5_000L
+            15 -> 15_000L
+            30 -> 30_000L
+            else -> 10_000L
+        }
 
     private fun closeBluetoothBootstrapTransport() {
         val activeCsm = csm

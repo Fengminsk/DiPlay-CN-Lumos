@@ -414,6 +414,8 @@ class DiPlayActivity : ComponentActivity() {
                 permissions = { listOf(CarHotspotSetup.Permission.BOOT_LAUNCH) }) {
                 AirPlayPersistence.saveAutoStartOnBoot(this, it)
             }
+            card.addView(button(getString(R.string.boot_start_repair), false) { repairBootStart() }, matchButton(6, 56))
+            card.addView(label(getString(R.string.boot_start_repair_desc), 14, MUTED).apply { setPadding(0, dp(8), 0, dp(6)) })
             card.addView(button("${getString(R.string.choose_iphone_prefix)}${DiPlayPreferences.phoneName(this)}", false) { choosePhone() }, matchButton(12, 60))
         }
         bydAdbSettings(content)
@@ -538,14 +540,18 @@ class DiPlayActivity : ComponentActivity() {
                         if (content.url != next.url) reconnectForClusterMap()
                     }
                     if (customCard) {
-                        val overlaySizes = CarPlayClusterDisplay.OverlaySize.entries
-                        choice(card, getString(R.string.turn_card_overlay_size), listOf(
-                            getString(R.string.turn_card_overlay_small),
-                            getString(R.string.turn_card_overlay_medium),
-                            getString(R.string.turn_card_overlay_large),
-                        ), overlaySizes.indexOf(AirPlayPersistence.loadClusterTurnCardOverlaySize(this)).coerceAtLeast(0), reconnects = false) {
-                            AirPlayPersistence.saveClusterTurnCardOverlaySize(this, overlaySizes[it])
-                        }
+                        card.addView(overlaySliderRow(
+                            getString(R.string.turn_card_overlay_size),
+                            ClusterTurnCardOverlay.sizePercents,
+                            AirPlayPersistence.loadClusterTurnCardOverlaySizePercent(this),
+                        ) { it -> getString(R.string.turn_card_overlay_size_option, it) }
+                            .also { it.onSave = { v -> AirPlayPersistence.saveClusterTurnCardOverlaySizePercent(this, v) } })
+                        card.addView(overlaySliderRow(
+                            getString(R.string.turn_card_overlay_opacity),
+                            ClusterTurnCardOverlay.opacityPercents,
+                            AirPlayPersistence.loadClusterTurnCardOpacityPercent(this),
+                        ) { it -> getString(R.string.turn_card_overlay_opacity_option, it) }
+                            .also { it.onSave = { v -> AirPlayPersistence.saveClusterTurnCardOpacityPercent(this, v) } })
                         card.addView(overlaySliderRow(
                             getString(R.string.turn_card_overlay_horizontal),
                             ClusterTurnCardOverlay.xPercents,
@@ -567,7 +573,12 @@ class DiPlayActivity : ComponentActivity() {
                     }
                     val turnCard = officialCardOnly
                     choice(card, getString(if (turnCard) R.string.turn_card_size else R.string.cluster_map_size),
-                        listOf(getString(R.string.cluster_size_standard), getString(R.string.cluster_size_larger), getString(R.string.cluster_size_largest)),
+                        listOf(
+                            getString(R.string.cluster_size_standard),
+                            getString(R.string.cluster_size_larger),
+                            getString(R.string.cluster_size_largest),
+                            getString(R.string.cluster_size_smallest),
+                        ),
                         sizes.indexOf(AirPlayPersistence.loadClusterMapScalePercent(this)).coerceAtLeast(0)) {
                         AirPlayPersistence.saveClusterMapScalePercent(this, sizes[it])
                     }
@@ -609,15 +620,109 @@ class DiPlayActivity : ComponentActivity() {
         languageSettings(content)
     }
 
+    private fun offerUpdate(release: AppUpdate.Release) {
+        val size = if (release.apkBytes > 0) "${release.apkBytes / 1024 / 1024} MB" else "?"
+        AlertDialog.Builder(this)
+            .setTitle(getString(R.string.update_available, release.tag, size))
+            .setPositiveButton(getString(R.string.download_and_install)) { _, _ -> downloadUpdate(release) }
+            .setNegativeButton(getString(R.string.common_cancel), null)
+            .show()
+    }
+
+    private fun downloadUpdate(release: AppUpdate.Release) {
+        val progress = android.app.ProgressDialog(this).apply {
+            setMessage(getString(R.string.update_downloading))
+            isIndeterminate = false
+            max = 100
+            setProgressStyle(android.app.ProgressDialog.STYLE_HORIZONTAL)
+            setCancelable(true)
+            show()
+        }
+        AppUpdate.download(
+            this,
+            release,
+            onProgress = { percent -> runOnUiThread { if (percent >= 0) progress.progress = percent else progress.isIndeterminate = true } },
+            onDone = { file ->
+                runOnUiThread {
+                    progress.dismiss()
+                    if (!AppUpdate.install(this, file)) {
+                        toast(getString(R.string.update_install_failed))
+                    }
+                }
+            },
+            onError = { message ->
+                runOnUiThread {
+                    progress.dismiss()
+                    toast(getString(R.string.update_download_failed, message))
+                }
+            },
+        )
+    }
+
     private fun about(content: LinearLayout) {
         content.addView(label(getString(R.string.diplay), 40, TEXT, true))
         content.addView(label(getString(R.string.carplay_at_home_in_your_car), 20, MUTED).apply { setPadding(0, dp(8), 0, dp(24)) })
         section(content, "${getString(R.string.about_public_preview_prefix)}${version()}") { card ->
             card.addView(label(getString(R.string.an_independent_carplay_receiver_for_android_head_units_wir), 17, TEXT))
+            val updateStatus = label(AppUpdate.currentVersion(this), 15, MUTED).apply {
+                setPadding(0, dp(10), 0, 0)
+            }
+            card.addView(updateStatus)
+            val channels = listOf(
+                getString(R.string.update_channel_github),
+                getString(R.string.update_channel_gitee),
+                getString(R.string.update_channel_mirror1),
+                getString(R.string.update_channel_mirror2),
+            )
+            choice(card, getString(R.string.update_channel), channels,
+                AirPlayPersistence.loadUpdateChannel(this).coerceIn(0, 3), reconnects = false) {
+                AirPlayPersistence.saveUpdateChannel(this, it)
+                AppUpdate.setChannel(it)
+            }
+            card.addView(button(getString(R.string.check_for_updates), false) {
+                updateStatus.text = "…"
+                AppUpdate.setChannel(AirPlayPersistence.loadUpdateChannel(this))
+                AppUpdate.check { release, failure ->
+                    when {
+                        release == null ->
+                            updateStatus.text = getString(R.string.update_check_failed, failure ?: "?")
+                        !AppUpdate.isAvailable(release, this) ->
+                            updateStatus.text = getString(R.string.up_to_date)
+                        else -> {
+                            updateStatus.text = release.tag
+                            offerUpdate(release)
+                        }
+                    }
+                }
+            }, matchButton(10, 56))
         }
         section(content, getString(R.string.made_possible_by_open_source)) { card ->
             card.addView(label(getString(R.string.receiver_based_on_xcertplay_licensed_under_gpl_3_0_diplay), 16, MUTED))
         }
+    }
+
+    private fun repairBootStart() {
+        val dialog = AlertDialog.Builder(this)
+            .setTitle(getString(R.string.boot_start_repair))
+            .setMessage(getString(R.string.boot_start_repair_running))
+            .setNegativeButton(getString(R.string.common_cancel), null)
+            .show()
+        Thread({
+            val result = runCatching {
+                com.shilapi.xcertplay.hud.BydBootStartRepair.apply(applicationContext, packageName)
+            }.getOrNull()
+            runOnUiThread {
+                if (isFinishing || isDestroyed) return@runOnUiThread
+                dialog.dismiss()
+                val text = result?.lines?.joinToString("\n")?.let { getString(R.string.boot_start_repair_result, it) }
+                    ?: getString(R.string.adb_check_failed)
+                AlertDialog.Builder(this)
+                    .setTitle(getString(R.string.boot_start_repair))
+                    .setMessage(text)
+                    .setPositiveButton(android.R.string.ok, null)
+                    .show()
+            }
+        }, "diplay-boot-repair").start()
     }
 
     // An opted-in connection prepares the hotspot in the controller instead of stopping at this reminder.
@@ -1397,6 +1502,18 @@ class DiPlayActivity : ComponentActivity() {
 
     private fun showVehicleDataSettings(card: LinearLayout, capabilities: BydVehicleCapabilities?) {
         if (capabilities == null || capabilities.batterySupported) {
+            toggle(card, getString(R.string.bt_suspend_during_carplay), getString(R.string.bt_suspend_during_carplay_description),
+                AirPlayPersistence.loadBtSuspendDuringCarplay(this), enabled = !adbSwitchChangePending) {
+                AirPlayPersistence.saveBtSuspendDuringCarplay(this, it)
+                if (it) checkAdbState(mayAsk = true)
+            }
+            if (AirPlayPersistence.loadBtSuspendDuringCarplay(this)) {
+                val delays = listOf(5, 10, 15, 30)
+                choice(card, getString(R.string.bt_suspend_delay), delays.map { getString(R.string.bt_suspend_delay_option, it) },
+                    delays.indexOf(AirPlayPersistence.loadBtSuspendDelaySeconds(this)).coerceAtLeast(0), reconnects = false) {
+                    AirPlayPersistence.saveBtSuspendDelaySeconds(this, delays[it])
+                }
+            }
             toggle(card, getString(R.string.car_battery_for_the_iphone),
                 getString(R.string.car_battery_for_the_iphone_description),
                 BydOutputSettings.batteryToIphone(this), enabled = !adbSwitchChangePending) {

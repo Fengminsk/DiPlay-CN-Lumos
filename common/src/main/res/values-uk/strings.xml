@@ -9,6 +9,7 @@
     <string name="hotspot_hint_manual">Вбудована точка доступу · Тримайте точку доступу автомобіля, Bluetooth і Wi-Fi на iPhone увімкненими.</string>
     <string name="hotspot_hint_local">Відкрийте налаштування підключення, щоб зберегти дані вбудованої точки доступу.</string>
     <string name="hotspot_hint_p2p">Wi-Fi Direct · Тримайте Wi-Fi автомобіля, Bluetooth і Wi-Fi на iPhone увімкненими.</string>
+    <string name="cluster_size_smallest">Менше · більше карти та дрібніші деталі</string>
     <string name="cluster_size_standard">Стандартний · найчіткіший</string>
     <string name="cluster_size_larger">Більший · типовий</string>
     <string name="cluster_size_largest">Найбільший</string>
@@ -257,6 +258,10 @@
     <string name="one_time_setup_on_this_car">Одноразове налаштування в цьому автомобілі</string>
     <string name="open">Відкрити</string>
     <string name="open_after_the_car_starts">Відкривати після запуску автомобіля</string>
+    <string name="boot_start_repair">Автозапуск · ремонт ADB (експериментально)</string>
+    <string name="boot_start_repair_desc">Деякі прошивки блокують сторонні приймачі завантаження. Ця дія через власний ADB автомобіля виводить DiPlay з фонових обмежень, щоб широкомовлення завантаження доходило. Один раз; повторіть після оновлення прошивки.</string>
+    <string name="boot_start_repair_result">Ремонт автозапуску:%1$s</string>
+    <string name="boot_start_repair_running">Застосовуються винятки автозапуску…</string>
     <string name="open_bluetooth">Відкрити Bluetooth</string>
     <string name="open_car_hotspot_settings">Відкрити налаштування точки доступу автомобіля</string>
     <string name="open_car_settings">Відкрити налаштування автомобіля</string>
@@ -519,6 +524,9 @@
     <string name="widget_not_connected">CarPlay не підключено</string>
     <string name="dashboard_content_map_with_custom_turn_card">Карта з власною карткою маневру</string>
     <string name="turn_card_overlay_size">Розмір власної картки</string>
+    <string name="turn_card_overlay_opacity">Прозорість власної картки</string>
+    <string name="turn_card_overlay_opacity_option">%1$d %%</string>
+    <string name="turn_card_overlay_size_option">%1$d %%</string>
     <string name="turn_card_overlay_horizontal">Власна картка · ліворуч / праворуч</string>
     <string name="turn_card_overlay_vertical">Власна картка · вгору / вниз</string>
     <string name="turn_card_overlay_small">Мала</string>
@@ -546,4 +554,25 @@
     <string name="hotspot_control_timeout">Час очікування ввімкнення точки доступу минув. Відкрийте налаштування авто.</string>
     <string name="hotspot_control_failed">Не вдалося ввімкнути точку доступу. Відкрийте налаштування авто.</string>
     <string name="byd_adb_features">Функції BYD · потрібен ADB</string>
+    <string name="bt_suspend_delay">Затримка паузи Bluetooth</string>
+    <string name="bt_suspend_delay_option">%1$d с після підключення</string>
+    <string name="bt_suspend_during_carplay">Призупинити Bluetooth авто під час CarPlay · потрібен ADB</string>
+    <string name="bt_suspend_during_carplay_description">Телефон тримає hands-free звʼязок з авто, тому вхідний дзвінок звучить і в телефоні авто, і в CarPlay. Після ввімкнення: Bluetooth авто призупиняється через ADB на час сеансу CarPlay — дзвінки йдуть лише в CarPlay; вмикається назад після сеансу і перед наступним бездротовим зʼєднанням. Пара не змінюється. Застосується з наступного підключення.</string>
+    <string name="check_for_updates">Перевірити оновлення</string>
+    <string name="download_and_install">Завантажити та встановити</string>
+    <string name="turn_card_info_arrival">Прибуття %1$s</string>
+    <string name="turn_card_info_duration_hm">%1$d год %2$d хв</string>
+    <string name="turn_card_info_duration_m">%1$d хв</string>
+    <string name="turn_card_info_km">%1$.1f км</string>
+    <string name="up_to_date">У вас найновіша версія.</string>
+    <string name="update_available">Доступна нова версія %1$s (%2$s).</string>
+    <string name="update_channel">Канал оновлень</string>
+    <string name="update_channel_gitee">Gitee (Китай)</string>
+    <string name="update_channel_mirror1">Дзеркало прискорення (gh-proxy.com)</string>
+    <string name="update_channel_mirror2">Дзеркало прискорення (ghproxy.net)</string>
+    <string name="update_channel_github">GitHub безпосередньо</string>
+    <string name="update_check_failed">Немає звʼязку з GitHub: %1$s. Спробуйте пізніше.</string>
+    <string name="update_download_failed">Не вдалося завантажити: %1$s. Перевірте мережу.</string>
+    <string name="update_downloading">Завантаження оновлення…</string>
+    <string name="update_install_failed">Інсталятор не відкрився. Дозвольте DiPlay встановлювати невідомі застосунки та повторіть.</string>
 </resources>

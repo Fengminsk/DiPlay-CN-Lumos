@@ -8,6 +8,7 @@
     <string name="hotspot_hint_manual">نقطة اتصال السيارة المدمجة · أبقِ نقطة الاتصال والبلوتوث وواي فاي iPhone مُفعّلة.</string>
     <string name="hotspot_hint_local">افتح إعداد الاتصال لحفظ بيانات نقطة اتصال السيارة المدمجة.</string>
     <string name="hotspot_hint_p2p">Wi-Fi Direct · أبقِ مفتاح واي فاي السيارة والبلوتوث وواي فاي iPhone مُفعّلة.</string>
+    <string name="cluster_size_smallest">أصغر · خريطة أكثر وتفاصيل أدق</string>
     <string name="cluster_size_standard">قياسي · أوضح صورة</string>
     <string name="cluster_size_larger">أكبر · الافتراضي</string>
     <string name="cluster_size_largest">الأكبر</string>
@@ -250,6 +251,10 @@
     <string name="one_time_setup_on_this_car">إعداد لمرة واحدة على هذه السيارة</string>
     <string name="open">فتح</string>
     <string name="open_after_the_car_starts">الفتح بعد تشغيل السيارة</string>
+    <string name="boot_start_repair">بدء التشغيل التلقائي · إصلاح ADB (تجريبي)</string>
+    <string name="boot_start_repair_desc">بعض البرامج الثابتة تحجب مستقبلات الإقلاع التابعة لجهات خارجية. يطلب هذا من وحدة الرأس عبر رابط ADB الخاص بها إعفاء DiPlay من حدود الخلفية حتى يصل بث الإقلاع. مرة واحدة؛ أعد التشغيل بعد تحديث البرنامج الثابت.</string>
+    <string name="boot_start_repair_result">إصلاح بدء التشغيل التلقائي:%1$s</string>
+    <string name="boot_start_repair_running">جارٍ تطبيق إعفاءات بدء التشغيل التلقائي…</string>
     <string name="open_bluetooth">فتح البلوتوث</string>
     <string name="open_car_hotspot_settings">فتح إعدادات نقطة اتصال السيارة</string>
     <string name="open_car_settings">فتح إعدادات السيارة</string>
@@ -506,6 +511,9 @@
     <string name="launcher_map_sharing">مشاركة الخريطة المباشرة مع المشغّلات الأخرى</string>
     <string name="launcher_map_sharing_description">يمكن للمشغّلات التي تدعم DiPlay عرض خريطة لوحة العدادات المباشرة داخل شاشتها الرئيسية. معطّل افتراضيًا، لأن أي تطبيق على وحدة القيادة يمكنه عندها طلب الخريطة. راجع docs/LAUNCHER_INTEGRATION.md.</string>
     <string name="turn_card_overlay_size">حجم بطاقة الانعطاف المخصصة</string>
+    <string name="turn_card_overlay_opacity">شفافية بطاقة الانعطاف المخصصة</string>
+    <string name="turn_card_overlay_opacity_option">%1$d %%</string>
+    <string name="turn_card_overlay_size_option">%1$d %%</string>
     <string name="turn_card_overlay_horizontal">بطاقة الانعطاف المخصصة · يسار / يمين</string>
     <string name="turn_card_overlay_vertical">بطاقة الانعطاف المخصصة · أعلى / أسفل</string>
     <string name="turn_card_overlay_small">صغير</string>
@@ -534,4 +542,25 @@
     <string name="hotspot_control_failed">تعذر تشغيل نقطة الاتصال. افتح إعدادات السيارة لتشغيلها.</string>
     <string name="byd_adb_features">ميزات BYD · تتطلب ADB</string>
     <string name="location_reporting_reconnects">يؤدي تغيير هذا الإعداد إلى إعادة اتصال جلسة CarPlay النشطة.</string>
+    <string name="bt_suspend_delay">تأخير إيقاف البلوتوث</string>
+    <string name="bt_suspend_delay_option">%1$d ث بعد الاتصال</string>
+    <string name="bt_suspend_during_carplay">إيقاف بلوتوث السيارة أثناء CarPlay · يتطلب ADB</string>
+    <string name="bt_suspend_during_carplay_description">يبقى الهاتف متصلًا بنظام التحدث الحر في السيارة، فرنين المكالمة يظهر على هاتف السيارة وعلى CarPlay معًا. عند التشغيل: يُوقف بلوتوث السيارة مؤقتًا عبر ADB طوال جلسة CarPlay فترد المكالمات على CarPlay فقط، ويُعاد تشغيله عند انتهاء الجلسة وقبل مصافحة الاتصال اللاسلكي التالية. لا يتأثر الاقتران. يسري التغيير عند الاتصال التالي.</string>
+    <string name="check_for_updates">التحقق من التحديثات</string>
+    <string name="download_and_install">تنزيل وتثبيت</string>
+    <string name="turn_card_info_arrival">الوصول %1$s</string>
+    <string name="turn_card_info_duration_hm">%1$d س %2$d د</string>
+    <string name="turn_card_info_duration_m">%1$d د</string>
+    <string name="turn_card_info_km">%1$.1f كم</string>
+    <string name="up_to_date">أنت على أحدث إصدار.</string>
+    <string name="update_available">يتوفر إصدار جديد %1$s (%2$s).</string>
+    <string name="update_channel">قناة التحديث</string>
+    <string name="update_channel_gitee">Gitee (الصين)</string>
+    <string name="update_channel_mirror1">مرآة التسريع (gh-proxy.com)</string>
+    <string name="update_channel_mirror2">مرآة التسريع (ghproxy.net)</string>
+    <string name="update_channel_github">GitHub مباشرة</string>
+    <string name="update_check_failed">تعذر الوصول إلى GitHub: %1$s. حاول لاحقًا.</string>
+    <string name="update_download_failed">فشل التنزيل: %1$s. تحقق من اتصال الشبكة.</string>
+    <string name="update_downloading">جارٍ تنزيل التحديث…</string>
+    <string name="update_install_failed">لم يُفتح المثبِّت. اسمح لـ DiPlay بتثبيت تطبيقات غير معروفة ثم أعد المحاولة.</string>
 </resources>

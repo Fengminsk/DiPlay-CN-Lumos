@@ -118,7 +118,7 @@ internal object BydClusterSong {
             state.accept(frame)
             state.current().also { if (it == previous) return }
         }
-        if (BydOutputSettings.clusterSong(app)) {
+        if (songWanted(app)) {
             if (song == null) stop(app) else show(app, song)
         }
     }
@@ -126,12 +126,24 @@ internal object BydClusterSong {
     /** The setting changed: show the current song now, or stop the card DiPlay set. */
     fun settingChanged(enabled: Boolean) {
         val app = context ?: return
-        if (enabled) synchronized(state) { state.current() }?.let { show(app, it) } else stop(app)
+        if (songWanted(app)) synchronized(state) { state.current() }?.let { show(app, it) } else stop(app)
     }
+
+    /**
+     * The song card needs both its own switch and the master navigation switch, so turning the
+     * master off stops every write to the instrument cluster. Also give up after a failed write:
+     * a dashboard that rejects the write once keeps rejecting it, and hammering an unhappy
+     * instrument service is how some firmwares fall back to their simple mode.
+     */
+    private fun songWanted(app: Context): Boolean =
+        BydOutputSettings.enabled(app) && BydOutputSettings.clusterSong(app) && !givenUp.get()
+
+    private val givenUp = java.util.concurrent.atomic.AtomicBoolean(false)
 
     /** The session ended: forget the song and stop the card DiPlay set. */
     fun end() {
         val app = context ?: return
+        givenUp.set(false)
         synchronized(state) { state.clear() }
         stop(app)
     }
@@ -171,7 +183,11 @@ internal object BydClusterSong {
             ?: return false
         val failed = output.lineSequence().map { it.trim() }.filter { it.contains('=') }
             .any { line -> line.substringAfter('=').trim().toIntOrNull() != 0 }
-        if (failed) Log.w(TAG, "dashboard write failed: ${output.trim().take(160)}")
+        if (failed) {
+            givenUp.set(true)
+            synchronized(state) { wanted = null }
+            Log.w(TAG, "dashboard write failed once; stopping song writes for this session: ${output.trim().take(160)}")
+        }
         return !failed
     }
 }
