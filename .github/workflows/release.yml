@@ -106,8 +106,15 @@ jobs:
             exit 0
           fi
           for f in "DiPlay-cn-$GITHUB_REF_NAME.apk" "DiPlay-cn-$GITHUB_REF_NAME.apk.sha256"; do
-            curl -fsS -X POST "$api/releases/$id/attach_files" \
-              -F "access_token=$GITEE_TOKEN" -F "file=@$f" >/dev/null \
-              || echo "::warning::attaching $f failed (maybe already uploaded)"
+            ok=""
+            for attempt in 1 2 3; do
+              if curl -fsS --max-time 600 -X POST "$api/releases/$id/attach_files" \
+                  -F "access_token=$GITEE_TOKEN" -F "file=@$f" >/dev/null; then
+                ok=1; break
+              fi
+              echo "attach $f attempt $attempt failed; retrying in 15s"
+              sleep 15
+            done
+            [ -n "$ok" ] || echo "::warning::attaching $f failed after retries"
           done
           echo "Gitee release synced: id=$id"
