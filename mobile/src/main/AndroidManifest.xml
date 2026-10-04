@@ -22,7 +22,10 @@
         <meta-data android:name="androidx.car.app.minCarApiLevel" tools:node="remove" />
 
         <!-- The launcher entry moves to the aliases below so the app-list name can be switched. -->
-        <activity android:name="com.shilapi.xcertplay.DiPlayActivity">
+        <activity
+            android:name="com.shilapi.xcertplay.DiPlayActivity"
+            android:exported="true"
+            android:launchMode="singleTop">
             <intent-filter tools:node="remove">
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
