@@ -573,6 +573,8 @@
     <string name="cluster_small_window_auto">Auto · experimental</string>
     <string name="cluster_small_window_marker">Small-window navi · separate positions</string>
     <string name="cluster_small_window_card_size">Small-window turn card · size</string>
+    <string name="cluster_small_window_card_theme">Small-window turn card theme</string>
+    <string name="cluster_small_window_card_theme_follow">Follow the turn card theme</string>
     <string name="cluster_small_window_card_horizontal">Small-window turn card · left/right</string>
     <string name="cluster_small_window_card_vertical">Small-window turn card · up/down</string>
     <string name="cluster_small_window_marker_description">When the cluster switches to its small navi window, only part of the panel is visible. This keeps a second car-marker position for that window (default: right of centre) so the route shows inside it, and the custom turn card gets its own size and position inside the window; full-screen positions are unchanged. Changes reconnect the cluster map.</string>

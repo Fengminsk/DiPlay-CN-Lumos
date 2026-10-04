@@ -598,28 +598,27 @@ class DiPlayActivity : ComponentActivity() {
                         else -> R.string.cluster_size_standard }) }
                         .also { it.onSave = { v -> AirPlayPersistence.saveClusterMapScalePercent(this, v) } }
                         .also { it.onCommit = { reconnectForClusterMap() } })
-                    val across = CarPlayClusterDisplay.horizontalSteps.toList()
                     card.addView(overlaySliderRow(
                         getString(if (turnCard) R.string.turn_card_horizontal else R.string.car_marker_horizontal),
-                        across,
-                        AirPlayPersistence.loadClusterMarkerHorizontalStep(this),
-                    ) { it -> markerStepLabel(it, getString(R.string.marker_left), getString(R.string.marker_right)) }
-                        .also { it.onSave = { v -> AirPlayPersistence.saveClusterMarkerHorizontalStep(this, v) } }
+                        CarPlayClusterDisplay.markerXPercents,
+                        AirPlayPersistence.loadClusterMarkerXPercent(this),
+                    ) { it -> overlayOffsetLabel(it, getString(R.string.marker_left), getString(R.string.marker_right), 50) }
+                        .also { it.onSave = { v -> AirPlayPersistence.saveClusterMarkerXPercent(this, v) } }
                         .also { it.onCommit = { reconnectForClusterMap() } })
-                    val upDown = CarPlayClusterDisplay.verticalSteps.toList()
                     card.addView(overlaySliderRow(
                         getString(if (turnCard) R.string.turn_card_vertical else R.string.car_marker_vertical),
-                        upDown,
-                        AirPlayPersistence.loadClusterMarkerVerticalStep(this),
-                    ) { it -> markerStepLabel(it, getString(R.string.marker_up), getString(R.string.marker_down)) }
-                        .also { it.onSave = { v -> AirPlayPersistence.saveClusterMarkerVerticalStep(this, v) } }
+                        CarPlayClusterDisplay.markerYPercents,
+                        AirPlayPersistence.loadClusterMarkerYPercent(this),
+                    ) { it -> overlayOffsetLabel(it, getString(R.string.marker_up), getString(R.string.marker_down), 45) }
+                        .also { it.onSave = { v -> AirPlayPersistence.saveClusterMarkerYPercent(this, v) } }
                         .also { it.onCommit = { reconnectForClusterMap() } })
                     card.addView(button(getString(if (turnCard) R.string.reset_turn_card_to_centre else R.string.reset_car_marker_to_centre), false) {
-                        AirPlayPersistence.saveClusterMarkerHorizontalStep(this, 0)
-                        AirPlayPersistence.saveClusterMarkerVerticalStep(this, 0)
+                        AirPlayPersistence.saveClusterMarkerXPercent(this, 50)
+                        AirPlayPersistence.saveClusterMarkerYPercent(this, 45)
                         render()
                         reconnectForClusterMap()
                     }, matchButton(10, 56))
+                    card.addView(space(10))
                     choice(card, getString(R.string.cluster_small_window_marker), listOf(
                         getString(R.string.cluster_small_window_off),
                         getString(R.string.cluster_small_window_on),
@@ -634,19 +633,26 @@ class DiPlayActivity : ComponentActivity() {
                     if (AirPlayPersistence.loadClusterSmallWindowMode(this) != 0) {
                         card.addView(overlaySliderRow(
                             getString(R.string.cluster_small_window_horizontal),
-                            CarPlayClusterDisplay.smallWindowXPercents,
+                            CarPlayClusterDisplay.markerXPercents,
                             AirPlayPersistence.loadClusterSmallWindowMarkerXPercent(this),
                         ) { it -> overlayOffsetLabel(it, getString(R.string.marker_left), getString(R.string.marker_right), 50) }
                             .also { it.onSave = { v -> AirPlayPersistence.saveClusterSmallWindowMarkerXPercent(this, v) } }
                             .also { it.onCommit = { reconnectForClusterMap() } })
                         card.addView(overlaySliderRow(
                             getString(R.string.cluster_small_window_vertical),
-                            CarPlayClusterDisplay.smallWindowYPercents,
+                            CarPlayClusterDisplay.markerYPercents,
                             AirPlayPersistence.loadClusterSmallWindowMarkerYPercent(this),
                         ) { it -> overlayOffsetLabel(it, getString(R.string.marker_up), getString(R.string.marker_down), 45) }
                             .also { it.onSave = { v -> AirPlayPersistence.saveClusterSmallWindowMarkerYPercent(this, v) } }
                             .also { it.onCommit = { reconnectForClusterMap() } })
                         if (customCard) {
+                            choice(card, getString(R.string.cluster_small_window_card_theme), listOf(
+                                getString(R.string.cluster_small_window_card_theme_follow),
+                                getString(R.string.turn_card_theme_day),
+                                getString(R.string.turn_card_theme_night),
+                            ), AirPlayPersistence.loadClusterSmallWindowCardTheme(this), reconnects = false) {
+                                AirPlayPersistence.saveClusterSmallWindowCardTheme(this, it)
+                            }
                             card.addView(overlaySliderRow(
                                 getString(R.string.cluster_small_window_card_size),
                                 ClusterTurnCardOverlay.sizePercents,
@@ -1259,12 +1265,6 @@ class DiPlayActivity : ComponentActivity() {
     }
 
     // "Left 20 %", "Centre · default", "Down 10 %": a signed step reads as a direction and a distance.
-    private fun markerStepLabel(step: Int, negative: String, positive: String): String = when {
-        step == 0 -> getString(R.string.marker_centre_default)
-        step < 0 -> "$negative ${-step * CarPlayClusterDisplay.MARKER_STEP_PERCENT} %"
-        else -> "$positive ${step * CarPlayClusterDisplay.MARKER_STEP_PERCENT} %"
-    }
-
     /** A 2%-step slider row for overlay placement; every step saves, so the card moves live. */
     private fun overlaySliderRow(title: String, values: List<Int>, current: Int, describe: (Int) -> String): OverlaySliderRow =
         OverlaySliderRow(this, title, values, current, describe)
@@ -1303,6 +1303,8 @@ class DiPlayActivity : ComponentActivity() {
                 })
             }
             addView(slider, LinearLayout.LayoutParams(-1, dp(44)))
+            // Keep a gap below each slider so stacked rows never touch the next control.
+            addView(space(8))
         }
     }
 

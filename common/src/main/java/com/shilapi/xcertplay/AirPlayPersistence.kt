@@ -68,6 +68,8 @@ object AirPlayPersistence {
     private const val KEY_CLUSTER_CONTENT = "cluster_content"
     private const val KEY_CLUSTER_MARKER_X = "cluster_marker_horizontal_step"
     private const val KEY_CLUSTER_MARKER_Y = "cluster_marker_vertical_step"
+    private const val KEY_CLUSTER_MARKER_X_PERCENT = "cluster_marker_x_percent"
+    private const val KEY_CLUSTER_MARKER_Y_PERCENT = "cluster_marker_y_percent"
     private const val KEY_CLUSTER_TURN_CARD_OVERLAY_POSITION = "cluster_turn_card_overlay_position"
     private const val KEY_CLUSTER_TURN_CARD_OVERLAY_SIZE = "cluster_turn_card_overlay_size"
     private const val KEY_CLUSTER_TURN_CARD_OVERLAY_X = "cluster_turn_card_overlay_x_percent"
@@ -102,6 +104,7 @@ object AirPlayPersistence {
     private const val KEY_CLUSTER_TURN_CARD_OVERLAY_SIZE_PERCENT = "cluster_turn_card_overlay_size_percent"
     private const val KEY_CLUSTER_TURN_CARD_OPACITY = "cluster_turn_card_opacity_percent"
     private const val KEY_CLUSTER_TURN_CARD_THEME = "cluster_turn_card_theme"
+    private const val KEY_CLUSTER_SMALL_WINDOW_CARD_THEME = "cluster_small_window_card_theme"
     private const val KEY_CLUSTER_SMALL_WINDOW_MARKER = "cluster_small_window_marker"
     private const val KEY_CLUSTER_SMALL_WINDOW_MODE = "cluster_small_window_mode"
     private const val KEY_CLUSTER_SMALL_WINDOW_MARKER_X = "cluster_small_window_marker_x"
@@ -648,6 +651,57 @@ object AirPlayPersistence {
         loadClusterSmallWindowMode(context) != 0
 
     /**
+     * Full-screen marker on the same 1 % grid as the small-window one; the old 10 % steps
+     * (around x 49.5 / y 45.5) migrate onto it.
+     */
+    fun loadClusterMarkerXPercent(context: Context): Int {
+        val prefs = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+        if (prefs.contains(KEY_CLUSTER_MARKER_X_PERCENT)) {
+            return ClusterTurnCardOverlay.snap(prefs.getInt(KEY_CLUSTER_MARKER_X_PERCENT, 50), CarPlayClusterDisplay.markerXPercents)
+        }
+        val step = prefs.getInt(KEY_CLUSTER_MARKER_X, 0)
+        return ClusterTurnCardOverlay.snap(
+            Math.round(49.5 + step * CarPlayClusterDisplay.MARKER_STEP_PERCENT).toInt(),
+            CarPlayClusterDisplay.markerXPercents,
+        )
+    }
+
+    fun saveClusterMarkerXPercent(context: Context, percent: Int) {
+        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit()
+            .putInt(KEY_CLUSTER_MARKER_X_PERCENT,
+                ClusterTurnCardOverlay.snap(percent, CarPlayClusterDisplay.markerXPercents)).apply()
+    }
+
+    fun loadClusterMarkerYPercent(context: Context): Int {
+        val prefs = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+        if (prefs.contains(KEY_CLUSTER_MARKER_Y_PERCENT)) {
+            return ClusterTurnCardOverlay.snap(prefs.getInt(KEY_CLUSTER_MARKER_Y_PERCENT, 45), CarPlayClusterDisplay.markerYPercents)
+        }
+        val step = prefs.getInt(KEY_CLUSTER_MARKER_Y, 0)
+        return ClusterTurnCardOverlay.snap(
+            Math.round(45.5 + step * CarPlayClusterDisplay.MARKER_STEP_PERCENT).toInt(),
+            CarPlayClusterDisplay.markerYPercents,
+        )
+    }
+
+    fun saveClusterMarkerYPercent(context: Context, percent: Int) {
+        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit()
+            .putInt(KEY_CLUSTER_MARKER_Y_PERCENT,
+                ClusterTurnCardOverlay.snap(percent, CarPlayClusterDisplay.markerYPercents)).apply()
+    }
+
+    /** Small-window card theme: 0 follow the full-screen card theme, 1 always day, 2 always night. */
+    fun loadClusterSmallWindowCardTheme(context: Context): Int =
+        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+            .getInt(KEY_CLUSTER_SMALL_WINDOW_CARD_THEME, 0).coerceIn(0, 2)
+
+    fun saveClusterSmallWindowCardTheme(context: Context, theme: Int) {
+        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit()
+            .putInt(KEY_CLUSTER_SMALL_WINDOW_CARD_THEME, theme.coerceIn(0, 2)).apply()
+        overlaySettingsListener?.invoke()
+    }
+
+    /**
      * Right of centre by default: the small navi window sits on the right half of the panel.
      * Placement is a 5 % grid; the cn.3/cn.4 step values migrate onto it.
      */
@@ -656,18 +710,18 @@ object AirPlayPersistence {
         if (prefs.contains(KEY_CLUSTER_SMALL_WINDOW_MARKER_X_PERCENT)) {
             return ClusterTurnCardOverlay.snap(
                 prefs.getInt(KEY_CLUSTER_SMALL_WINDOW_MARKER_X_PERCENT, 80),
-                CarPlayClusterDisplay.smallWindowXPercents,
+                CarPlayClusterDisplay.markerXPercents,
             )
         }
         val legacyStep = prefs.getInt(KEY_CLUSTER_SMALL_WINDOW_MARKER_X, 3)
         val legacyPercent = (Math.round((49.5 + legacyStep * 10) / 5) * 5).toInt()
-        return ClusterTurnCardOverlay.snap(legacyPercent, CarPlayClusterDisplay.smallWindowXPercents)
+        return ClusterTurnCardOverlay.snap(legacyPercent, CarPlayClusterDisplay.markerXPercents)
     }
 
     fun saveClusterSmallWindowMarkerXPercent(context: Context, percent: Int) {
         context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit()
             .putInt(KEY_CLUSTER_SMALL_WINDOW_MARKER_X_PERCENT,
-                ClusterTurnCardOverlay.snap(percent, CarPlayClusterDisplay.smallWindowXPercents)).apply()
+                ClusterTurnCardOverlay.snap(percent, CarPlayClusterDisplay.markerXPercents)).apply()
     }
 
     fun loadClusterSmallWindowMarkerYPercent(context: Context): Int {
@@ -675,18 +729,18 @@ object AirPlayPersistence {
         if (prefs.contains(KEY_CLUSTER_SMALL_WINDOW_MARKER_Y_PERCENT)) {
             return ClusterTurnCardOverlay.snap(
                 prefs.getInt(KEY_CLUSTER_SMALL_WINDOW_MARKER_Y_PERCENT, 45),
-                CarPlayClusterDisplay.smallWindowYPercents,
+                CarPlayClusterDisplay.markerYPercents,
             )
         }
         val legacyStep = prefs.getInt(KEY_CLUSTER_SMALL_WINDOW_MARKER_Y, 0)
         val legacyPercent = (Math.round((45.5 + legacyStep * 10) / 5) * 5).toInt()
-        return ClusterTurnCardOverlay.snap(legacyPercent, CarPlayClusterDisplay.smallWindowYPercents)
+        return ClusterTurnCardOverlay.snap(legacyPercent, CarPlayClusterDisplay.markerYPercents)
     }
 
     fun saveClusterSmallWindowMarkerYPercent(context: Context, percent: Int) {
         context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit()
             .putInt(KEY_CLUSTER_SMALL_WINDOW_MARKER_Y_PERCENT,
-                ClusterTurnCardOverlay.snap(percent, CarPlayClusterDisplay.smallWindowYPercents)).apply()
+                ClusterTurnCardOverlay.snap(percent, CarPlayClusterDisplay.markerYPercents)).apply()
     }
 
     /** Turn-card glass theme: 0 follow the head unit, 1 always day, 2 always night. */

@@ -21,6 +21,8 @@
     <string name="cluster_small_window_auto">Авто · экспериментально</string>
     <string name="cluster_small_window_marker">Навигация в малом окне · отдельные положения</string>
     <string name="cluster_small_window_card_size">Карточка в малом окне · размер</string>
+    <string name="cluster_small_window_card_theme">Тема карточки в малом окне</string>
+    <string name="cluster_small_window_card_theme_follow">Следовать теме карточки</string>
     <string name="cluster_small_window_card_horizontal">Карточка в малом окне · влево / вправо</string>
     <string name="cluster_small_window_card_vertical">Карточка в малом окне · вверх / вниз</string>
     <string name="cluster_small_window_marker_description">Когда панель приборов переключается на малое окно навигации, видна только часть экрана. Хранится второе положение метки автомобиля для этого окна (по умолчанию правее центра), чтобы маршрут показывался внутри него, а собственная карточка получает отдельные размер и положение в окне; положения для полного экрана не меняются. Изменения переподключают карту панели.</string>

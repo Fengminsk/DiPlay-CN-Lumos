@@ -57,11 +57,32 @@ class ClusterSmallWindowPersistenceTest {
         assertEquals(-2, AirPlayPersistence.loadClusterMarkerHorizontalStep(context))
     }
 
-    @Test fun markerSnapsOntoTheFivePercentGrid() {
+    @Test fun markerSnapsOntoTheOnePercentGrid() {
         AirPlayPersistence.saveClusterSmallWindowMarkerXPercent(context, 87)
         AirPlayPersistence.saveClusterSmallWindowMarkerYPercent(context, 3)
-        assertEquals(85, AirPlayPersistence.loadClusterSmallWindowMarkerXPercent(context))
+        assertEquals(87, AirPlayPersistence.loadClusterSmallWindowMarkerXPercent(context))
         assertEquals(5, AirPlayPersistence.loadClusterSmallWindowMarkerYPercent(context))
+        AirPlayPersistence.saveClusterSmallWindowMarkerXPercent(context, 99)
+        assertEquals(95, AirPlayPersistence.loadClusterSmallWindowMarkerXPercent(context))
+    }
+
+    @Test fun fullScreenMarkerStepsMigrateToThePercentGrid() {
+        val prefs = context.getSharedPreferences("xcertplay_airplay", 0)
+        prefs.edit().putInt("cluster_marker_horizontal_step", 3).apply()
+        prefs.edit().putInt("cluster_marker_vertical_step", -3).apply()
+        assertEquals(80, AirPlayPersistence.loadClusterMarkerXPercent(context))
+        assertEquals(16, AirPlayPersistence.loadClusterMarkerYPercent(context))
+
+        prefs.edit().putInt("cluster_marker_horizontal_step", 0).apply()
+        prefs.edit().putInt("cluster_marker_vertical_step", 0).apply()
+        assertEquals(50, AirPlayPersistence.loadClusterMarkerXPercent(context))
+        assertEquals(46, AirPlayPersistence.loadClusterMarkerYPercent(context))
+    }
+
+    @Test fun smallWindowCardThemeDefaultsToFollowAndRoundTrips() {
+        assertEquals(0, AirPlayPersistence.loadClusterSmallWindowCardTheme(context))
+        AirPlayPersistence.saveClusterSmallWindowCardTheme(context, 2)
+        assertEquals(2, AirPlayPersistence.loadClusterSmallWindowCardTheme(context))
     }
 
     @Test fun legacyStepSettingsMigrateToPercents() {
@@ -88,7 +109,7 @@ class ClusterSmallWindowPersistenceTest {
         AirPlayPersistence.saveClusterSmallWindowCardYPercent(context, 14)
         AirPlayPersistence.saveClusterSmallWindowCardSizePercent(context, 35)
 
-        assertEquals(90, AirPlayPersistence.loadClusterSmallWindowCardXPercent(context))
+        assertEquals(88, AirPlayPersistence.loadClusterSmallWindowCardXPercent(context))
         assertEquals(15, AirPlayPersistence.loadClusterSmallWindowCardYPercent(context))
         assertEquals(35, AirPlayPersistence.loadClusterSmallWindowCardSizePercent(context))
         assertEquals(20, AirPlayPersistence.loadClusterTurnCardOverlayXPercent(context))

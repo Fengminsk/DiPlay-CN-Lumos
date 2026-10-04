@@ -21,6 +21,8 @@
     <string name="cluster_small_window_auto">تلقائي · تجريبي</string>
     <string name="cluster_small_window_marker">التنقل بالنافذة الصغيرة · مواضع مستقلة</string>
     <string name="cluster_small_window_card_size">بطاقة النافذة الصغيرة · الحجم</string>
+    <string name="cluster_small_window_card_theme">ثيم بطاقة النافذة الصغيرة</string>
+    <string name="cluster_small_window_card_theme_follow">يتبع ثيم بطاقة الانعطاف</string>
     <string name="cluster_small_window_card_horizontal">بطاقة النافذة الصغيرة · يسار / يمين</string>
     <string name="cluster_small_window_card_vertical">بطاقة النافذة الصغيرة · أعلى / أسفل</string>
     <string name="cluster_small_window_marker_description">عند تحويل العداد إلى نافذة التنقل الصغيرة يظهر جزء من اللوحة فقط. يحفظ هذا موضعًا ثانيًا لمؤشر المركبة داخل تلك النافذة (الافتراضي: يمين المنتصف) لتظهر الملاحة فيها، وللبطاقة المخصصة حجم وموضع مستقلان داخل النافذة؛ ولا تتغير مواضع الشاشة الكاملة. يعيد التطبيق اتصال خريطة العداد بعد التغيير.</string>

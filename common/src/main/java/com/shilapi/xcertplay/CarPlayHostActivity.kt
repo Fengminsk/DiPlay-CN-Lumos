@@ -775,11 +775,16 @@ class CarPlayHostActivity : ComponentActivity() {
             2 -> true
             else -> darkMode
         }
+        val smallCardNight = when (AirPlayPersistence.loadClusterSmallWindowCardTheme(this)) {
+            1 -> false
+            2 -> true
+            else -> cardNight
+        }
         val presentations = (clusterLayers.values + listOfNotNull(clusterPresentation)).distinct()
         for (presentation in presentations) {
             presentation.setTurnCardOverlay(xPercent, yPercent, sizePercent)
             presentation.setTurnCardOpacity(AirPlayPersistence.loadClusterTurnCardOpacityPercent(this))
-            presentation.setTurnCardNightMode(cardNight)
+            presentation.setTurnCardNightMode(if (smallWindow) smallCardNight else cardNight)
             presentation.setTurnCardGuidance(if (overlay) clusterTurnGuidance else null)
         }
     }
@@ -825,11 +830,13 @@ class CarPlayHostActivity : ComponentActivity() {
             size.x,
             size.y,
             AirPlayPersistence.loadClusterMapScalePercent(this),
-            if (smallWindow) 0 else AirPlayPersistence.loadClusterMarkerHorizontalStep(this),
-            if (smallWindow) 0 else AirPlayPersistence.loadClusterMarkerVerticalStep(this),
+            0,
+            0,
             AirPlayPersistence.loadClusterContent(this),
-            markerXPercent = if (smallWindow) AirPlayPersistence.loadClusterSmallWindowMarkerXPercent(this) else null,
-            markerYPercent = if (smallWindow) AirPlayPersistence.loadClusterSmallWindowMarkerYPercent(this) else null,
+            markerXPercent = if (smallWindow) AirPlayPersistence.loadClusterSmallWindowMarkerXPercent(this)
+            else AirPlayPersistence.loadClusterMarkerXPercent(this),
+            markerYPercent = if (smallWindow) AirPlayPersistence.loadClusterSmallWindowMarkerYPercent(this)
+            else AirPlayPersistence.loadClusterMarkerYPercent(this),
         ).also {
             appendLog("Cluster map: requesting ${it.widthPixels}x${it.heightPixels} on ${size.x}x${size.y} smallWindow=$smallWindow safeArea=${it.safeArea} url=${it.initialUrl}")
         }

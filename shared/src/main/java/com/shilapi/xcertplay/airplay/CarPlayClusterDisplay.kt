@@ -42,9 +42,9 @@ object CarPlayClusterDisplay {
     val horizontalSteps = -4..4 // negative = left
     val verticalSteps = -3..3 // negative = up
 
-    /** Small-window navi placement: the marker lands on a 5 % grid anywhere on the panel. */
-    val smallWindowXPercents = (5..95 step 5).toList()
-    val smallWindowYPercents = (5..95 step 5).toList()
+    /** Marker placement on a 1 % grid, used by the full-screen and small-window positions. */
+    val markerXPercents = (5..95 step 1).toList()
+    val markerYPercents = (5..95 step 1).toList()
 
     /** Where the car marker lands, in percent of the panel (x from the left, y from the top). */
     fun markerPercent(horizontalStep: Int, verticalStep: Int): Pair<Double, Double> {

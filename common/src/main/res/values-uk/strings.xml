@@ -22,6 +22,8 @@
     <string name="cluster_small_window_auto">Авто · експериментально</string>
     <string name="cluster_small_window_marker">Навігація в малому вікні · окремі положення</string>
     <string name="cluster_small_window_card_size">Картка в малому вікні · розмір</string>
+    <string name="cluster_small_window_card_theme">Тема картки в малому вікні</string>
+    <string name="cluster_small_window_card_theme_follow">Слідувати темі картки</string>
     <string name="cluster_small_window_card_horizontal">Картка в малому вікні · ліворуч / праворуч</string>
     <string name="cluster_small_window_card_vertical">Картка в малому вікні · вгору / вниз</string>
     <string name="cluster_small_window_marker_description">Коли панель приладів перемикається на мале вікно навігації, видно лише частину екрана. Зберігається друге положення мітки авто для цього вікна (стандартно: праворуч від центру), щоб маршрут показувався всередині, а власна картка отримує окремі розмір і положення у вікні; положення для повного екрана не змінюються. Зміни перепідключають карту панелі.</string>

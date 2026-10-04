@@ -21,6 +21,8 @@
     <string name="cluster_small_window_auto">自动 · 实验</string>
     <string name="cluster_small_window_marker">小屏导航 · 独立位置</string>
     <string name="cluster_small_window_card_size">小屏转向卡 · 大小</string>
+    <string name="cluster_small_window_card_theme">小屏转向卡主题</string>
+    <string name="cluster_small_window_card_theme_follow">跟随转向卡主题</string>
     <string name="cluster_small_window_card_horizontal">小屏转向卡 · 左右</string>
     <string name="cluster_small_window_card_vertical">小屏转向卡 · 上下</string>
     <string name="cluster_small_window_marker_description">仪表切到小屏导航时只显示面板的一部分。为小屏窗口单独保存一个车标位置（默认居中偏右 30%），让导航落进窗口里；自定义转向卡也有独立的大小和位置。全屏位置不受影响。更改后仪表盘地图会重连。</string>
