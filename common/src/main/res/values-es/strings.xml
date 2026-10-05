@@ -642,7 +642,7 @@
     <string name="update_channel_mirror1">Espejo de aceleración (gh-proxy.com)</string>
     <string name="update_channel_mirror2">Espejo de aceleración (ghproxy.net)</string>
     <string name="update_channel_github">GitHub directo</string>
-    <string name="update_check_failed">No se pudo conectar con GitHub: %1$s. Prueba más tarde.</string>
+    <string name="update_check_failed">No se pudo conectar con el servidor de actualizaciones: %1$s. Prueba más tarde.</string>
     <string name="update_download_failed">Error al descargar: %1$s. Comprueba la conexión.</string>
     <string name="update_downloading">Descargando actualización…</string>
     <string name="update_install_failed">No se abrió el instalador. Permite a DiPlay instalar apps desconocidas e inténtalo de nuevo.</string>

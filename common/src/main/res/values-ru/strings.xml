@@ -642,7 +642,7 @@
     <string name="update_channel_mirror1">Зеркало ускорения (gh-proxy.com)</string>
     <string name="update_channel_mirror2">Зеркало ускорения (ghproxy.net)</string>
     <string name="update_channel_github">GitHub напрямую</string>
-    <string name="update_check_failed">Нет связи с GitHub: %1$s. Попробуйте позже.</string>
+    <string name="update_check_failed">Нет связи с сервером обновлений: %1$s. Попробуйте позже.</string>
     <string name="update_download_failed">Не удалось скачать: %1$s. Проверьте сеть.</string>
     <string name="update_downloading">Загрузка обновления…</string>
     <string name="update_install_failed">Установщик не открылся. Разрешите DiPlay установку неизвестных приложений и повторите.</string>

@@ -642,7 +642,7 @@
     <string name="update_channel_mirror1">مرآة التسريع (gh-proxy.com)</string>
     <string name="update_channel_mirror2">مرآة التسريع (ghproxy.net)</string>
     <string name="update_channel_github">GitHub مباشرة</string>
-    <string name="update_check_failed">تعذر الوصول إلى GitHub: %1$s. حاول لاحقًا.</string>
+    <string name="update_check_failed">تعذر الوصول إلى خادم التحديث: %1$s. حاول لاحقًا.</string>
     <string name="update_download_failed">فشل التنزيل: %1$s. تحقق من اتصال الشبكة.</string>
     <string name="update_downloading">جارٍ تنزيل التحديث…</string>
     <string name="update_install_failed">لم يُفتح المثبِّت. اسمح لـ DiPlay بتثبيت تطبيقات غير معروفة ثم أعد المحاولة.</string>
