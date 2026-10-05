@@ -554,6 +554,7 @@
     <string name="settings_gesture_fingers_label">Відкрити налаштування · кількість пальців</string>
     <string name="settings_gesture_fingers_option">%1$d пальців</string>
     <string name="settings_gesture_fingers_hint">Виберіть кількість пальців, яку не використовує головний пристрій. BYD резервує свайп трьома пальцями вниз під панель кондиціонера.</string>
+    <string name="open_full_settings">Відкрити всі налаштування DiPlay</string>
     <string name="auto_car_hotspot_title">Автоматично вмикати точку доступу авто</string>
     <string name="auto_car_hotspot_description">Вмикає збережену точку доступу під час відкриття DiPlay. Перемикач автоматично запитує потрібні дозволи через ADB; підтвердьте запит на екрані авто. Для запуску після завантаження ввімкніть відкриття DiPlay після запуску авто. Назва й пароль зберігаються, точка доступу автоматично не вимикається.</string>
     <string name="hotspot_control_missing">Немає дозволу керування точкою доступу. Надайте його через ADB або ввімкніть точку доступу в налаштуваннях авто.</string>

@@ -1931,6 +1931,20 @@ class CarPlayHostActivity : ComponentActivity() {
         gestureButton.text = getString(R.string.settings_gesture_fingers, gestureFingerCount)
         content.addView(gestureButton, LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(12) })
 
+        // CN: keep the old full settings reachable — the in-session menu covers only a subset.
+        content.addView(Button(this).apply {
+            text = getString(R.string.open_full_settings)
+            isAllCaps = false
+            textSize = 17f
+            setTextColor(Color.WHITE)
+            backgroundTintList = ColorStateList.valueOf(MENU_TRACK_OFF)
+            minHeight = dp(52)
+            setOnClickListener {
+                finishSettingsMenu("full-settings", reconnect = false)
+                showDiPlayHome()
+            }
+        }, LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(12) })
+
         val scroll = ScrollView(this).apply {
             isFillViewport = true
             addView(
