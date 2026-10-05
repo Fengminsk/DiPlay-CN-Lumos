@@ -889,6 +889,7 @@ object AirPlayPersistence {
     fun clearClusterSafeAreaRect(context: Context) {
         context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit()
             .remove("cluster_safe_area_1920x720").apply()
+    }
 
     fun loadRightHandDrive(context: Context): Boolean =
         context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
