@@ -38,7 +38,8 @@ class ClusterTurnOverlayExpiryTest {
     @Test fun endingTheSessionKeepsTheTurnCardAcrossTheDrop() = withRoute { route, _, events ->
         BydNavigationOutputs.endNow()
         assertEquals(150, route.currentApple()!!.distanceMeters)
-        assertEquals(2, events.size)
+        // The published card stays as it was; only staleness retires it later.
+        assertEquals(150, events.last()!!.distanceMeters)
     }
 
     private fun withRoute(test: (BydHudRouteState, (Long) -> Unit, MutableList<ClusterTurnGuidance?>) -> Unit) {
