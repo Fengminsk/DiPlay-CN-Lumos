@@ -654,7 +654,7 @@
     <string name="cluster_size_smallest">Smaller · more map, finer detail</string>
     <string name="app_rename_title">App name (car app list)</string>
     <string name="app_rename_note">Switches between preset names; Android cannot set free text. Takes effect at once — if the car list still shows the old name, reopen the app list or restart the head unit.</string>
-    <string name="update_auto_found">New version %1$s available · tap Check for updates to install.</string>
+    <string name="update_auto_found">New version %1$s available.</string>
     <string name="turn_card_theme">Turn card theme</string>
     <string name="turn_card_theme_auto">Auto · follow the head unit</string>
     <string name="turn_card_theme_day">Always day</string>

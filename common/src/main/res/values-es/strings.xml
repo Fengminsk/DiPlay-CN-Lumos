@@ -596,7 +596,7 @@
     <string name="cluster_size_smallest">Más pequeño · más mapa y detalle fino</string>
     <string name="app_rename_title">Nombre de la app (lista del coche)</string>
     <string name="app_rename_note">Cambia entre nombres predefinidos; Android no admite texto libre. Se aplica al instante; si la lista sigue mostrando el nombre anterior, vuelve a abrirla o reinicia la unidad.</string>
-    <string name="update_auto_found">Nueva versión %1$s disponible · toca Comprobar actualizaciones para instalar.</string>
+    <string name="update_auto_found">Nueva versión %1$s disponible.</string>
     <string name="turn_card_theme">Tema de la tarjeta de giro</string>
     <string name="turn_card_theme_auto">Automático · seguir a la unidad</string>
     <string name="turn_card_theme_day">Siempre día</string>

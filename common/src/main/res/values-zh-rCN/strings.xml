@@ -639,7 +639,7 @@
     <string name="cluster_size_smallest">更小 · 内容更多更精细</string>
     <string name="app_rename_title">应用名称（车机应用列表）</string>
     <string name="app_rename_note">在预置名称中切换；安卓无法自定义任意文字。立即生效——若列表仍显示旧名，重新打开应用列表或重启车机即可。</string>
-    <string name="update_auto_found">发现新版本 %1$s · 点「检查更新」安装。</string>
+    <string name="update_auto_found">发现新版本 %1$s</string>
     <string name="turn_card_theme">转向卡主题</string>
     <string name="turn_card_theme_auto">自动 · 跟随车机</string>
     <string name="turn_card_theme_day">始终白天</string>

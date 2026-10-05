@@ -608,7 +608,7 @@
     <string name="cluster_size_smallest">Менше · більше карти та дрібніші деталі</string>
     <string name="app_rename_title">Назва програми (список програм авто)</string>
     <string name="app_rename_note">Перемикання між готовими назвами; довільний текст в Android неможливий. Застосовується одразу — якщо у списку лишилася стара назва, відкрийте список знову або перезапустіть головний пристрій.</string>
-    <string name="update_auto_found">Доступна нова версія %1$s · натисніть «Перевірити оновлення» для встановлення.</string>
+    <string name="update_auto_found">Доступна нова версія %1$s.</string>
     <string name="turn_card_theme">Тема картки повороту</string>
     <string name="turn_card_theme_auto">Авто · слідувати за головним пристроєм</string>
     <string name="turn_card_theme_day">Завжди день</string>

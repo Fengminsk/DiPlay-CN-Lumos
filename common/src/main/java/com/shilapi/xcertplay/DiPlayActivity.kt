@@ -891,7 +891,13 @@ class DiPlayActivity : ComponentActivity() {
         languageSettings(content)
     }
 
+    /** The last release a dialog was offered for, so auto and manual checks never double-pop. */
+    private var offeredUpdateTag: String? = null
+
     private fun offerUpdate(release: AppUpdate.Release) {
+        val tag = AppUpdate.normalizeTag(release.tag)
+        if (offeredUpdateTag == tag) return
+        offeredUpdateTag = tag
         val notes = AppUpdate.plainNotes(release.notes).ifBlank { getString(R.string.update_notes_missing) }
         // Channels like Gitee often omit the asset size; then the brackets are dropped entirely.
         val headline = if (release.apkBytes > 0) {
@@ -951,12 +957,13 @@ class DiPlayActivity : ComponentActivity() {
                 setPadding(0, dp(10), 0, 0)
             }
             card.addView(updateStatus)
-            // A silent background check pre-fills the status line; the button still installs.
+            // A silent background check opens the update dialog as soon as a newer build is found.
             AppUpdate.autoCheck(this) { release ->
                 runOnUiThread {
                     if (release == null || isFinishing || isDestroyed) return@runOnUiThread
                     if (AppUpdate.isAvailable(release, this)) {
                         updateStatus.text = getString(R.string.update_auto_found, release.tag)
+                        offerUpdate(release)
                     }
                 }
             }

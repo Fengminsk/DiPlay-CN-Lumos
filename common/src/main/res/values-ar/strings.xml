@@ -596,7 +596,7 @@
     <string name="cluster_size_smallest">أصغر · خريطة أكثر وتفاصيل أدق</string>
     <string name="app_rename_title">اسم التطبيق (قائمة تطبيقات السيارة)</string>
     <string name="app_rename_note">التبديل بين أسماء جاهزة؛ لا يمكن لنظام أندرويد تعيين نص حر. يسري فورًا — إن ظهر الاسم القديم في القائمة أعد فتحها أو أعد تشغيل وحدة الرأس.</string>
-    <string name="update_auto_found">يتوفر إصدار جديد %1$s · اضغط «التحقق من التحديثات» للتثبيت.</string>
+    <string name="update_auto_found">يتوفر إصدار جديد %1$s.</string>
     <string name="turn_card_theme">ثيم بطاقة الانعطاف</string>
     <string name="turn_card_theme_auto">تلقائي · يتبع وحدة الرأس</string>
     <string name="turn_card_theme_day">نهاري دائمًا</string>
