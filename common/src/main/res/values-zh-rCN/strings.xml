@@ -658,6 +658,9 @@
     <string name="cluster_small_window_horizontal">小屏车标 · 左右</string>
     <string name="cluster_small_window_vertical">小屏车标 · 上下</string>
     <string name="cluster_small_window_hint">默认向右 30%。按你车小屏窗口的实际位置微调。</string>
+    <string name="cluster_small_window_access_ok">已授权使用情况访问 · 下次连接起自动跟随仪表小屏。</string>
+    <string name="cluster_small_window_access_missing">自动模式需要「使用情况访问」权限才能感知仪表小屏状态——授权后重连即生效。</string>
+    <string name="cluster_small_window_grant_access">去授权使用情况访问</string>
     <string name="boot_start_repair">开机自启 · ADB 修复（实验）</string>
     <string name="boot_start_repair_desc">部分固件会拦截第三方应用的开机广播。此操作通过车机自身的 ADB 通道，把 DiPlay 加入后台运行白名单，让开机广播能送达。执行一次即可；车机固件升级后如失效可重新执行。</string>
     <string name="boot_start_repair_result">开机自启修复结果：%1$s</string>

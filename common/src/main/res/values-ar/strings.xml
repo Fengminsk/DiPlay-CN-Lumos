@@ -615,6 +615,9 @@
     <string name="cluster_small_window_horizontal">مؤشر النافذة الصغيرة · يسار / يمين</string>
     <string name="cluster_small_window_vertical">مؤشر النافذة الصغيرة · أعلى / أسفل</string>
     <string name="cluster_small_window_hint">الافتراضي ثلاث خطوات (30٪) يمين المنتصف. عدّل حسب موضع النافذة الصغيرة في عدادك.</string>
+    <string name="cluster_small_window_access_ok">تم منح الوصول إلى الاستخدام · تتم متابعة العداد تلقائيًا عند الاتصال التالي.</string>
+    <string name="cluster_small_window_access_missing">يحتاج الوضع التلقائي إلى إذن «الوصول إلى الاستخدام» لمعرفة حالة الخريطة الصغيرة — امنحه ثم أعد الاتصال.</string>
+    <string name="cluster_small_window_grant_access">منح الوصول إلى الاستخدام</string>
     <string name="boot_start_repair">بدء التشغيل التلقائي · إصلاح ADB (تجريبي)</string>
     <string name="boot_start_repair_desc">بعض البرامج الثابتة تحجب مستقبلات الإقلاع التابعة لجهات خارجية. يطلب هذا من وحدة الرأس عبر رابط ADB الخاص بها إعفاء DiPlay من حدود الخلفية حتى يصل بث الإقلاع. مرة واحدة؛ أعد التشغيل بعد تحديث البرنامج الثابت.</string>
     <string name="boot_start_repair_result">إصلاح بدء التشغيل التلقائي:%1$s</string>

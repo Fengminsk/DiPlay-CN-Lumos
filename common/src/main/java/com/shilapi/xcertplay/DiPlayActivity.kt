@@ -818,6 +818,19 @@ class DiPlayActivity : ComponentActivity() {
                             card.addView(label(getString(R.string.cluster_small_window_marker_description), 14, MUTED).apply {
                                 setPadding(0, dp(8), 0, dp(6))
                             })
+                            if (AirPlayPersistence.loadClusterSmallWindowMode(this) == 2 &&
+                                !DiLink51ClusterMonitor.hasAccess(this)) {
+                                card.addView(label(getString(R.string.cluster_small_window_access_missing), 14, WARNING)
+                                    .apply { setPadding(0, dp(4), 0, dp(4)) })
+                                card.addView(button(getString(R.string.cluster_small_window_grant_access), false) {
+                                    runCatching {
+                                        openSystem(Intent(android.provider.Settings.ACTION_USAGE_ACCESS_SETTINGS))
+                                    }
+                                }, matchButton(6, 56))
+                            } else if (AirPlayPersistence.loadClusterSmallWindowMode(this) == 2) {
+                                card.addView(label(getString(R.string.cluster_small_window_access_ok), 14, MUTED)
+                                    .apply { setPadding(0, dp(4), 0, dp(4)) })
+                            }
                             if (AirPlayPersistence.loadClusterSmallWindowMode(this) != 0) {
                                 card.addView(overlaySliderRow(
                                     getString(R.string.cluster_small_window_horizontal),
