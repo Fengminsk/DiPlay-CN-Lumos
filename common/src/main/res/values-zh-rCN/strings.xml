@@ -685,7 +685,7 @@
     <string name="update_channel_github">GitHub 直连</string>
     <string name="update_channel_mirror1">国内加速镜像（gh-proxy.com）</string>
     <string name="update_channel_mirror2">国内加速镜像（ghproxy.net）</string>
-    <string name="update_check_failed">无法连接 GitHub：%1$s。请稍后再试。</string>
+    <string name="update_check_failed">无法连接更新服务器：%1$s。请稍后再试。</string>
     <string name="update_download_failed">下载失败：%1$s。请检查车机网络。</string>
     <string name="update_downloading">正在下载更新…</string>
     <string name="update_install_failed">未能打开安装器。请允许 DiPlay 安装未知应用后重试。</string>
