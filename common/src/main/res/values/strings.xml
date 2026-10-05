@@ -674,7 +674,7 @@
     <string name="cluster_small_window_vertical">Small-window marker · up/down</string>
     <string name="cluster_small_window_hint">Default is three steps (30 %) right of centre. Adjust to wherever the small window sits on your cluster.</string>
     <string name="cluster_small_window_access_ok">Usage Access granted · the cluster is followed automatically on the next connection.</string>
-    <string name="cluster_small_window_access_missing">Auto mode needs the Usage Access permission to see the cluster's small-map state — grant it, then reconnect.</string>
+    <string name="cluster_small_window_access_missing">Auto mode needs the Usage Access permission to see the cluster\'s small-map state — grant it, then reconnect.</string>
     <string name="cluster_small_window_grant_access">Grant Usage Access</string>
     <string name="download_and_install">Download and install</string>
     <string name="up_to_date">You are on the latest version.</string>
