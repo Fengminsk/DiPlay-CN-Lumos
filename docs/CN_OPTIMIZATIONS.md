@@ -4,11 +4,11 @@
 
 覆盖安装：包名始终为 `com.shihab.diplay.cn`；自 0.2.10-cn.4 起所有 CN 版本使用同一把固定签名密钥，`versionCode` 更大即可直接覆盖安装并保留设置。0.2.10-cn.3 及更早版本签名各不相同，升到 cn.4 需最后一次卸载重装。不能覆盖官方 `com.shihab.diplay`。
 
-## 未打包（main，下一版）
+## 0.2.12-cn.9 — 2026-10-06
 
-- 采纳官方未合并 PR [#285](https://github.com/shihabal3amri/DiPlay/pull/285)：`ro.car.protocol` 为空时回退读 `sys.car.protocol`。部分 DiLink 5（如 2024 唐 2025 固件）只写后者，原先读不到电池、地图也不把车当电动车。
-- 采纳官方未合并 PR [#286](https://github.com/shihabal3amri/DiPlay/pull/286)：简体「使用车輄自带热点」改为「使用车辆自带热点」。
-- 采纳官方未合并 PR [#239](https://github.com/shihabal3amri/DiPlay/pull/239)：环境光门槛和切换延迟只在昼夜模式选「自动（环境光）」时显示；切走模式不丢已保存的数值。
+- 采纳官方已合并的 [#285](https://github.com/shihabal3amri/DiPlay/pull/285)：`ro.car.protocol` 为空时回退读 `sys.car.protocol`。部分 DiLink 5（如 2024 唐 2025 固件）只写后者，原先读不到电池、地图也不把车当电动车。
+- 采纳官方已合并的 [#286](https://github.com/shihabal3amri/DiPlay/pull/286)：简体「使用车輄自带热点」改为「使用车辆自带热点」。
+- 采纳官方已合并的 [#239](https://github.com/shihabal3amri/DiPlay/pull/239)：环境光门槛和切换延迟只在昼夜模式选「自动（环境光）」时显示；切走模式不丢已保存的数值。
 - 下滑手势可选择打开「独立设置页」（CarPlay 内菜单，默认）或「启动页设置页」。启动页完整设置和下滑菜单里都能改；下滑菜单底部「打开 DiPlay 完整设置」始终进入启动页设置页（不再落到主页）。
 - 「CarPlay 期间暂停车机蓝牙」打开且蓝牙已暂停时，CarPlay 通话改走中控喇叭和车机麦克风（不再走电话 SCO），避免接听没声、也没麦。蓝牙未暂停时仍走原来的电话声道。
 
