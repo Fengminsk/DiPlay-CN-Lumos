@@ -56,7 +56,7 @@ internal class ClusterMapPresentation(
         val dark = DiLink51ClusterLayout.dark(context, theme)
         val backdrop = if (dark) Color.rgb(15, 22, 30) else Color.rgb(207, 218, 229)
         val root = FrameLayout(context).apply {
-            setBackgroundColor(if (plan == null) Color.BLACK else if (plan.fullMap) backdrop else Color.TRANSPARENT)
+            setBackgroundColor(if (plan == null) Color.rgb(233, 238, 246) else if (plan.fullMap) backdrop else Color.TRANSPARENT)
         }
         if (plan != null) {
             window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
@@ -118,7 +118,8 @@ internal class ClusterMapPresentation(
         }
         waitingLabel = TextView(context).apply {
             text = context.getString(R.string.cluster_waiting_for_map)
-            setTextColor(if (plan != null && !dark) Color.DKGRAY else Color.WHITE)
+            // CN: light placeholder so an unconnected cluster reads as waiting, not dead.
+            setTextColor(Color.DKGRAY)
             textSize = 26f
             gravity = Gravity.CENTER
         }
