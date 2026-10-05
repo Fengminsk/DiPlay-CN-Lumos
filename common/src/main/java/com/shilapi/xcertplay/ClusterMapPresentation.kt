@@ -43,6 +43,7 @@ internal class ClusterMapPresentation(
 ) : Presentation(context, display) {
     private var waitingLabel: TextView? = null
     private var turnCardView: ClusterTurnCardView? = null
+    private var videoView: View? = null
     var outputSurface: Surface? = null
         private set
     var mapVisible = true
@@ -91,6 +92,7 @@ internal class ClusterMapPresentation(
                 }
             }
             root.addView(textureView, videoParams)
+            videoView = textureView
             if (plan.fullMap) root.addView(InstrumentContrastView(context, plan, backdrop), FrameLayout.LayoutParams(-1, -1))
             Log.i(TAG, "layout=$theme viewport=$plan source=${plan.sourceLeft},${plan.sourceTop} dark=$dark")
         } else {
@@ -115,6 +117,7 @@ internal class ClusterMapPresentation(
                 }
             })
             root.addView(surfaceView, videoParams)
+            videoView = surfaceView
         }
         waitingLabel = TextView(context).apply {
             text = context.getString(R.string.cluster_waiting_for_map)
@@ -129,9 +132,31 @@ internal class ClusterMapPresentation(
         setContentView(root)
     }
 
-    /** Hides the placeholder once the phone streams the cluster screen. */
+    /**
+     * Cross-fades the placeholder and the video when the cluster stream starts or stops, so the
+     * dashboard never hard-cuts between "waiting" and the live map.
+     */
     fun setStreamActive(active: Boolean) {
-        waitingLabel?.visibility = if (active) View.GONE else View.VISIBLE
+        val video = videoView
+        val label = waitingLabel
+        if (video == null || label == null) {
+            label?.visibility = if (active) View.GONE else View.VISIBLE
+            return
+        }
+        if (active) {
+            video.animate().cancel()
+            label.animate().cancel()
+            video.alpha = 0f
+            video.animate().alpha(1f).setDuration(300).start()
+            label.animate().alpha(0f).setDuration(300).withEndAction { label.visibility = View.GONE }.start()
+        } else {
+            video.animate().cancel()
+            label.animate().cancel()
+            label.visibility = View.VISIBLE
+            label.alpha = 0f
+            label.animate().alpha(1f).setDuration(300).start()
+            video.animate().alpha(0f).setDuration(300).start()
+        }
     }
 
     /** Window alpha hides the pixels without destroying the TextureView/decoder surface. */
