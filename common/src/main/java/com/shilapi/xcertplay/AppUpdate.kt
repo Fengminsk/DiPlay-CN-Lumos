@@ -182,6 +182,19 @@ object AppUpdate {
         }
     }
 
+    /** Without this per-app grant Android 8+ silently swallows the installer intent. */
+    fun canInstall(context: Context): Boolean =
+        android.os.Build.VERSION.SDK_INT < 26 || context.packageManager.canRequestPackageInstalls()
+
+    /** Opens this app's "install unknown apps" page; return afterwards to continue installing. */
+    fun openInstallPermission(context: Context) {
+        val intent = Intent(
+            android.provider.Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES,
+            Uri.parse("package:${context.packageName}"),
+        ).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        runCatching { context.startActivity(intent) }
+    }
+
     /** Opens the system installer for a downloaded APK; false when no installer accepted it. */
     fun install(context: Context, apk: File): Boolean {
         val uri: Uri = FileProvider.getUriForFile(context, "${context.packageName}.update", apk)

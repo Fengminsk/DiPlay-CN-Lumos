@@ -642,4 +642,5 @@
     <string name="update_download_failed">Error al descargar: %1$s. Comprueba la conexión.</string>
     <string name="update_downloading">Descargando actualización…</string>
     <string name="update_install_failed">No se abrió el instalador. Permite a DiPlay instalar apps desconocidas e inténtalo de nuevo.</string>
+    <string name="update_allow_unknown">Permite que DiPlay instale apps de origen desconocido en la página que se acaba de abrir y vuelve: la instalación continúa sola.</string>
 </resources>

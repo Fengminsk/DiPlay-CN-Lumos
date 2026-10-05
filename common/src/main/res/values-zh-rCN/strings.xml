@@ -685,4 +685,5 @@
     <string name="update_download_failed">下载失败：%1$s。请检查车机网络。</string>
     <string name="update_downloading">正在下载更新…</string>
     <string name="update_install_failed">未能打开安装器。请允许 DiPlay 安装未知应用后重试。</string>
+    <string name="update_allow_unknown">在刚打开的页面允许 DiPlay 安装未知应用，返回后自动继续安装。</string>
 </resources>

@@ -642,4 +642,5 @@
     <string name="update_download_failed">Не удалось скачать: %1$s. Проверьте сеть.</string>
     <string name="update_downloading">Загрузка обновления…</string>
     <string name="update_install_failed">Установщик не открылся. Разрешите DiPlay установку неизвестных приложений и повторите.</string>
+    <string name="update_allow_unknown">Разрешите DiPlay устанавливать неизвестные приложения на открывшемся экране и вернитесь — установка продолжится сама.</string>
 </resources>

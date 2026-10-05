@@ -642,4 +642,5 @@
     <string name="update_download_failed">فشل التنزيل: %1$s. تحقق من اتصال الشبكة.</string>
     <string name="update_downloading">جارٍ تنزيل التحديث…</string>
     <string name="update_install_failed">لم يُفتح المثبِّت. اسمح لـ DiPlay بتثبيت تطبيقات غير معروفة ثم أعد المحاولة.</string>
+    <string name="update_allow_unknown">اسمح لـ DiPlay بتثبيت تطبيقات غير معروفة في الصفحة التي فُتحت للتو، ثم ارجع — سيستكمل التثبيت تلقائيًا.</string>
 </resources>

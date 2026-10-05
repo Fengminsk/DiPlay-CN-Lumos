@@ -685,4 +685,5 @@
     <string name="update_download_failed">Download failed: %1$s. Check the car\'s network connection.</string>
     <string name="update_downloading">Downloading update…</string>
     <string name="update_install_failed">No installer opened. Allow DiPlay to install unknown apps, then try again.</string>
+    <string name="update_allow_unknown">Allow DiPlay to install unknown apps in the screen that just opened, then come back — the install continues automatically.</string>
 </resources>

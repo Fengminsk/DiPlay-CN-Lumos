@@ -221,6 +221,13 @@ class DiPlayActivity : ComponentActivity() {
 
     override fun onResume() {
         super.onResume()
+        // Returning from the "install unknown apps" page finishes a pending update install.
+        pendingInstallApk?.let { apk ->
+            if (AppUpdate.canInstall(this)) {
+                pendingInstallApk = null
+                if (!AppUpdate.install(this, apk)) toast(getString(R.string.update_install_failed))
+            }
+        }
         if (Build.VERSION.SDK_INT < 33 && AppLocale.preference(this) != languagePreferenceAtCreate) {
             recreate()
             return
@@ -918,6 +925,9 @@ class DiPlayActivity : ComponentActivity() {
             .show()
     }
 
+    /** A downloaded APK waiting for the "install unknown apps" grant; installed on resume. */
+    private var pendingInstallApk: File? = null
+
     private fun downloadUpdate(release: AppUpdate.Release) {
         val progress = android.app.ProgressDialog(this).apply {
             setMessage(getString(R.string.update_downloading))
@@ -934,9 +944,7 @@ class DiPlayActivity : ComponentActivity() {
             onDone = { file ->
                 runOnUiThread {
                     progress.dismiss()
-                    if (!AppUpdate.install(this, file)) {
-                        toast(getString(R.string.update_install_failed))
-                    }
+                    installOrUpdate(file)
                 }
             },
             onError = { message ->
@@ -946,6 +954,19 @@ class DiPlayActivity : ComponentActivity() {
                 }
             },
         )
+    }
+
+    /** The car silently drops the installer intent without the per-app unknown-sources grant. */
+    private fun installOrUpdate(file: File) {
+        if (!AppUpdate.canInstall(this)) {
+            pendingInstallApk = file
+            toast(getString(R.string.update_allow_unknown))
+            AppUpdate.openInstallPermission(this)
+            return
+        }
+        if (!AppUpdate.install(this, file)) {
+            toast(getString(R.string.update_install_failed))
+        }
     }
 
     private fun about(content: LinearLayout) {
