@@ -9,6 +9,7 @@
 - 采纳官方未合并 PR [#285](https://github.com/shihabal3amri/DiPlay/pull/285)：`ro.car.protocol` 为空时回退读 `sys.car.protocol`。部分 DiLink 5（如 2024 唐 2025 固件）只写后者，原先读不到电池、地图也不把车当电动车。
 - 采纳官方未合并 PR [#286](https://github.com/shihabal3amri/DiPlay/pull/286)：简体「使用车輄自带热点」改为「使用车辆自带热点」。
 - 采纳官方未合并 PR [#239](https://github.com/shihabal3amri/DiPlay/pull/239)：环境光门槛和切换延迟只在昼夜模式选「自动（环境光）」时显示；切走模式不丢已保存的数值。
+- 下滑手势可选择打开「独立设置页」（CarPlay 内菜单，默认）或「启动页设置页」。启动页完整设置和下滑菜单里都能改；下滑菜单底部「打开 DiPlay 完整设置」始终进入启动页设置页（不再落到主页）。
 
 ## 0.2.12-cn.8 — 2026-10-05
 

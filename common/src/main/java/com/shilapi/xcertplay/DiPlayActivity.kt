@@ -472,6 +472,19 @@ class DiPlayActivity : ComponentActivity() {
             card.addView(label(getString(R.string.settings_gesture_fingers_hint), 14, MUTED).apply {
                 setPadding(0, dp(10), 0, 0)
             })
+            val swipeTargets = listOf(false, true)
+            choice(card, getString(R.string.settings_swipe_target_label),
+                listOf(
+                    getString(R.string.settings_swipe_target_overlay),
+                    getString(R.string.settings_swipe_target_full),
+                ),
+                swipeTargets.indexOf(AirPlayPersistence.loadSwipeOpensFullSettings(this)).coerceAtLeast(0),
+                reconnects = false) {
+                AirPlayPersistence.saveSwipeOpensFullSettings(this, swipeTargets[it])
+            }
+            card.addView(label(getString(R.string.settings_swipe_target_hint), 14, MUTED).apply {
+                setPadding(0, dp(10), 0, 0)
+            })
         }
         section(content, getString(R.string.connection_setup), R.drawable.ic_dp_connection) { card ->
             card.addView(label(getString(R.string.choose_how_to_connect_follow_the_setup_steps_and_save_your), 16, MUTED))

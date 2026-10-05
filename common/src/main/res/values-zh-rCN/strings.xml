@@ -570,6 +570,10 @@
     <string name="settings_gesture_fingers_option">%1$d 指</string>
     <string name="settings_gesture_fingers_hint">选择车机没有占用的手指数。比亚迪的三指下滑是空调面板，建议改用 2 指。</string>
     <string name="open_full_settings">打开 DiPlay 完整设置</string>
+    <string name="settings_swipe_target_label">下滑打开</string>
+    <string name="settings_swipe_target_overlay">独立设置页</string>
+    <string name="settings_swipe_target_full">启动页设置页</string>
+    <string name="settings_swipe_target_hint">选择下滑手势打开哪一套设置。独立设置页是 CarPlay 内的菜单；启动页设置页是改名、转向卡、小屏、更新等完整选项。下滑菜单底部的「打开 DiPlay 完整设置」始终进入启动页设置页。</string>
     <string name="auto_car_hotspot_title">自动开启热点</string>
     <string name="auto_car_hotspot_description">DiPlay 启动时开启车机热点。打开开关会自动通过 ADB 申请所需权限，请允许车机上的授权提示。配合“车辆启动后打开”可随开机启动。保留热点名称和密码，不会自动关闭热点。</string>
     <string name="hotspot_control_missing">缺少热点控制权限。请通过 ADB 授权，或在车机设置中手动开启热点。</string>

@@ -398,6 +398,7 @@ class CarPlayHostActivity : ComponentActivity() {
     private var reconnectScheduled = false
     private var sessionLog: SessionLogFile? = null
     private var gestureFingerCount = 3
+    private var swipeOpensFullSettings = false
     private var settingsGestureHint: TextView? = null
     private var gestureSequenceActive = false
     private var gestureTracking = false
@@ -546,6 +547,7 @@ class CarPlayHostActivity : ComponentActivity() {
             ambientDelaySeconds,
         )
         gestureFingerCount = AirPlayPersistence.loadSettingsGestureFingers(this)
+        swipeOpensFullSettings = AirPlayPersistence.loadSwipeOpensFullSettings(this)
         displayScalePercent = AirPlayPersistence.loadDisplayScalePercent(this)
         displayScaleTenths = CarPlayDisplayScale.sanitize((displayScalePercent + 5) / 10)
         // Size is now chosen only through CarPlaySize; ignore the canvas scale older builds stored.
@@ -754,7 +756,10 @@ class CarPlayHostActivity : ComponentActivity() {
             clusterMonitor?.stop()
             clusterMonitor = null
         }
-        if (!menuOpen) gestureFingerCount = AirPlayPersistence.loadSettingsGestureFingers(this)
+        if (!menuOpen) {
+            gestureFingerCount = AirPlayPersistence.loadSettingsGestureFingers(this)
+            swipeOpensFullSettings = AirPlayPersistence.loadSwipeOpensFullSettings(this)
+        }
         settingsGestureHint?.text = getString(R.string.open_diplay_settings_hint, gestureFingerCount)
         ensureClusterPresentation()
         AirPlayPersistence.overlaySettingsListener = { runOnUiThread { applyClusterTurnOverlay() } }
@@ -1931,6 +1936,31 @@ class CarPlayHostActivity : ComponentActivity() {
         gestureButton.text = getString(R.string.settings_gesture_fingers, gestureFingerCount)
         content.addView(gestureButton, LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(12) })
 
+        content.addView(
+            settingsChoiceRow(
+                label = getString(R.string.settings_swipe_target_label),
+                options = listOf(
+                    false to getString(R.string.settings_swipe_target_overlay),
+                    true to getString(R.string.settings_swipe_target_full),
+                ),
+                selected = swipeOpensFullSettings,
+            ) { value ->
+                swipeOpensFullSettings = value
+                AirPlayPersistence.saveSwipeOpensFullSettings(this, value)
+            },
+            LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT,
+            ).apply { topMargin = dp(12) },
+        )
+        content.addView(
+            menuText(getString(R.string.settings_swipe_target_hint), 16f, MENU_SECONDARY),
+            LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT,
+            ).apply { topMargin = dp(6) },
+        )
+
         // CN: keep the old full settings reachable — the in-session menu covers only a subset.
         content.addView(Button(this).apply {
             text = getString(R.string.open_full_settings)
@@ -1941,7 +1971,7 @@ class CarPlayHostActivity : ComponentActivity() {
             minHeight = dp(52)
             setOnClickListener {
                 finishSettingsMenu("full-settings", reconnect = false)
-                showDiPlayHome()
+                showDiPlayHome("settings")
             }
         }, LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(12) })
 
@@ -2007,6 +2037,7 @@ class CarPlayHostActivity : ComponentActivity() {
 
     private fun persistMenuSettings() {
         AirPlayPersistence.saveSettingsGestureFingers(this, gestureFingerCount)
+        AirPlayPersistence.saveSwipeOpensFullSettings(this, swipeOpensFullSettings)
         AirPlayPersistence.saveWirelessEnabled(this, wirelessEnabled)
         AirPlayPersistence.saveMfiTarget(this, mfiTarget)
         AirPlayPersistence.saveMfiI2cPath(this, mfiI2cPath)
@@ -4373,7 +4404,11 @@ class CarPlayHostActivity : ComponentActivity() {
                 ) {
                     gestureSequenceActive = false
                     gestureTracking = false
-                    openSettingsMenu()
+                    if (AirPlayPersistence.loadSwipeOpensFullSettings(this)) {
+                        showDiPlayHome("settings")
+                    } else {
+                        openSettingsMenu()
+                    }
                     return true
                 }
             }

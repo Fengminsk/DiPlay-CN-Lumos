@@ -542,6 +542,10 @@
     <string name="settings_gesture_fingers_option">%1$d أصابع</string>
     <string name="settings_gesture_fingers_hint">اختر عددًا من الأصابع لا يستخدمه جهاز السيارة. تأخذ وحدة BYD السحب لأسفل بثلاثة أصابع للوحة التكييف.</string>
     <string name="open_full_settings">فتح إعدادات DiPlay الكاملة</string>
+    <string name="settings_swipe_target_label">السحب لأسفل يفتح</string>
+    <string name="settings_swipe_target_overlay">إعدادات الجلسة</string>
+    <string name="settings_swipe_target_full">صفحة إعدادات الشاشة الرئيسية</string>
+    <string name="settings_swipe_target_hint">اختر أي إعدادات يفتحها السحب لأسفل في CarPlay. تبقى قائمة الجلسة متاحة؛ وزر الإعدادات الكاملة فيها يفتح دائمًا صفحة إعدادات الشاشة الرئيسية.</string>
     <string name="auto_car_hotspot_title">تشغيل نقطة اتصال السيارة تلقائيًا</string>
     <string name="auto_car_hotspot_description">يشغّل نقطة اتصال السيارة المحفوظة عند فتح DiPlay. عند تفعيل المفتاح تُطلب الأذونات اللازمة تلقائيًا عبر ADB؛ وافق على شاشة السيارة. فعّل فتح DiPlay بعد تشغيل السيارة للبدء عند الإقلاع. يبقى الاسم وكلمة المرور دون تغيير ولا تُطفأ نقطة الاتصال تلقائيًا.</string>
     <string name="hotspot_control_missing">إذن التحكم بنقطة الاتصال غير متاح. امنحه عبر ADB أو شغّل نقطة الاتصال من إعدادات السيارة.</string>

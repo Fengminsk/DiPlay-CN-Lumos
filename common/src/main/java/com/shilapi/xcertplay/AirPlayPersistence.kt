@@ -80,6 +80,7 @@ object AirPlayPersistence {
     private const val KEY_CLUSTER_TURN_CARD_OVERLAY_Y = "cluster_turn_card_overlay_y_percent"
     private const val KEY_CENTER_MAP_FOLLOWS_DASHBOARD = "center_map_follows_dashboard"
     private const val KEY_SETTINGS_GESTURE_FINGERS = "settings_gesture_fingers"
+    private const val KEY_SWIPE_OPENS_FULL_SETTINGS = "swipe_opens_full_settings"
     private const val KEY_WIDTH_PHYSICAL_MM = "display_width_physical_mm"
     private const val KEY_PHYSICAL_SIZE_BASIS = "display_physical_size_basis"
     private const val KEY_MAX_DETECTED_WIDTH = "display_max_detected_width"
@@ -634,6 +635,16 @@ object AirPlayPersistence {
     fun saveSettingsGestureFingers(context: Context, fingers: Int) {
         context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit()
             .putInt(KEY_SETTINGS_GESTURE_FINGERS, fingers.coerceIn(2, 4)).apply()
+    }
+
+    /** When true, the CarPlay swipe-down opens the home settings page instead of the in-session overlay. */
+    fun loadSwipeOpensFullSettings(context: Context): Boolean =
+        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+            .getBoolean(KEY_SWIPE_OPENS_FULL_SETTINGS, false)
+
+    fun saveSwipeOpensFullSettings(context: Context, enabled: Boolean) {
+        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit()
+            .putBoolean(KEY_SWIPE_OPENS_FULL_SETTINGS, enabled).apply()
     }
 
     fun loadCenterMapFollowsDashboard(context: Context): Boolean =
