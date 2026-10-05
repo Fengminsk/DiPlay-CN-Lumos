@@ -498,6 +498,8 @@ class DiPlayActivity : ComponentActivity() {
             ) {
                 UsbAutoConfirmService.openSettings(this)
             }
+            card.addView(button(getString(R.string.boot_start_repair), false) { repairBootStart() }, matchButton(6, 56))
+            card.addView(label(getString(R.string.boot_start_repair_desc), 14, MUTED).apply { setPadding(0, dp(8), 0, dp(6)) })
             card.addView(button("${getString(R.string.choose_iphone_prefix)}${DiPlayPreferences.phoneName(this)}", false) { choosePhone() }, matchButton(12, 60))
         }
         bydAdbSettings(content)
@@ -529,6 +531,14 @@ class DiPlayActivity : ComponentActivity() {
                 startActivity(Intent(this, CarPlayHostActivity::class.java)
                     .putExtra("picture_controls", true).addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT))
             }, matchButton(0, 56).apply { bottomMargin = dp(24) })
+            if (AppRenamer.available(this)) {
+                choice(card, getString(R.string.app_rename_title), AppRenamer.labels(this),
+                    AppRenamer.current(this), reconnects = false) {
+                    AppRenamer.apply(this, it)
+                    render()
+                }
+                card.addView(label(getString(R.string.app_rename_note), 14, MUTED).apply { setPadding(0, dp(8), 0, dp(6)) })
+            }
             carPlaySizeControl(card)
             resolutionSettingControl(
                 card, R.string.resolution, R.string.custom_resolution_hint,
@@ -728,6 +738,13 @@ class DiPlayActivity : ComponentActivity() {
                                 AirPlayPersistence.loadClusterTurnCardOpacityPercent(this),
                             ) { it -> getString(R.string.turn_card_overlay_opacity_option, it) }
                                 .also { it.onSave = { v -> AirPlayPersistence.saveClusterTurnCardOpacityPercent(this, v) } })
+                            choice(card, getString(R.string.turn_card_theme), listOf(
+                                getString(R.string.turn_card_theme_auto),
+                                getString(R.string.turn_card_theme_day),
+                                getString(R.string.turn_card_theme_night),
+                            ), AirPlayPersistence.loadClusterTurnCardTheme(this), reconnects = false) {
+                                AirPlayPersistence.saveClusterTurnCardTheme(this, it)
+                            }
                             card.addView(overlaySliderRow(
                                 getString(R.string.turn_card_overlay_horizontal),
                                 ClusterTurnCardOverlay.xPercents,
@@ -749,29 +766,95 @@ class DiPlayActivity : ComponentActivity() {
                         }
                         val turnCard = officialCardOnly
                         if (!diLink4) {
-                            choice(card, getString(if (turnCard) R.string.turn_card_size else R.string.cluster_map_size),
-                                listOf(getString(R.string.cluster_size_standard), getString(R.string.cluster_size_larger), getString(R.string.cluster_size_largest)),
-                                sizes.indexOf(AirPlayPersistence.loadClusterMapScalePercent(this)).coerceAtLeast(0)) {
-                                AirPlayPersistence.saveClusterMapScalePercent(this, sizes[it])
-                            }
+                            card.addView(overlaySliderRow(
+                                getString(if (turnCard) R.string.turn_card_size else R.string.cluster_map_size),
+                                sizes.sorted(),
+                                AirPlayPersistence.loadClusterMapScalePercent(this),
+                            ) { v -> getString(when (v) {
+                                67 -> R.string.cluster_size_largest
+                                83 -> R.string.cluster_size_larger
+                                125 -> R.string.cluster_size_smallest
+                                else -> R.string.cluster_size_standard }) }
+                                .also { it.onSave = { v -> AirPlayPersistence.saveClusterMapScalePercent(this, v) } }
+                                .also { it.onCommit = { reconnectForClusterMap() } })
                         }
                         if (!diLink4 || AirPlayPersistence.loadClusterSafeAreaRect(this) == null) {
-                            val across = CarPlayClusterDisplay.horizontalSteps.toList()
-                            choice(card, getString(if (turnCard) R.string.turn_card_horizontal else R.string.car_marker_horizontal), across.map { markerStepLabel(it, getString(R.string.marker_left), getString(R.string.marker_right)) },
-                                across.indexOf(AirPlayPersistence.loadClusterMarkerHorizontalStep(this)).coerceAtLeast(0)) {
-                                AirPlayPersistence.saveClusterMarkerHorizontalStep(this, across[it])
-                            }
-                            val upDown = CarPlayClusterDisplay.verticalSteps.toList()
-                            choice(card, getString(if (turnCard) R.string.turn_card_vertical else R.string.car_marker_vertical), upDown.map { markerStepLabel(it, getString(R.string.marker_up), getString(R.string.marker_down)) },
-                                upDown.indexOf(AirPlayPersistence.loadClusterMarkerVerticalStep(this)).coerceAtLeast(0)) {
-                                AirPlayPersistence.saveClusterMarkerVerticalStep(this, upDown[it])
-                            }
+                            card.addView(overlaySliderRow(
+                                getString(if (turnCard) R.string.turn_card_horizontal else R.string.car_marker_horizontal),
+                                CarPlayClusterDisplay.markerXPercents,
+                                AirPlayPersistence.loadClusterMarkerXPercent(this),
+                            ) { it -> overlayOffsetLabel(it, getString(R.string.marker_left), getString(R.string.marker_right), 50) }
+                                .also { it.onSave = { v -> AirPlayPersistence.saveClusterMarkerXPercent(this, v) } }
+                                .also { it.onCommit = { reconnectForClusterMap() } })
+                            card.addView(overlaySliderRow(
+                                getString(if (turnCard) R.string.turn_card_vertical else R.string.car_marker_vertical),
+                                CarPlayClusterDisplay.markerYPercents,
+                                AirPlayPersistence.loadClusterMarkerYPercent(this),
+                            ) { it -> overlayOffsetLabel(it, getString(R.string.marker_up), getString(R.string.marker_down), 45) }
+                                .also { it.onSave = { v -> AirPlayPersistence.saveClusterMarkerYPercent(this, v) } }
+                                .also { it.onCommit = { reconnectForClusterMap() } })
                             card.addView(button(getString(if (turnCard) R.string.reset_turn_card_to_centre else R.string.reset_car_marker_to_centre), false) {
-                                AirPlayPersistence.saveClusterMarkerHorizontalStep(this, 0)
-                                AirPlayPersistence.saveClusterMarkerVerticalStep(this, 0)
+                                AirPlayPersistence.saveClusterMarkerXPercent(this, 50)
+                                AirPlayPersistence.saveClusterMarkerYPercent(this, 45)
                                 render()
                                 reconnectForClusterMap()
                             }, matchButton(10, 56))
+                            card.addView(space(10))
+                            choice(card, getString(R.string.cluster_small_window_marker), listOf(
+                                getString(R.string.cluster_small_window_off),
+                                getString(R.string.cluster_small_window_on),
+                                getString(R.string.cluster_small_window_auto),
+                            ), AirPlayPersistence.loadClusterSmallWindowMode(this)) {
+                                AirPlayPersistence.saveClusterSmallWindowMode(this, it)
+                                render()
+                            }
+                            card.addView(label(getString(R.string.cluster_small_window_marker_description), 14, MUTED).apply {
+                                setPadding(0, dp(8), 0, dp(6))
+                            })
+                            if (AirPlayPersistence.loadClusterSmallWindowMode(this) != 0) {
+                                card.addView(overlaySliderRow(
+                                    getString(R.string.cluster_small_window_horizontal),
+                                    CarPlayClusterDisplay.markerXPercents,
+                                    AirPlayPersistence.loadClusterSmallWindowMarkerXPercent(this),
+                                ) { it -> overlayOffsetLabel(it, getString(R.string.marker_left), getString(R.string.marker_right), 50) }
+                                    .also { it.onSave = { v -> AirPlayPersistence.saveClusterSmallWindowMarkerXPercent(this, v) } }
+                                    .also { it.onCommit = { reconnectForClusterMap() } })
+                                card.addView(overlaySliderRow(
+                                    getString(R.string.cluster_small_window_vertical),
+                                    CarPlayClusterDisplay.markerYPercents,
+                                    AirPlayPersistence.loadClusterSmallWindowMarkerYPercent(this),
+                                ) { it -> overlayOffsetLabel(it, getString(R.string.marker_up), getString(R.string.marker_down), 45) }
+                                    .also { it.onSave = { v -> AirPlayPersistence.saveClusterSmallWindowMarkerYPercent(this, v) } }
+                                    .also { it.onCommit = { reconnectForClusterMap() } })
+                                if (customCard) {
+                                    choice(card, getString(R.string.cluster_small_window_card_theme), listOf(
+                                        getString(R.string.cluster_small_window_card_theme_follow),
+                                        getString(R.string.turn_card_theme_day),
+                                        getString(R.string.turn_card_theme_night),
+                                    ), AirPlayPersistence.loadClusterSmallWindowCardTheme(this), reconnects = false) {
+                                        AirPlayPersistence.saveClusterSmallWindowCardTheme(this, it)
+                                    }
+                                    card.addView(overlaySliderRow(
+                                        getString(R.string.cluster_small_window_card_size),
+                                        ClusterTurnCardOverlay.sizePercents,
+                                        AirPlayPersistence.loadClusterSmallWindowCardSizePercent(this),
+                                    ) { it -> getString(R.string.turn_card_overlay_size_option, it) }
+                                        .also { it.onSave = { v -> AirPlayPersistence.saveClusterSmallWindowCardSizePercent(this, v) } })
+                                    card.addView(overlaySliderRow(
+                                        getString(R.string.cluster_small_window_card_horizontal),
+                                        ClusterTurnCardOverlay.smallWindowXPercents,
+                                        AirPlayPersistence.loadClusterSmallWindowCardXPercent(this),
+                                    ) { it -> overlayOffsetLabel(it, getString(R.string.marker_left), getString(R.string.marker_right), 50) }
+                                        .also { it.onSave = { v -> AirPlayPersistence.saveClusterSmallWindowCardXPercent(this, v) } })
+                                    card.addView(overlaySliderRow(
+                                        getString(R.string.cluster_small_window_card_vertical),
+                                        ClusterTurnCardOverlay.smallWindowYPercents,
+                                        AirPlayPersistence.loadClusterSmallWindowCardYPercent(this),
+                                    ) { it -> overlayOffsetLabel(it, getString(R.string.marker_up), getString(R.string.marker_down), 40) }
+                                        .also { it.onSave = { v -> AirPlayPersistence.saveClusterSmallWindowCardYPercent(this, v) } })
+                                }
+                                card.addView(label(getString(R.string.cluster_small_window_hint), 14, MUTED).apply { setPadding(0, dp(10), 0, 0) })
+                            }
                         }
                         if (!diLink4) {
                             toggle(card, getString(R.string.dashboard_map_only_in_small_and_full_navi),
@@ -808,15 +891,145 @@ class DiPlayActivity : ComponentActivity() {
         languageSettings(content)
     }
 
+    private fun offerUpdate(release: AppUpdate.Release) {
+        val notes = AppUpdate.plainNotes(release.notes).ifBlank { getString(R.string.update_notes_missing) }
+        // Channels like Gitee often omit the asset size; then the brackets are dropped entirely.
+        val headline = if (release.apkBytes > 0) {
+            getString(R.string.update_available, release.tag, "${release.apkBytes / 1024 / 1024} MB")
+        } else {
+            getString(R.string.update_available_no_size, release.tag)
+        }
+        val message = headline + "\n\n" + notes
+        val view = ScrollView(this).apply {
+            addView(label(message, 16, TEXT).apply { setPadding(dp(24), dp(8), dp(24), dp(8)) })
+            isFillViewport = true
+        }
+        AlertDialog.Builder(this)
+            .setTitle(getString(R.string.update_details_title, release.tag))
+            .setView(view)
+            .setPositiveButton(getString(R.string.download_and_install)) { _, _ -> downloadUpdate(release) }
+            .setNegativeButton(getString(R.string.common_cancel), null)
+            .show()
+    }
+
+    private fun downloadUpdate(release: AppUpdate.Release) {
+        val progress = android.app.ProgressDialog(this).apply {
+            setMessage(getString(R.string.update_downloading))
+            isIndeterminate = false
+            max = 100
+            setProgressStyle(android.app.ProgressDialog.STYLE_HORIZONTAL)
+            setCancelable(true)
+            show()
+        }
+        AppUpdate.download(
+            this,
+            release,
+            onProgress = { percent -> runOnUiThread { if (percent >= 0) progress.progress = percent else progress.isIndeterminate = true } },
+            onDone = { file ->
+                runOnUiThread {
+                    progress.dismiss()
+                    if (!AppUpdate.install(this, file)) {
+                        toast(getString(R.string.update_install_failed))
+                    }
+                }
+            },
+            onError = { message ->
+                runOnUiThread {
+                    progress.dismiss()
+                    toast(getString(R.string.update_download_failed, message))
+                }
+            },
+        )
+    }
+
     private fun about(content: LinearLayout) {
         content.addView(label(getString(R.string.diplay), 40, TEXT, true))
         content.addView(label(getString(R.string.carplay_at_home_in_your_car), 20, MUTED).apply { setPadding(0, dp(8), 0, dp(24)) })
         section(content, "${getString(R.string.about_public_preview_prefix)}${version()}") { card ->
             card.addView(label(getString(R.string.an_independent_carplay_receiver_for_android_head_units_wir), 17, TEXT))
+            val updateStatus = label(AppUpdate.currentVersion(this), 15, MUTED).apply {
+                setPadding(0, dp(10), 0, 0)
+            }
+            card.addView(updateStatus)
+            // A silent background check pre-fills the status line; the button still installs.
+            AppUpdate.autoCheck(this) { release ->
+                runOnUiThread {
+                    if (release == null || isFinishing || isDestroyed) return@runOnUiThread
+                    if (AppUpdate.isAvailable(release, this)) {
+                        updateStatus.text = getString(R.string.update_auto_found, release.tag)
+                    }
+                }
+            }
+            val channels = listOf(
+                getString(R.string.update_channel_github),
+                getString(R.string.update_channel_gitee),
+                getString(R.string.update_channel_mirror1),
+                getString(R.string.update_channel_mirror2),
+            )
+            choice(card, getString(R.string.update_channel), channels,
+                AirPlayPersistence.loadUpdateChannel(this).coerceIn(0, 3), reconnects = false) {
+                AirPlayPersistence.saveUpdateChannel(this, it)
+                AppUpdate.setChannel(it)
+            }
+            card.addView(button(getString(R.string.check_for_updates), false) {
+                updateStatus.text = "…"
+                AppUpdate.setChannel(AirPlayPersistence.loadUpdateChannel(this))
+                AppUpdate.check { release, failure ->
+                    when {
+                        release == null ->
+                            updateStatus.text = getString(R.string.update_check_failed, failure ?: "?")
+                        !AppUpdate.isAvailable(release, this) ->
+                            updateStatus.text = getString(R.string.up_to_date)
+                        else -> {
+                            updateStatus.text = release.tag
+                            offerUpdate(release)
+                        }
+                    }
+                }
+            }, matchButton(10, 56))
+        }
+        section(content, getString(R.string.cn_features_title)) { card ->
+            card.addView(label(getString(R.string.cn_features_body), 16, TEXT).apply {
+                setPadding(0, 0, 0, dp(8))
+            })
+        }
+        section(content, getString(R.string.cn_changelog_title)) { card ->
+            card.addView(label(cnChangelogText(), 15, MUTED))
         }
         section(content, getString(R.string.made_possible_by_open_source)) { card ->
             card.addView(label(getString(R.string.receiver_based_on_xcertplay_licensed_under_gpl_3_0_diplay), 16, MUTED))
         }
+    }
+
+    private fun cnChangelogText(): String {
+        val raw = runCatching {
+            assets.open("CN_OPTIMIZATIONS.md").bufferedReader().use { it.readText() }
+        }.getOrNull().orEmpty()
+        return AppUpdate.plainNotes(raw, limit = 8000).ifBlank { getString(R.string.cn_changelog_missing) }
+    }
+
+    private fun repairBootStart() {
+        val dialog = AlertDialog.Builder(this)
+            .setTitle(getString(R.string.boot_start_repair))
+            .setMessage(getString(R.string.boot_start_repair_running))
+            .setNegativeButton(getString(R.string.common_cancel), null)
+            .show()
+        Thread({
+            val result = runCatching {
+                com.shilapi.xcertplay.hud.BydBootStartRepair.apply(applicationContext, packageName)
+            }.getOrNull()
+            runOnUiThread {
+                if (isFinishing || isDestroyed) return@runOnUiThread
+                dialog.dismiss()
+                val text = result?.lines?.joinToString("\n")?.let { getString(R.string.boot_start_repair_result, it) }
+                    ?: getString(R.string.adb_check_failed)
+                AlertDialog.Builder(this)
+                    .setTitle(getString(R.string.boot_start_repair))
+                    .setMessage(text)
+                    .setPositiveButton(android.R.string.ok, null)
+                    .show()
+            }
+        }, "diplay-boot-repair").start()
     }
 
     // An opted-in connection prepares the hotspot in the controller instead of stopping at this reminder.
@@ -1184,14 +1397,15 @@ class DiPlayActivity : ComponentActivity() {
         if (value == previous) return
         AirPlayPersistence.saveMediaAudioChannel(this, value)
         control.text = summary(value)
-        if (CarPlayBackgroundSession.hasSession()) connect(AirPlayPersistence.loadWirelessEnabled(this))
+        // The sink bakes the channel into its AudioTrack, so the session must restart to apply it.
+        connect(AirPlayPersistence.loadWirelessEnabled(this))
     }
 
     private fun applyNavigationChannel(value: Int, previous: Int, control: Button, summary: (Int) -> String) {
         if (value == previous) return
         AirPlayPersistence.saveNavigationAudioChannel(this, value)
         control.text = summary(value)
-        if (CarPlayBackgroundSession.hasSession()) connect(AirPlayPersistence.loadWirelessEnabled(this))
+        connect(AirPlayPersistence.loadWirelessEnabled(this))
     }
 
     private fun channelLabel(value: Int): String = value.toString()
@@ -1268,12 +1482,6 @@ class DiPlayActivity : ComponentActivity() {
     }
 
     // "Left 20 %", "Centre · default", "Down 10 %": a signed step reads as a direction and a distance.
-    private fun markerStepLabel(step: Int, negative: String, positive: String): String = when {
-        step == 0 -> getString(R.string.marker_centre_default)
-        step < 0 -> "$negative ${-step * CarPlayClusterDisplay.MARKER_STEP_PERCENT} %"
-        else -> "$positive ${step * CarPlayClusterDisplay.MARKER_STEP_PERCENT} %"
-    }
-
     /** A 2%-step slider row for overlay placement; every step saves, so the card moves live. */
     private fun overlaySliderRow(title: String, values: List<Int>, current: Int, describe: (Int) -> String): OverlaySliderRow =
         OverlaySliderRow(this, title, values, current, describe)
@@ -1286,6 +1494,8 @@ class DiPlayActivity : ComponentActivity() {
         private val describe: (Int) -> String,
     ) : LinearLayout(context) {
         var onSave: (Int) -> Unit = {}
+        /** Fired once when the finger leaves the slider, for saves that need a reconnect. */
+        var onCommit: () -> Unit = {}
         val slider: SeekBar
 
         init {
@@ -1306,10 +1516,12 @@ class DiPlayActivity : ComponentActivity() {
                         if (fromUser) onSave(value)
                     }
                     override fun onStartTrackingTouch(seekBar: SeekBar?) {}
-                    override fun onStopTrackingTouch(seekBar: SeekBar?) {}
+                    override fun onStopTrackingTouch(seekBar: SeekBar?) { onCommit() }
                 })
             }
             addView(slider, LinearLayout.LayoutParams(-1, dp(44)))
+            // Keep a gap below each slider so stacked rows never touch the next control.
+            addView(space(8))
         }
     }
 
@@ -1705,6 +1917,18 @@ class DiPlayActivity : ComponentActivity() {
 
     private fun showVehicleDataSettings(card: LinearLayout, capabilities: BydVehicleCapabilities?) {
         if (capabilities == null || capabilities.batterySupported) {
+            toggle(card, getString(R.string.bt_suspend_during_carplay), getString(R.string.bt_suspend_during_carplay_description),
+                AirPlayPersistence.loadBtSuspendDuringCarplay(this), enabled = !adbSwitchChangePending) {
+                AirPlayPersistence.saveBtSuspendDuringCarplay(this, it)
+                if (it) checkAdbState(mayAsk = true)
+            }
+            if (AirPlayPersistence.loadBtSuspendDuringCarplay(this)) {
+                val delays = listOf(5, 10, 15, 30)
+                choice(card, getString(R.string.bt_suspend_delay), delays.map { getString(R.string.bt_suspend_delay_option, it) },
+                    delays.indexOf(AirPlayPersistence.loadBtSuspendDelaySeconds(this)).coerceAtLeast(0), reconnects = false) {
+                    AirPlayPersistence.saveBtSuspendDelaySeconds(this, delays[it])
+                }
+            }
             toggle(card, getString(R.string.car_battery_for_the_iphone),
                 getString(R.string.car_battery_for_the_iphone_description),
                 BydOutputSettings.batteryToIphone(this), enabled = !adbSwitchChangePending) {

@@ -39,7 +39,18 @@ class ClusterActivityStateTest {
         event(ClusterActivityState.SIMPLE, 1, time = 200)
         assertEquals(ClusterActivityState.Snapshot(Theme.SIMPLE, false), state.snapshot())
         event(ClusterActivityState.MINI_MAP, 1, time = 210)
-        assertEquals(ClusterActivityState.Snapshot(Theme.SIMPLE, true), state.snapshot())
+        assertEquals(ClusterActivityState.Snapshot(Theme.SIMPLE, true, true), state.snapshot())
+    }
+
+    @Test fun smallWindowFollowsTheNewestVisibleMapActivity() {
+        event(ClusterActivityState.MINI_MAP, 1)
+        assertTrue(state.snapshot().smallWindow)
+        event(ClusterActivityState.FULL_MAP, 1, time = 200)
+        assertFalse(state.snapshot().smallWindow)
+        event(ClusterActivityState.MINI_MAP, 1, time = 300)
+        assertTrue(state.snapshot().smallWindow)
+        event(ClusterActivityState.MINI_MAP, 23, time = 301)
+        assertFalse(state.snapshot().smallWindow)
     }
 
     @Test fun pausedButVisibleClusterSurvivesFocusMovingToTheHeadUnit() {

@@ -13,7 +13,8 @@ data class ClusterTurnGuidance(
 ) {
     companion object {
         internal fun from(frame: BydClusterFrame): ClusterTurnGuidance {
-            return ClusterTurnGuidance(frame.icon, frame.roundaboutExit, frame.distanceMeters, frame.road)
+            val icon = if (frame.icon == 0) 9 else frame.icon
+            return ClusterTurnGuidance(icon, frame.roundaboutExit, frame.distanceMeters, frame.road)
         }
     }
 }
