@@ -29,4 +29,15 @@ class AppUpdateTest {
         assertFalse(plain.contains("https://"))
         assertFalse(plain.contains("**"))
     }
+
+    @Test
+    fun giteeAssetNamesMustBeApkNotChecksumOrArchive() {
+        fun picked(name: String) = name.endsWith(".apk", ignoreCase = true) &&
+            !name.endsWith(".apk.sha256", ignoreCase = true) &&
+            !name.endsWith(".apk.zip", ignoreCase = true)
+        assertTrue(picked("DiPlay-cn-v0.2.12-cn.9.apk"))
+        assertFalse(picked("DiPlay-cn-v0.2.12-cn.9.apk.sha256"))
+        assertFalse(picked("DiPlay-cn-v0.2.12-cn.9.apk.zip"))
+        assertFalse(picked("v0.2.12-cn.9.zip"))
+    }
 }

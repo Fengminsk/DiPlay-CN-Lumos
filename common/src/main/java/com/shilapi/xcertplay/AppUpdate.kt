@@ -12,6 +12,7 @@ import java.io.FileOutputStream
 import java.net.HttpURLConnection
 import java.net.URL
 import java.util.concurrent.Executors
+import java.util.zip.ZipFile
 
 /**
  * In-app updates from this repository's GitHub releases: check the latest release, download its
@@ -116,7 +117,12 @@ object AppUpdate {
                     val asset = json.optJSONArray("assets")?.let { assets ->
                         (0 until assets.length()).asSequence()
                             .map { assets.optJSONObject(it) }
-                            .firstOrNull { it?.optString("name", "")?.endsWith(".apk") == true }
+                            .firstOrNull { asset ->
+                                val name = asset?.optString("name", "").orEmpty()
+                                name.endsWith(".apk", ignoreCase = true) &&
+                                    !name.endsWith(".apk.sha256", ignoreCase = true) &&
+                                    !name.endsWith(".apk.zip", ignoreCase = true)
+                            }
                     }
                     if (tag.isNotEmpty() && asset != null) {
                         result = Release(
@@ -152,6 +158,7 @@ object AppUpdate {
                 val target = File(directory, "diplay-cn-${release.tag}.apk")
                 val downloadUrl = mirrorPrefixes[channel]?.let { it + release.apkUrl } ?: release.apkUrl
                 val connection = URL(downloadUrl).openConnection() as HttpURLConnection
+                connection.instanceFollowRedirects = true
                 connection.connectTimeout = CONNECT_TIMEOUT
                 connection.readTimeout = 60_000
                 connection.setRequestProperty("User-Agent", USER_AGENT)
@@ -174,6 +181,7 @@ object AppUpdate {
                         if (total <= 0) main.post { onProgress(-1) }
                     }
                 }
+                check(isAndroidPackage(target)) { "downloaded file is not an Android package" }
                 main.post { onDone(target) }
             }.onFailure { failure ->
                 val message = failure.message ?: failure.javaClass.simpleName
@@ -206,4 +214,9 @@ object AppUpdate {
             true
         }.getOrDefault(false)
     }
+
+    /** Gitee serves APKs as application/zip; a real package still contains AndroidManifest.xml. */
+    internal fun isAndroidPackage(file: File): Boolean = runCatching {
+        ZipFile(file).use { zip -> zip.getEntry("AndroidManifest.xml") != null }
+    }.getOrDefault(false)
 }

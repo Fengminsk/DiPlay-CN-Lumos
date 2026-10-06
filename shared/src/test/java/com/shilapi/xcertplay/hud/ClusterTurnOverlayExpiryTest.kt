@@ -31,15 +31,17 @@ class ClusterTurnOverlayExpiryTest {
         assertEquals(150, events.last()!!.distanceMeters)
     }
 
-    /**
-     * CN behaviour: a session end — including the momentary drop of a wireless handoff — must
-     * not clear the overlay; the 120 s staleness window retires a truly ended route instead.
-     */
-    @Test fun endingTheSessionKeepsTheTurnCardAcrossTheDrop() = withRoute { route, _, events ->
-        BydNavigationOutputs.endNow()
+    @Test fun aWirelessHandoffKeepsTheTurnCard() = withRoute { route, _, events ->
+        BydNavigationOutputs.endNow(preserveTurnOverlay = true)
         assertEquals(150, route.currentApple()!!.distanceMeters)
-        // The published card stays as it was; only staleness retires it later.
         assertEquals(150, events.last()!!.distanceMeters)
+    }
+
+    @Test fun endingTheSessionClearsTheTurnCardImmediately() = withRoute { route, _, events ->
+        BydNavigationOutputs.endNow()
+        assertNull(route.currentApple())
+        assertNull(events.last())
+        assertEquals(2, events.size)
     }
 
     private fun withRoute(test: (BydHudRouteState, (Long) -> Unit, MutableList<ClusterTurnGuidance?>) -> Unit) {

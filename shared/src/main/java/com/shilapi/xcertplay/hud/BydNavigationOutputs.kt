@@ -7,6 +7,7 @@ import com.shilapi.xcertplay.iap2.wire.Iap2Frame
 object BydNavigationOutputs {
     /** Recover a journaled interrupted output when the app opens, even before a phone reconnects. */
     fun onAppOpened(context: Context) {
+        BydBluetoothSuspend.onAppOpened(context)
         BydOemClusterNavi.restoreIfNeeded(context)
         BydDiLink3ClusterOutput.restoreIfNeeded(context)
         com.shilapi.xcertplay.network.WifiScanPause.restoreIfNeeded(context)
@@ -128,9 +129,13 @@ object BydNavigationOutputs {
     fun dashboardNote(text: String, source: Int? = null) = BydClusterSong.note(text, source)
 
     /** Best effort while alive; Android does not guarantee callbacks before force-stop. */
-    fun endNow() {
+    fun endNow(preserveTurnOverlay: Boolean = false) {
         standalone.clear(); hud.clear(); cluster.clear(); BydClusterSong.end()
-        // Keep the overlay route across a session drop (wireless handoff). The overlay's
-        // own 120 s staleness window retires a truly ended route.
+        // Only a wireless session replacement retains the card. Explicit controller close
+        // and wired disconnect still clear it immediately.
+        if (!preserveTurnOverlay) {
+            synchronized(overlayLock) { overlayRoute.clear() }
+            refreshTurnOverlay()
+        }
     }
 }

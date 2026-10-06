@@ -44,6 +44,7 @@ internal class ClusterMapPresentation(
     private var waitingLabel: TextView? = null
     private var turnCardView: ClusterTurnCardView? = null
     private var videoView: View? = null
+    private var streamActive = false
     var outputSurface: Surface? = null
         private set
     var mapVisible = true
@@ -121,42 +122,45 @@ internal class ClusterMapPresentation(
         }
         waitingLabel = TextView(context).apply {
             text = context.getString(R.string.cluster_waiting_for_map)
-            // CN: light placeholder so an unconnected cluster reads as waiting, not dead.
-            setTextColor(Color.DKGRAY)
+            setTextColor(if (plan != null && dark) Color.WHITE else Color.DKGRAY)
+            if (plan == null) setBackgroundColor(Color.rgb(233, 238, 246))
             textSize = 26f
             gravity = Gravity.CENTER
         }
         root.addView(waitingLabel, FrameLayout.LayoutParams(videoParams))
         turnCardView = ClusterTurnCardView(context).apply { visibility = View.GONE }
         root.addView(turnCardView, FrameLayout.LayoutParams(-1, -1))
+        // Start with the placeholder visible; SurfaceView would otherwise cover the light
+        // backdrop with an empty black surface before the first stream notification.
+        // SurfaceView ignores fractional alpha before API 34. Keep its decoder surface
+        // visible and fade an opaque ordinary View over it instead.
+        if (videoView !is SurfaceView) videoView?.alpha = if (streamActive) 1f else 0f
+        waitingLabel?.apply {
+            alpha = if (streamActive) 0f else 1f
+            visibility = if (streamActive) View.GONE else View.VISIBLE
+        }
         setContentView(root)
     }
 
     /**
-     * Cross-fades the placeholder and the video when the cluster stream starts or stops, so the
-     * dashboard never hard-cuts between "waiting" and the live map.
+     * Cross-fades the waiting placeholder over the live map. TextureView can also fade the
+     * video; legacy SurfaceView stays visible under the placeholder to preserve its surface.
      */
     fun setStreamActive(active: Boolean) {
+        if (streamActive == active) return
+        // Update before cancelling: a cancelled fade must not hide the newly restored label.
+        streamActive = active
         val video = videoView
         val label = waitingLabel
-        if (video == null || label == null) {
-            label?.visibility = if (active) View.GONE else View.VISIBLE
-            return
-        }
-        if (active) {
-            video.animate().cancel()
-            label.animate().cancel()
-            video.alpha = 0f
-            video.animate().alpha(1f).setDuration(300).start()
-            label.animate().alpha(0f).setDuration(300).withEndAction { label.visibility = View.GONE }.start()
-        } else {
-            video.animate().cancel()
-            label.animate().cancel()
-            label.visibility = View.VISIBLE
-            label.alpha = 0f
-            label.animate().alpha(1f).setDuration(300).start()
-            video.animate().alpha(0f).setDuration(300).start()
-        }
+        video?.animate()?.cancel()
+        label?.animate()?.cancel()
+        if (video == null || label == null) return
+        label.visibility = View.VISIBLE
+        // Animate from the current opacity so a stream reversal does not jump or restart.
+        if (video !is SurfaceView) video.animate().alpha(if (active) 1f else 0f).setDuration(300).start()
+        label.animate().alpha(if (active) 0f else 1f).setDuration(300).withEndAction {
+            if (streamActive == active) label.visibility = if (active) View.GONE else View.VISIBLE
+        }.start()
     }
 
     /** Window alpha hides the pixels without destroying the TextureView/decoder surface. */

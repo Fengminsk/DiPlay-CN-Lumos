@@ -4,6 +4,12 @@
 
 覆盖安装：包名始终为 `com.shihab.diplay.cn`；自 0.2.10-cn.4 起所有 CN 版本使用同一把固定签名密钥，`versionCode` 更大即可直接覆盖安装并保留设置。0.2.10-cn.3 及更早版本签名各不相同，升到 cn.4 需最后一次卸载重装。不能覆盖官方 `com.shihab.diplay`。
 
+## 未打包（main，下一版）
+
+- 对齐官方合入后的加固：转向卡仅在无线会话替换时保留（有线断开/主动关闭仍立刻清）；仪表等待淡化对 SurfaceView 用实心遮罩；「更小」125% 流过解码器能力检查，不支持则回退。
+- 「暂停车机蓝牙」改为官方 #307 的 lease 实现：ADB 失败不算暂停成功、本来关着的蓝牙保持关、取消/断开/重开应用按原状态恢复。
+- 应用内更新：Gitee 资源排除 `.apk.sha256` / `.apk.zip`；下载后校验 ZIP 内含 `AndroidManifest.xml`（Gitee CDN 把 APK 标成 `application/zip`，浏览器可能存成 `.apk.zip`，但包本身是真正的 APK）。
+
 ## 0.2.12-cn.9 — 2026-10-06
 
 - 采纳官方已合并的 [#285](https://github.com/shihabal3amri/DiPlay/pull/285)：`ro.car.protocol` 为空时回退读 `sys.car.protocol`。部分 DiLink 5（如 2024 唐 2025 固件）只写后者，原先读不到电池、地图也不把车当电动车。
