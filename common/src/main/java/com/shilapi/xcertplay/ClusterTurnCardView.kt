@@ -91,17 +91,17 @@ internal class ClusterTurnCardView(context: Context) : View(context) {
             glassPaint.color = Color.argb(alpha, 12, 14, 18)
             chipPaint.color = Color.argb((alpha * 0.18f).toInt().coerceAtLeast(12), 255, 255, 255)
             strokePaint.color = Color.argb((alpha * 0.16f).toInt().coerceAtLeast(10), 255, 255, 255)
-            distancePaint.color = Color.argb(255, 240, 242, 246)
-            roadPaint.color = Color.argb(179, 176, 182, 192)
-            infoPaint.color = Color.argb(224, 226, 228, 236)
+            distancePaint.color = Color.WHITE
+            roadPaint.color = Color.argb(245, 248, 248, 252)
+            infoPaint.color = Color.WHITE
             badgePaint.color = accent
         } else {
             glassPaint.color = Color.argb(alpha, 28, 28, 30)
             chipPaint.color = Color.argb((alpha * 0.18f).toInt().coerceAtLeast(12), 255, 255, 255)
             strokePaint.color = Color.argb((alpha * 0.15f).toInt().coerceAtLeast(10), 255, 255, 255)
             distancePaint.color = Color.WHITE
-            roadPaint.color = Color.argb(179, 199, 199, 204)
-            infoPaint.color = Color.argb(224, 235, 235, 240)
+            roadPaint.color = Color.argb(245, 248, 248, 252)
+            infoPaint.color = Color.WHITE
             badgePaint.color = accent
         }
     }
