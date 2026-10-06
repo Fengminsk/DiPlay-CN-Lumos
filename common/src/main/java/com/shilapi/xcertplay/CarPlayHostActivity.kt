@@ -792,10 +792,16 @@ class CarPlayHostActivity : ComponentActivity() {
         else DiLink51ClusterLayout.theme(this)
 
     private fun onClusterActivityState(state: ClusterActivityState.Snapshot) {
-        if (state != detectedCluster) appendLog("Cluster map: detected theme=${state.theme} mapVisible=${state.mapVisible}")
+        val previous = detectedCluster
+        if (state != previous) appendLog("Cluster map: detected theme=${state.theme} mapVisible=${state.mapVisible} smallWindow=${state.smallWindow}")
         detectedCluster = state
         if (!AirPlayPersistence.loadClusterMapEnabled(this)) { dismissClusterPresentation(); return }
         ensureClusterPresentation()
+        if (AirPlayPersistence.loadClusterSmallWindowMode(this) == CLUSTER_SMALL_WINDOW_AUTO &&
+            previous.smallWindow != state.smallWindow &&
+            CarPlayBackgroundSession.hasSession()) {
+            reconnectAfterLoss("Cluster small-window navi ${if (state.smallWindow) "on" else "off"}")
+        }
     }
 
     private fun ensureClusterPresentation() {
@@ -818,7 +824,10 @@ class CarPlayHostActivity : ComponentActivity() {
             ensureDiLink51ClusterPresentation(theme)
             return
         }
-        if (clusterPresentation != null) return
+        if (clusterPresentation != null) {
+            applyClusterTurnOverlay()
+            return
+        }
         val display = ClusterMapPresentation.findDisplay(this, theme) ?: run {
             appendLog("Cluster map: no cluster projection display among ${ClusterMapPresentation.describeDisplays(this)}")
             return
