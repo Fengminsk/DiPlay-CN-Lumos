@@ -916,13 +916,12 @@ class CarPlayHostActivity : ComponentActivity() {
         val effectiveNight = if (smallWindow) smallCardNight else cardNight
         ClusterActivityOutput.setTurnCard(if (overlay) clusterTurnGuidance else null,
             xPercent, yPercent, sizePercent,
-            AirPlayPersistence.loadClusterTurnCardOpacityPercent(this), effectiveNight, smallWindow)
+            AirPlayPersistence.loadClusterTurnCardOpacityPercent(this), effectiveNight)
         val presentations = (clusterLayers.values + listOfNotNull(clusterPresentation)).distinct()
         for (presentation in presentations) {
             presentation.setTurnCardOverlay(xPercent, yPercent, sizePercent)
             presentation.setTurnCardOpacity(AirPlayPersistence.loadClusterTurnCardOpacityPercent(this))
             presentation.setTurnCardNightMode(effectiveNight)
-            presentation.setTurnCardWhiteGlyph(smallWindow)
             presentation.setTurnCardGuidance(if (overlay) clusterTurnGuidance else null)
         }
     }

@@ -22,13 +22,12 @@ import com.shilapi.xcertplay.hud.ClusterTurnGuidance
  *
  * Visual language follows Apple's turn banners: a dark glass capsule with a hairline stroke,
  * the maneuver glyph in a soft chip on the left, distance and road stacked on the right.
- * Maneuver glyphs are Material Symbols (Apache 2.0), tinted the system blue; the roundabout
+     * Maneuver glyphs are Material Symbols (Apache 2.0), tinted white; the roundabout
  * exit number sits in a small badge on the glyph.
  */
 internal class ClusterTurnCardView(context: Context) : View(context) {
     private var guidance: ClusterTurnGuidance? = null
     private var night = false
-    private var whiteGlyph = false
     private var xPercent = ClusterTurnCardOverlay.DEFAULT_X_PERCENT
     private var yPercent = ClusterTurnCardOverlay.DEFAULT_Y_PERCENT
     private var sizePercent = ClusterTurnCardOverlay.DEFAULT_SIZE_PERCENT
@@ -83,14 +82,6 @@ internal class ClusterTurnCardView(context: Context) : View(context) {
         if (night == this.night) return
         this.night = night
         applyPalette()
-        invalidate()
-    }
-
-    /** Small-window navi: white maneuver icon; full-screen keeps the blue accent. */
-    fun setWhiteGlyph(white: Boolean) {
-        if (white == whiteGlyph) return
-        whiteGlyph = white
-        glyphTag = -1
         invalidate()
     }
 
@@ -229,9 +220,7 @@ internal class ClusterTurnCardView(context: Context) : View(context) {
     private fun drawGlyph(canvas: Canvas, next: ClusterTurnGuidance, left: Float, top: Float, side: Float, exit: Int?) {
         val resId = glyphRes(next.icon)
         if (resId != glyphTag) {
-            glyph = ContextCompat.getDrawable(context, resId)?.mutate()?.apply {
-                setTint(if (whiteGlyph) Color.WHITE else accent)
-            }
+            glyph = ContextCompat.getDrawable(context, resId)?.mutate()?.apply { setTint(Color.WHITE) }
             glyphTag = resId
         }
         val inset = side * 0.10f

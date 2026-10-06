@@ -180,10 +180,6 @@ internal class ClusterMapPresentation(
         turnCardView?.setNightMode(night)
     }
 
-    fun setTurnCardWhiteGlyph(white: Boolean) {
-        turnCardView?.setWhiteGlyph(white)
-    }
-
     fun setTurnCardOpacity(percent: Int) {
         turnCardView?.setOpacity(percent)
     }
