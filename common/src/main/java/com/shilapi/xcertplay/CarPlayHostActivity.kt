@@ -3740,7 +3740,7 @@ class CarPlayHostActivity : ComponentActivity() {
                     applyClusterTurnOverlay()
                     if (pendingSmallWindowReconnect && !menuOpen) {
                         pendingSmallWindowReconnect = false
-                        if (AirPlayPersistence.loadClusterSmallWindowMode(this) == CLUSTER_SMALL_WINDOW_AUTO &&
+                        if (AirPlayPersistence.loadClusterSmallWindowMode(this@CarPlayHostActivity) == CLUSTER_SMALL_WINDOW_AUTO &&
                             CarPlayBackgroundSession.hasSession()) {
                             reconnectAfterLoss("Cluster small-window navi ${if (smallWindowActive()) "on" else "off"}")
                         }
