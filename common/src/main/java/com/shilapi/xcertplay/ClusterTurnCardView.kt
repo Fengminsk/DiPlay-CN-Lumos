@@ -22,7 +22,7 @@ import com.shilapi.xcertplay.hud.ClusterTurnGuidance
  *
  * Visual language follows Apple's turn banners: a dark glass capsule with a hairline stroke,
  * the maneuver glyph in a soft chip on the left, distance and road stacked on the right.
- * Maneuver glyphs are Material Symbols (Apache 2.0), tinted the system blue; the roundabout
+     * Maneuver glyphs are Material Symbols (Apache 2.0), tinted white; the roundabout
  * exit number sits in a small badge on the glyph.
  */
 internal class ClusterTurnCardView(context: Context) : View(context) {
@@ -56,10 +56,10 @@ internal class ClusterTurnCardView(context: Context) : View(context) {
         color = Color.argb(224, 235, 235, 240); typeface = Typeface.create("sans-serif-medium", Typeface.NORMAL)
     }
     private val rect = RectF()
+    init { applyPalette() }
+
     private var glyph: Drawable? = null
     private var glyphTag: Int = -1
-
-    init { applyPalette() }
 
     fun setLayout(xPercent: Int, yPercent: Int, sizePercent: Int) {
         this.xPercent = xPercent
@@ -91,17 +91,17 @@ internal class ClusterTurnCardView(context: Context) : View(context) {
             glassPaint.color = Color.argb(alpha, 12, 14, 18)
             chipPaint.color = Color.argb((alpha * 0.18f).toInt().coerceAtLeast(12), 255, 255, 255)
             strokePaint.color = Color.argb((alpha * 0.16f).toInt().coerceAtLeast(10), 255, 255, 255)
-            distancePaint.color = Color.argb(255, 240, 242, 246)
-            roadPaint.color = Color.argb(179, 176, 182, 192)
-            infoPaint.color = Color.argb(224, 226, 228, 236)
+            distancePaint.color = Color.WHITE
+            roadPaint.color = Color.argb(245, 248, 248, 252)
+            infoPaint.color = Color.WHITE
             badgePaint.color = accent
         } else {
             glassPaint.color = Color.argb(alpha, 28, 28, 30)
             chipPaint.color = Color.argb((alpha * 0.18f).toInt().coerceAtLeast(12), 255, 255, 255)
             strokePaint.color = Color.argb((alpha * 0.15f).toInt().coerceAtLeast(10), 255, 255, 255)
             distancePaint.color = Color.WHITE
-            roadPaint.color = Color.argb(179, 199, 199, 204)
-            infoPaint.color = Color.argb(224, 235, 235, 240)
+            roadPaint.color = Color.argb(245, 248, 248, 252)
+            infoPaint.color = Color.WHITE
             badgePaint.color = accent
         }
     }
@@ -218,10 +218,9 @@ internal class ClusterTurnCardView(context: Context) : View(context) {
 
     /** Draws the tinted Material Symbols glyph; the roundabout exit number gets a corner badge. */
     private fun drawGlyph(canvas: Canvas, next: ClusterTurnGuidance, left: Float, top: Float, side: Float, exit: Int?) {
-        if (next.icon == 0) return
         val resId = glyphRes(next.icon)
         if (resId != glyphTag) {
-            glyph = ContextCompat.getDrawable(context, resId)?.mutate()?.apply { setTint(accent) }
+            glyph = ContextCompat.getDrawable(context, resId)?.mutate()?.apply { setTint(Color.WHITE) }
             glyphTag = resId
         }
         val inset = side * 0.10f

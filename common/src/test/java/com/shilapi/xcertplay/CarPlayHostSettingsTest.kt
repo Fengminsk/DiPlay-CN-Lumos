@@ -82,6 +82,38 @@ class CarPlayHostSettingsTest {
         }
     }
 
+    @Test fun swipeTargetHomeOpensDiPlaySettingsInsteadOfTheMenu() {
+        AirPlayPersistence.saveSwipeOpensFullSettings(activity, true)
+        invoke("loadPersistedSettings")
+        gesture(3)
+        assertFalse(field("menuOpen") as Boolean)
+        val started = shadowOf(activity).nextStartedActivity
+        assertEquals(DiPlayActivity::class.java.name, started.component!!.className)
+        assertEquals("settings", started.getStringExtra("page"))
+    }
+
+    @Test fun openFullSettingsButtonAlwaysOpensTheHomeSettingsPage() {
+        invoke("openSettingsMenu")
+        views(menu()).filterIsInstance<Button>()
+            .first { it.text == activity.getString(R.string.open_full_settings) }
+            .performClick()
+        assertFalse(field("menuOpen") as Boolean)
+        val started = shadowOf(activity).nextStartedActivity
+        assertEquals(DiPlayActivity::class.java.name, started.component!!.className)
+        assertEquals("settings", started.getStringExtra("page"))
+    }
+
+    @Test fun overlaySwipeTargetChoiceIsKeptWithoutSavingTheMenu() {
+        assertFalse(AirPlayPersistence.loadSwipeOpensFullSettings(activity))
+        invoke("openSettingsMenu")
+        views(menu()).filterIsInstance<RadioButton>()
+            .first { it.text == activity.getString(R.string.settings_swipe_target_full) }
+            .performClick()
+        assertTrue(AirPlayPersistence.loadSwipeOpensFullSettings(activity))
+        invoke("cancelSettingsEdits")
+        assertTrue(AirPlayPersistence.loadSwipeOpensFullSettings(activity))
+    }
+
     @Test fun wrongFingerCountsAndNonDownwardSwipesDoNotOpenTheMenu() {
         for (configured in 2..4) {
             AirPlayPersistence.saveSettingsGestureFingers(activity, configured)

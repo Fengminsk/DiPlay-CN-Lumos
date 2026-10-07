@@ -127,7 +127,7 @@ internal object BydClusterSong {
             val previous = state.current()
             state.accept(frame)
             val song = state.current()
-            if (song == previous || !BydOutputSettings.clusterSong(app)) return
+            if (song == previous || !songWanted(app)) return
             if (song == null) {
                 stop(app)
                 return
@@ -159,7 +159,7 @@ internal object BydClusterSong {
             if (onChange !== token) return
             onChange = null
             // Preferences are saved before their callback; an expiry in that gap must also be safe.
-            if (!BydOutputSettings.clusterSong(app) || !BydOutputSettings.clusterSongOnChange(app)) return
+            if (!songWanted(app) || !BydOutputSettings.clusterSongOnChange(app)) return
             if (note != null) return
             wanted = EMPTY
         }
@@ -178,7 +178,7 @@ internal object BydClusterSong {
         synchronized(state) {
             onChange = null
             announced = null
-            val song = state.current().takeIf { enabled }
+            val song = state.current().takeIf { enabled && songWanted(app) }
             when {
                 song == null -> stop(app)
                 BydOutputSettings.clusterSongOnChange(app) -> {
@@ -190,9 +190,21 @@ internal object BydClusterSong {
         }
     }
 
+    /**
+     * The song card needs both its own switch and the master navigation switch, so turning the
+     * master off stops every write to the instrument cluster. Also give up after a failed write:
+     * a dashboard that rejects the write once keeps rejecting it, and hammering an unhappy
+     * instrument service is how some firmwares fall back to their simple mode.
+     */
+    private fun songWanted(app: Context): Boolean =
+        BydOutputSettings.enabled(app) && BydOutputSettings.clusterSong(app) && !givenUp.get()
+
+    private val givenUp = java.util.concurrent.atomic.AtomicBoolean(false)
+
     /** The session ended: forget the song and stop the card DiPlay set. */
     fun end() {
         val app = context ?: return
+        givenUp.set(false)
         synchronized(state) {
             state.clear()
             stop(app)
@@ -220,7 +232,7 @@ internal object BydClusterSong {
         val song = synchronized(state) {
             if (note !== token) return
             note = null
-            val current = state.current().takeIf { BydOutputSettings.clusterSong(app) }
+            val current = state.current().takeIf { songWanted(app) }
             // In the "only when it changes" mode the card stays empty unless the new song's seconds still run.
             (if (current != null && BydOutputSettings.clusterSongOnChange(app) && onChange == null) EMPTY else current)
                 .also { wanted = it }
@@ -277,7 +289,11 @@ internal object BydClusterSong {
             ?: return false
         val failed = output.lineSequence().map { it.trim() }.filter { it.contains('=') }
             .any { line -> line.substringAfter('=').trim().toIntOrNull() != 0 }
-        if (failed) Log.w(TAG, "dashboard write failed: ${output.trim().take(160)}")
+        if (failed) {
+                givenUp.set(true)
+                synchronized(state) { wanted = null }
+                Log.w(TAG, "dashboard write failed once; stopping song writes for this session: ${output.trim().take(160)}")
+            }
         return !failed
     }
 }

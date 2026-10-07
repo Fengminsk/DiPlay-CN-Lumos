@@ -27,6 +27,7 @@ import java.util.concurrent.atomic.AtomicBoolean
 internal class MicrophoneUplink(
     private val config: MicrophoneConfig,
     private val onDiagnostic: (String) -> Unit = {},
+    private val speakerphoneCall: Boolean = false,
 ) : Closeable {
     private val running = AtomicBoolean(false)
     private val stats = MicrophoneCaptureStats(config, report = { message ->
@@ -59,9 +60,10 @@ internal class MicrophoneUplink(
             return false
         }
 
-        val source = when (config.audioType) {
-            "telephony" -> MediaRecorder.AudioSource.VOICE_COMMUNICATION
-            "speechrecognition" -> MediaRecorder.AudioSource.VOICE_RECOGNITION
+        val source = when {
+            config.audioType == "telephony" && speakerphoneCall -> MediaRecorder.AudioSource.MIC
+            config.audioType == "telephony" -> MediaRecorder.AudioSource.VOICE_COMMUNICATION
+            config.audioType == "speechrecognition" -> MediaRecorder.AudioSource.VOICE_RECOGNITION
             else -> MediaRecorder.AudioSource.MIC
         }
         val nextEncoder = if (config.codec == AudioCodecKind.OPUS) {
@@ -122,7 +124,9 @@ internal class MicrophoneUplink(
         socket = nextSocket
         opusEncoder = nextEncoder
         return try {
-            if (config.audioType == "telephony") effects = voiceEffects(nextRecorder.audioSessionId)
+            if (config.audioType == "telephony" && !speakerphoneCall) {
+                effects = voiceEffects(nextRecorder.audioSessionId)
+            }
             nextRecorder.startRecording()
             stats.started(routeType(nextRecorder))
             thread = Thread({ capture(nextRecorder, nextSocket) }, "carplay-mic").apply {
