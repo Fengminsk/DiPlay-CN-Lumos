@@ -13,8 +13,8 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 30
     env:
-      OFFICIAL_APK_URL: https://github.com/shihabal3amri/DiPlay/releases/download/v0.2.13/DiPlay-0.2.13.apk
-      OFFICIAL_APK_SHA256: aed9eac786e7c0e80a2929dc2f0c2e1d0df318ca8fd83ae7c2988a98bb4cd7e6
+      OFFICIAL_APK_URL: https://github.com/shihabal3amri/DiPlay/releases/download/v0.2.14/DiPlay-0.2.14.apk
+      OFFICIAL_APK_SHA256: 62b31f79db32bc7c85013ae830460b697a5952fad571ed0030b97341dde0b2e3
     steps:
       - uses: actions/checkout@v4
       - name: Reject credential files in public source
@@ -27,11 +27,11 @@ jobs:
         with:
           packages: platform-tools platforms;android-37.0 build-tools;36.0.0 ndk;28.2.13676358
       - uses: gradle/actions/setup-gradle@v4
-      - name: Provision runtime identity from official v0.2.13 APK
+      - name: Provision runtime identity from official v0.2.14 APK
         shell: bash
         run: |
           set -euo pipefail
-          apk="$RUNNER_TEMP/DiPlay-0.2.13.apk"
+          apk="$RUNNER_TEMP/DiPlay-0.2.14.apk"
           assets="$RUNNER_TEMP/auth-assets"
           curl -fsSL -o "$apk" "$OFFICIAL_APK_URL"
           python3 scripts/extract_official_identity.py "$apk" "$assets" "$OFFICIAL_APK_SHA256"
