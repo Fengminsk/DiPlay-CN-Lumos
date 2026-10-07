@@ -408,6 +408,8 @@ class CarPlayHostActivity : ComponentActivity() {
     private var startAfterHandshakeReset = false
     private var restartGeneration = 0
     private var reconnectScheduled = false
+    // CN: the small window was detected while no session was connecting yet; correct the stream once one is active.
+    private var pendingSmallWindowReconnect = false
     private var sessionLog: SessionLogFile? = null
     private var gestureFingerCount = 3
     private var swipeOpensFullSettings = false
@@ -831,9 +833,12 @@ class CarPlayHostActivity : ComponentActivity() {
         if (!AirPlayPersistence.loadClusterMapEnabled(this)) { dismissClusterPresentation(); return }
         ensureClusterPresentation()
         if (AirPlayPersistence.loadClusterSmallWindowMode(this) == CLUSTER_SMALL_WINDOW_AUTO &&
-            previous.smallWindow != state.smallWindow &&
-            CarPlayBackgroundSession.hasSession()) {
-            reconnectAfterLoss("Cluster small-window navi ${if (state.smallWindow) "on" else "off"}")
+            previous.smallWindow != state.smallWindow) {
+            if (CarPlayBackgroundSession.hasSession()) {
+                reconnectAfterLoss("Cluster small-window navi ${if (state.smallWindow) "on" else "off"}")
+            } else {
+                pendingSmallWindowReconnect = true
+            }
         }
     }
 
@@ -3730,6 +3735,16 @@ class CarPlayHostActivity : ComponentActivity() {
                     reconnectAttempts = 0
                     logThemeState(ThemeModeDiagnostics.Source.SESSION_ACTIVE, resources.configuration)
                     syncAirPlayDarkMode(ThemeModeDiagnostics.Source.SESSION_ACTIVE)
+                    // CN: re-push the turn card after a reconnect, and correct the cluster stream when
+                    // the small window was detected before this session started connecting.
+                    applyClusterTurnOverlay()
+                    if (pendingSmallWindowReconnect && !menuOpen) {
+                        pendingSmallWindowReconnect = false
+                        if (AirPlayPersistence.loadClusterSmallWindowMode(this) == CLUSTER_SMALL_WINDOW_AUTO &&
+                            CarPlayBackgroundSession.hasSession()) {
+                            reconnectAfterLoss("Cluster small-window navi ${if (smallWindowActive()) "on" else "off"}")
+                        }
+                    }
                     if (menuOpen) return@runOnUiThread
                     appendLog("AirPlay session active")
                 }
