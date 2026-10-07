@@ -33,7 +33,7 @@ internal class ClusterActivityState {
         val miniMap = visible.keys.any { it.name == MINI_MAP }
         return Snapshot(
             theme,
-            theme != null && (theme == DiLink51ClusterLayout.Theme.MAP || miniMap),
+            theme == DiLink51ClusterLayout.Theme.MAP || miniMap,
             latestMap == MINI_MAP,
         )
     }

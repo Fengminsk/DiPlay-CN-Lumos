@@ -53,6 +53,15 @@ class ClusterActivityStateTest {
         assertFalse(state.snapshot().smallWindow)
     }
 
+    @Test fun smallWindowAloneRemainsVisibleAndSwitchesBothDirections() {
+        event(ClusterActivityState.MINI_MAP, 1, time = 100)
+        assertEquals(ClusterActivityState.Snapshot(null, true, true), state.snapshot())
+        event(ClusterActivityState.FULL_MAP, 1, time = 200)
+        assertEquals(ClusterActivityState.Snapshot(Theme.MAP, true, false), state.snapshot())
+        event(ClusterActivityState.MINI_MAP, 1, time = 300)
+        assertEquals(ClusterActivityState.Snapshot(Theme.MAP, true, true), state.snapshot())
+    }
+
     @Test fun pausedButVisibleClusterSurvivesFocusMovingToTheHeadUnit() {
         event(ClusterActivityState.FULL_MAP, 1)
         event(ClusterActivityState.FULL_MAP, 2)

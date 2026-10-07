@@ -150,6 +150,15 @@ class DiPlayActivity : ComponentActivity() {
     private val bluetoothPermission = registerForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
         if (granted) choosePhone() else permissionHelp(getString(R.string.nearby_devices), getString(R.string.allow_nearby_devices_so_diplay_can_connect_to_your_paired))
     }
+    private val bluetoothAutoConnectPermission = registerForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
+        if (granted) {
+            if (DiPlayPreferences.phoneAddress(this) == null) choosePhone()
+        } else {
+            DiPlayPreferences.saveConnectOnPhoneBluetooth(this, false)
+            render()
+            permissionHelp(getString(R.string.nearby_devices), getString(R.string.allow_nearby_devices_so_diplay_can_connect_to_your_paired))
+        }
+    }
     private val locationPermission = registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) {
         if (hasPreciseLocation()) {
             applyLocationReporting(true)
@@ -211,6 +220,20 @@ class DiPlayActivity : ComponentActivity() {
         automaticVehicleValidationStarted = false
         scheduleAutomaticVehicleValidation()
         handleWirelessRecovery()
+        if (consumeBluetoothAutoConnectIntent(intent)) {
+            if (initialLaunch) {
+                initialLaunch = false
+                startCarHotspotOnLaunch()
+            }
+            handler.post { connect(true) }
+        }
+    }
+    private fun consumeBluetoothAutoConnectIntent(intent: Intent): Boolean {
+        val requested = intent.getBooleanExtra(PhoneBluetoothReceiver.EXTRA_AUTO_CONNECT, false)
+        intent.removeExtra(PhoneBluetoothReceiver.EXTRA_AUTO_CONNECT)
+        return requested && DiPlayPreferences.connectOnPhoneBluetooth(this) &&
+            DiPlayPreferences.phoneAddress(this) != null && setupError == null &&
+            !CarPlayBackgroundSession.hasSession()
     }
     override fun onSaveInstanceState(outState: Bundle) {
         outState.putString("page", page)
@@ -260,7 +283,9 @@ class DiPlayActivity : ComponentActivity() {
         if (initialLaunch) {
             initialLaunch = false
             startCarHotspotOnLaunch()
-            if (setupError == null && !CarPlayBackgroundSession.hasSession() &&
+            if (consumeBluetoothAutoConnectIntent(intent)) {
+                handler.post { connect(true) }
+            } else if (setupError == null && !CarPlayBackgroundSession.hasSession() &&
                 DiPlayPreferences.autoConnect(this) && intent.getStringExtra("page") == null) {
                 handler.post { connect(AirPlayPersistence.loadWirelessEnabled(this)) }
             }
@@ -525,6 +550,15 @@ class DiPlayActivity : ComponentActivity() {
         }
         section(content, getString(R.string.automatic_connection), R.drawable.ic_dp_automation) { card ->
             toggle(card, getString(R.string.connect_when_diplay_opens), getString(R.string.use_your_last_connection_type_and_selected_iphone), DiPlayPreferences.autoConnect(this)) { DiPlayPreferences.saveAutoConnect(this, it) }
+            toggle(card, getString(R.string.connect_when_iphone_bluetooth_connects),
+                getString(R.string.connect_when_iphone_bluetooth_connects_description),
+                DiPlayPreferences.connectOnPhoneBluetooth(this)) { enabled ->
+                DiPlayPreferences.saveConnectOnPhoneBluetooth(this, enabled)
+                if (enabled && Build.VERSION.SDK_INT >= 31 &&
+                    checkSelfPermission(Manifest.permission.BLUETOOTH_CONNECT) != PackageManager.PERMISSION_GRANTED) {
+                    bluetoothAutoConnectPermission.launch(Manifest.permission.BLUETOOTH_CONNECT)
+                } else if (enabled && DiPlayPreferences.phoneAddress(this) == null) choosePhone()
+            }
             adbToggle(card, R.string.open_after_the_car_starts,
                 R.string.availability_depends_on_your_head_unit_s_startup_settings,
                 read = { AirPlayPersistence.loadAutoStartOnBoot(this) },
@@ -802,6 +836,7 @@ class DiPlayActivity : ComponentActivity() {
                         val contents = CarPlayClusterDisplay.Content.entries
                         val content = AirPlayPersistence.loadClusterContent(this)
                         val customCard = CarPlayClusterDisplay.usesCustomTurnCard(content)
+                        var cardPlacementPreview: ClusterCardPlacementPreview? = null
                         val officialCardOnly = content == CarPlayClusterDisplay.Content.TURN_CARD
                         choice(card, getString(R.string.dashboard_shows), listOf(
                             getString(R.string.dashboard_content_map),
@@ -833,12 +868,17 @@ class DiPlayActivity : ComponentActivity() {
                             }
                         }
                         if (customCard) {
+                            card.addView(label(getString(R.string.card_preview_title), 16, TEXT, true))
+                            cardPlacementPreview = ClusterCardPlacementPreview(this).also {
+                                card.addView(it, LinearLayout.LayoutParams(-1, dp(240)))
+                            }
+                            card.addView(label(getString(R.string.card_preview_note), 14, MUTED))
                             card.addView(overlaySliderRow(
                                 getString(R.string.turn_card_overlay_size),
                                 ClusterTurnCardOverlay.sizePercents,
                                 AirPlayPersistence.loadClusterTurnCardOverlaySizePercent(this),
                             ) { it -> getString(R.string.turn_card_overlay_size_option, it) }
-                                .also { it.onSave = { v -> AirPlayPersistence.saveClusterTurnCardOverlaySizePercent(this, v) } })
+                                .also { it.onSave = { v -> AirPlayPersistence.saveClusterTurnCardOverlaySizePercent(this, v); cardPlacementPreview?.invalidate() } })
                             card.addView(overlaySliderRow(
                                 getString(R.string.turn_card_overlay_opacity),
                                 ClusterTurnCardOverlay.opacityPercents,
@@ -857,13 +897,13 @@ class DiPlayActivity : ComponentActivity() {
                                 ClusterTurnCardOverlay.xPercents,
                                 AirPlayPersistence.loadClusterTurnCardOverlayXPercent(this),
                             ) { it -> overlayOffsetLabel(it, getString(R.string.marker_left), getString(R.string.marker_right), 50) }
-                                .also { it.onSave = { v -> AirPlayPersistence.saveClusterTurnCardOverlayXPercent(this, v) } })
+                                .also { it.onSave = { v -> AirPlayPersistence.saveClusterTurnCardOverlayXPercent(this, v); cardPlacementPreview?.invalidate() } })
                             card.addView(overlaySliderRow(
                                 getString(R.string.turn_card_overlay_vertical),
                                 ClusterTurnCardOverlay.yPercents,
                                 AirPlayPersistence.loadClusterTurnCardOverlayYPercent(this),
                             ) { it -> overlayOffsetLabel(it, getString(R.string.marker_up), getString(R.string.marker_down), 40) }
-                                .also { it.onSave = { v -> AirPlayPersistence.saveClusterTurnCardOverlayYPercent(this, v) } })
+                                .also { it.onSave = { v -> AirPlayPersistence.saveClusterTurnCardOverlayYPercent(this, v); cardPlacementPreview?.invalidate() } })
                             card.addView(button(getString(R.string.reset_turn_card_overlay), false) {
                                 AirPlayPersistence.saveClusterTurnCardOverlayXPercent(this, ClusterTurnCardOverlay.DEFAULT_X_PERCENT)
                                 AirPlayPersistence.saveClusterTurnCardOverlayYPercent(this, ClusterTurnCardOverlay.DEFAULT_Y_PERCENT)
@@ -914,6 +954,7 @@ class DiPlayActivity : ComponentActivity() {
                             ), AirPlayPersistence.loadClusterSmallWindowMode(this)) {
                                 AirPlayPersistence.saveClusterSmallWindowMode(this, it)
                                 render()
+                                reconnectForClusterMap()
                             }
                             card.addView(label(getString(R.string.cluster_small_window_marker_description), 14, MUTED).apply {
                                 setPadding(0, dp(8), 0, dp(6))
@@ -959,19 +1000,19 @@ class DiPlayActivity : ComponentActivity() {
                                         ClusterTurnCardOverlay.sizePercents,
                                         AirPlayPersistence.loadClusterSmallWindowCardSizePercent(this),
                                     ) { it -> getString(R.string.turn_card_overlay_size_option, it) }
-                                        .also { it.onSave = { v -> AirPlayPersistence.saveClusterSmallWindowCardSizePercent(this, v) } })
+                                        .also { it.onSave = { v -> AirPlayPersistence.saveClusterSmallWindowCardSizePercent(this, v); cardPlacementPreview?.invalidate() } })
                                     card.addView(overlaySliderRow(
                                         getString(R.string.cluster_small_window_card_horizontal),
                                         ClusterTurnCardOverlay.smallWindowXPercents,
                                         AirPlayPersistence.loadClusterSmallWindowCardXPercent(this),
                                     ) { it -> overlayOffsetLabel(it, getString(R.string.marker_left), getString(R.string.marker_right), 50) }
-                                        .also { it.onSave = { v -> AirPlayPersistence.saveClusterSmallWindowCardXPercent(this, v) } })
+                                        .also { it.onSave = { v -> AirPlayPersistence.saveClusterSmallWindowCardXPercent(this, v); cardPlacementPreview?.invalidate() } })
                                     card.addView(overlaySliderRow(
                                         getString(R.string.cluster_small_window_card_vertical),
                                         ClusterTurnCardOverlay.smallWindowYPercents,
                                         AirPlayPersistence.loadClusterSmallWindowCardYPercent(this),
                                     ) { it -> overlayOffsetLabel(it, getString(R.string.marker_up), getString(R.string.marker_down), 40) }
-                                        .also { it.onSave = { v -> AirPlayPersistence.saveClusterSmallWindowCardYPercent(this, v) } })
+                                        .also { it.onSave = { v -> AirPlayPersistence.saveClusterSmallWindowCardYPercent(this, v); cardPlacementPreview?.invalidate() } })
                                 }
                                 card.addView(label(getString(R.string.cluster_small_window_hint), 14, MUTED).apply { setPadding(0, dp(10), 0, 0) })
                             }
@@ -3273,7 +3314,9 @@ class DiPlayActivity : ComponentActivity() {
                     appendLine("--- Last received boot and app-launch result ---")
                     appendLine(StartupDiagnosticSnapshot.report(appContext))
                     appendLine("Startup settings: openAfterBoot=${AirPlayPersistence.loadAutoStartOnBoot(appContext)} " +
-                        "connectWhenOpened=${DiPlayPreferences.autoConnect(appContext)}")
+                        "connectWhenOpened=${DiPlayPreferences.autoConnect(appContext)} " +
+                        "connectOnSelectedPhoneBluetooth=${DiPlayPreferences.connectOnPhoneBluetooth(appContext)}")
+                    appendLine(PhoneWakeDiagnostics.report(appContext))
                     appendLine()
                     appendLine("--- Recent own-app process exits (Android 11+) ---")
                     appendLine(ProcessExitDiagnostics.report(appContext))
