@@ -521,7 +521,7 @@ class CarPlayHostSettingsTest {
     private fun gestureButton() = views(menu()).filterIsInstance<Button>()
         .first { it.text == activity.getString(R.string.settings_gesture_fingers, field("gestureFingerCount")) }
     private fun fullSettingsButton() = views(menu()).filterIsInstance<Button>()
-        .first { it.text == activity.getString(R.string.app_name) + " " + activity.getString(R.string.settings) }
+        .first { it.text == activity.getString(R.string.open_full_settings) }
     private fun views(view: View): Sequence<View> = sequence {
         yield(view)
         if (view is ViewGroup) for (index in 0 until view.childCount) yieldAll(views(view.getChildAt(index)))
