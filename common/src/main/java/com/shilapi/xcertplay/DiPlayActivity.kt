@@ -2467,7 +2467,7 @@ class DiPlayActivity : ComponentActivity() {
             slider = SeekBar(context).apply {
                 max = steps.lastIndex
                 progress = steps.indexOf(current).coerceIn(steps.indices)
-                minHeight = dp(44)
+                setMinimumHeight(dp(44))
                 setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
                     override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
                         val value = steps[progress.coerceIn(steps.indices)]
