@@ -4582,8 +4582,11 @@ class CarPlayHostActivity : ComponentActivity() {
         val display = sessionDisplay ?: return false
         if (display.rotation != displayRotation()) return true
         if (display.hideTopBar != hideTopBar || display.hideBottomBar != hideBottomBar) return true
-        if (newSize != null && newSize.width > 0 && newSize.height > 0) {
-            val baseAspect = display.width.toDouble() / display.height
+        if (newSize != null && newSize.width > 0 && newSize.height > 0 &&
+            display.windowWidth > 0 && display.windowHeight > 0) {
+            // The negotiated canvas may be square to support screen rotation; compare the
+            // actual startup window instead, or every return to a landscape window looks like PiP.
+            val baseAspect = display.windowWidth.toDouble() / display.windowHeight
             val currentAspect = newSize.width.toDouble() / newSize.height
             val aspectDiff = kotlin.math.abs(currentAspect / baseAspect - 1.0)
             if (aspectDiff > 0.08 && AirPlayPersistence.loadAdaptPipResolution(this)) {
