@@ -2388,6 +2388,8 @@ class CarPlayHostActivity : ComponentActivity() {
 
     private fun restoreSettingsBaseline() {
         val baseline = settingsBaseline ?: return
+        val previewChangedSystemBars = hideTopBar != AirPlayPersistence.loadHideTopBar(this) ||
+            hideBottomBar != AirPlayPersistence.loadHideBottomBar(this)
         loadPersistedSettings()
         baseline.safeAreaRects.forEach { (size, savedRect) ->
             savedRect?.let { rect ->
@@ -2422,8 +2424,12 @@ class CarPlayHostActivity : ComponentActivity() {
         updateHotspotStatusBlock()
         updateResolutionMenu()
         updateDebugOverlays()
-        applyFullscreenMode()
-        refreshDisplaySizeAfterLayout()
+        // Closing an unchanged menu must not schedule a display renegotiation. Real bar
+        // previews still need to restore the window and re-measure after cancellation.
+        if (previewChangedSystemBars) {
+            applyFullscreenMode()
+            refreshDisplaySizeAfterLayout()
+        }
     }
 
     private fun buildMfiTargetSection(): View {
@@ -4503,10 +4509,6 @@ class CarPlayHostActivity : ComponentActivity() {
                 "keeping CarPlay session canvas=${display.width}x${display.height}"
             appendLog(message)
             Log.i(TAG, message)
-            videoView?.let { updateVideoLayout(it.width, it.height) }
-        } else if (previous.width == size.width && previous.height == size.height) {
-            // A settings-menu close re-applies the same layout; an identical size must not
-            // tear down a healthy wireless session just to rebuild the same canvas.
             videoView?.let { updateVideoLayout(it.width, it.height) }
         } else {
             restartCarPlay(

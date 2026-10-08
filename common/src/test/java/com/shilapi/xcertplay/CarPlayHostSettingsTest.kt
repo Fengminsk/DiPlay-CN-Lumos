@@ -246,9 +246,11 @@ class CarPlayHostSettingsTest {
         assertNotSame(oldMenu, menu())
         assertEquals("Unsaved hotspot", field("manualHotspotSsid"))
         assertEquals(false, field("appNight"))
+        // The sheet overlay dims the video; the palette-driven surface is the panel inside it.
+        val panel = (menu() as android.view.ViewGroup).getChildAt(0)
         assertEquals(
             DiPlayPalette.LIGHT.overlayBackground,
-            (menu().background as android.graphics.drawable.ColorDrawable).color,
+            (panel.background as android.graphics.drawable.GradientDrawable).color?.defaultColor,
         )
         val heading = views(menu()).filterIsInstance<TextView>()
             .first { it.text == activity.getString(R.string.carplay_settings) }
