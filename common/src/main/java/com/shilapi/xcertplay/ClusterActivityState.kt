@@ -46,6 +46,11 @@ internal class ClusterActivityState {
     }
 
     companion object {
+        /** A covered map is unknown, not a switch; compare again when the map returns. */
+        fun shouldReconnectSmallWindowStream(previous: Snapshot, current: Snapshot, requested: Boolean?): Boolean =
+            requested != null && current.mapVisible && requested != current.smallWindow &&
+                (!previous.mapVisible || previous.smallWindow != current.smallWindow)
+
         const val FULL_MAP = "com.byd.automap.meter.MeterActivity"
         const val MINI_MAP = "com.byd.automap.meter.MeterSmallScreenActivity"
         const val SCENARIO = "com.byd.sr.cluster.ClusterActivity"

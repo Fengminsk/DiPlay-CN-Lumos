@@ -62,6 +62,17 @@ class ClusterActivityStateTest {
         assertEquals(ClusterActivityState.Snapshot(Theme.MAP, true, true), state.snapshot())
     }
 
+    @Test fun coveredMapOnlyReconnectsWhenItReturnsInADifferentWindowMode() {
+        val small = ClusterActivityState.Snapshot(Theme.SCENARIO, true, true)
+        val covered = ClusterActivityState.Snapshot(Theme.SCENARIO, false, false)
+        val full = ClusterActivityState.Snapshot(Theme.MAP, true, false)
+        assertFalse(ClusterActivityState.shouldReconnectSmallWindowStream(small, covered, true))
+        assertTrue(ClusterActivityState.shouldReconnectSmallWindowStream(covered, full, true))
+        assertFalse(ClusterActivityState.shouldReconnectSmallWindowStream(covered, small, true))
+        assertFalse(ClusterActivityState.shouldReconnectSmallWindowStream(full, full, true))
+        assertTrue(ClusterActivityState.shouldReconnectSmallWindowStream(full, small, false))
+    }
+
     @Test fun pausedButVisibleClusterSurvivesFocusMovingToTheHeadUnit() {
         event(ClusterActivityState.FULL_MAP, 1)
         event(ClusterActivityState.FULL_MAP, 2)

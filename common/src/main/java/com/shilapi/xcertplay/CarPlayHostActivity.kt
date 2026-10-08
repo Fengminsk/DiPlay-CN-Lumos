@@ -898,15 +898,15 @@ class CarPlayHostActivity : ComponentActivity() {
         if (!AirPlayPersistence.loadClusterMapEnabled(this)) { dismissClusterPresentation(); return }
         ensureClusterPresentation()
         if (AirPlayPersistence.loadClusterSmallWindowMode(this) == CLUSTER_SMALL_WINDOW_AUTO &&
-            previous.smallWindow != state.smallWindow) {
+            (previous.smallWindow != state.smallWindow || previous.mapVisible != state.mapVisible)) {
             // A covered map (360 camera on the turn signal, another cluster page) hides the map
             // activities momentarily; that is not a real full/small switch — do not reconnect.
             if (!state.mapVisible) {
                 appendLog("Cluster map: map covered; keeping the stream at smallWindow=$requestedSmallWindowForStream")
             } else {
                 appendLog("Cluster map: instrument switched to ${if (state.smallWindow) "small" else "full"} window; stream requested=$requestedSmallWindowForStream")
-                if (CarPlayBackgroundSession.active && requestedSmallWindowForStream != null &&
-                    requestedSmallWindowForStream != state.smallWindow) {
+                if (CarPlayBackgroundSession.active && ClusterActivityState.shouldReconnectSmallWindowStream(
+                        previous, state, requestedSmallWindowForStream)) {
                     reconnectAfterLoss("Cluster small-window navi ${if (state.smallWindow) "on" else "off"}")
                 }
             }
