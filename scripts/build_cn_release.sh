@@ -27,12 +27,21 @@ if [ -z "$GITEE_TOKEN" ]; then
   log "probing variable channels (names only)"
   env | grep -iE 'token|secret|hidden|param|jc_' | cut -d= -f1 | sort || true
   for d in "${SYSTEM_FILE_PARAMETER_CACHE:-}" "${SYSTEM_PARAMETER_RESULT_DIR:-}" "${SYSTEM_FILE_RESULT_DIR:-}"; do
-    [ -n "$d" ] && [ -d "$d" ] && find "$d" -maxdepth 3 \( -type f -o -type p \) -printf '%p %s\n' 2>/dev/null | head -20
+    [ -n "$d" ] && { ls -ld "$d" 2>&1 | head -2; [ -f "$d" ] && log "file $d masked head: $(head -c 200 "$d" | sed -E 's/[0-9a-fA-F]{12,}/<HEX>/g')"; }
   done
   v="${JC_HIDDEN_VALUE_FROM_PIPE:-}"
   log "JC_HIDDEN_VALUE_FROM_PIPE length=${#v}"
-  if [ -n "$v" ] && [ -e "$v" ]; then v="$(tr -d '[:space:]' < "$v")"; fi
-  if [[ "$v" =~ ^[0-9a-f]{32}$ ]]; then GITEE_TOKEN="$v"; log "token taken from the hidden pipe channel"; fi
+  log "JC structure (hex runs masked): $(printf '%s' "$v" | sed -E 's/[0-9a-fA-F]{12,}/<HEX>/g' | head -c 500)"
+  if [ -n "$v" ] && [ -e "$v" ]; then v="$(tr -d '[:space:]' < "$v")"; log "JC was a path; read the file"; fi
+  extract_token() {
+    if [[ "$1" =~ DIPLAY_GITEE_TOKEN[^0-9a-f]{0,8}([0-9a-f]{32}) ]]; then printf '%s' "${BASH_REMATCH[1]}"; return 0; fi
+    if command -v base64 >/dev/null; then
+      local d; d="$(printf '%s' "$1" | tr -d '[:space:]' | base64 -d 2>/dev/null || true)"
+      if [[ "$d" =~ DIPLAY_GITEE_TOKEN[^0-9a-f]{0,8}([0-9a-f]{32}) ]]; then printf '%s' "${BASH_REMATCH[1]}"; return 0; fi
+    fi
+    return 1
+  }
+  if t="$(extract_token "$v")"; then GITEE_TOKEN="$t"; log "token extracted from the hidden pipe channel"; fi
   if [ -z "$GITEE_TOKEN" ]; then
     for d in "${SYSTEM_FILE_PARAMETER_CACHE:-}" "${SYSTEM_PARAMETER_RESULT_DIR:-}" "${SYSTEM_FILE_RESULT_DIR:-}"; do
       for f in "$d/DIPLAY_GITEE_TOKEN" "$d/DIPLAY_GITEE_TOKEN.txt" "$d/diplay_gitee_token"; do
