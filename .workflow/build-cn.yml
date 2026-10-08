@@ -1,0 +1,24 @@
+version: '1.0'
+name: build-cn-release
+displayName: Build CN Release on Gitee
+# Builds the APK on a Gitee runner (fast attach to the Gitee release) when a v*-cn.* tag is
+# pushed, or from the web UI with TAG/ GITEE_TOKEN set. The heavy lifting is entirely in
+# scripts/build_cn_release.sh so this file stays minimal.
+triggers:
+  push:
+    - tags:
+        - 'v*-cn.*'
+stages:
+  - name: build-and-attach
+    displayName: Build and attach
+    steps:
+      - step: shell
+        name: build
+        with:
+          script: |
+            set -euo pipefail
+            bash scripts/build_cn_release.sh "${GITEE_BRANCH:-${GITEE_TAG:-v0.2.14-cn.3}}"
+        env:
+          GITEE_TOKEN: ${{ GITEE_TOKEN }}
+          OFFICIAL_TAG: v0.2.14
+          OFFICIAL_SHA256: 62b31f79db32bc7c85013ae830460b697a5952fad571ed0030b97341dde0b2e3
