@@ -274,6 +274,9 @@ class DiPlayActivity : ComponentActivity(), AppAppearanceOwner {
     private val export = registerForActivityResult(ActivityResultContracts.CreateDocument("text/plain")) { uri ->
         if (uri != null) exportDiagnostics(uri)
     }
+    private val cosConfigPicker = registerForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
+        if (uri != null) importCosLogConfig(uri)
+    }
 
     private var languagePreferenceAtCreate = AppLocale.SYSTEM
 
@@ -300,6 +303,7 @@ class DiPlayActivity : ComponentActivity(), AppAppearanceOwner {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        CloudLogArchive.start(applicationContext)
         // Back on the home page finishes this activity while the session runs on, so the icon lands here.
         if (savedInstanceState == null && isLauncherIntent(intent) && CarPlayBackgroundSession.hasSession() &&
             AirPlayPersistence.loadLauncherReturnsToCarPlay(this)) {
@@ -1272,6 +1276,74 @@ class DiPlayActivity : ComponentActivity(), AppAppearanceOwner {
         renderSections(content, SettingsInformationArchitecture.sectionsByCategory.getValue(SettingsCategory.DIAGNOSTICS))
     }
 
+    private fun importCosLogConfig(uri: Uri) {
+        val result = runCatching {
+            val bytes = contentResolver.openInputStream(uri)?.use { input ->
+                val buffer = ByteArray(16 * 1024 + 1)
+                var count = 0
+                while (count < buffer.size) {
+                    val read = input.read(buffer, count, buffer.size - count)
+                    if (read < 0) break
+                    count += read
+                }
+                require(count in 1 until buffer.size)
+                buffer.copyOf(count)
+            } ?: error("Cannot read JSON")
+            val current = CosLogSettings.load(this)
+            CosLogSettings.fromJson(String(bytes, Charsets.UTF_8), current?.enabled == true)
+        }
+        result.onSuccess {
+            CosLogSettings.save(this, it)
+            CloudLogArchive.configurationChanged()
+            render()
+        }.onFailure { showCosConfigError() }
+    }
+
+    private fun showCosLogConfigDialog() {
+        val current = CosLogSettings.load(this)
+        val dialogContext = appDialogContext()
+        val fields = column().apply { setPadding(dp(24), dp(12), dp(24), dp(12)) }
+        fun field(hintId: Int, value: String = "", secret: Boolean = false): EditText = EditText(dialogContext).apply {
+            hint = getString(hintId)
+            setSingleLine()
+            setText(value)
+            if (secret) inputType = android.text.InputType.TYPE_CLASS_TEXT or
+                android.text.InputType.TYPE_TEXT_VARIATION_PASSWORD
+            fields.addView(this)
+        }
+        val bucket = field(R.string.settings_cloud_log_bucket, current?.bucket.orEmpty())
+        val endpoint = field(R.string.settings_cloud_log_endpoint, current?.endpoint.orEmpty())
+        val id = field(R.string.settings_cloud_log_secret_id, secret = true)
+        val key = field(R.string.settings_cloud_log_secret_key, secret = true)
+        fields.addView(label(getString(R.string.settings_cloud_log_secret_hint), 14, MUTED))
+        val error = label("", 14, WARNING)
+        fields.addView(error)
+        val dialog = appDialogBuilder().setTitle(R.string.settings_cloud_log_configure)
+            .setView(ScrollView(dialogContext).apply { addView(fields) })
+            .setPositiveButton(R.string.save_details, null)
+            .setNegativeButton(R.string.cancel, null).create()
+        dialog.setOnShowListener {
+            dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener {
+                val value = CosLogSettings(bucket.text.toString().trim(),
+                    endpoint.text.toString().trim().removePrefix("https://").trimEnd('/'),
+                    id.text.toString().trim().ifBlank { current?.secretId.orEmpty() },
+                    key.text.toString().trim().ifBlank { current?.secretKey.orEmpty() },
+                    current?.enabled == true)
+                if (!value.valid()) error.text = getString(R.string.settings_cloud_log_invalid)
+                else runCatching { CosLogSettings.save(this, value) }
+                    .onSuccess { CloudLogArchive.configurationChanged(); dialog.dismiss(); render() }
+                    .onFailure { error.text = getString(R.string.settings_cloud_log_invalid) }
+            }
+        }
+        dialog.show()
+    }
+
+    private fun showCosConfigError() {
+        appDialogBuilder().setTitle(R.string.settings_cloud_log_configure)
+            .setMessage(R.string.settings_cloud_log_invalid)
+            .setPositiveButton(android.R.string.ok, null).show()
+    }
+
     internal data class SettingsSearchResult(val title: String, val category: SettingsCategory)
 
     // Renders every category into a detached view and records what the builders label.
@@ -1390,6 +1462,13 @@ class DiPlayActivity : ComponentActivity(), AppAppearanceOwner {
 
     private fun advancedVehicleDataSettings(content: LinearLayout) {
         section(content, getString(R.string.settings_vehicle), R.drawable.ic_dp_dashboard) { card ->
+            toggle(card, getString(R.string.lynk09_instrument_to_iphone),
+                getString(R.string.lynk09_instrument_to_iphone_description),
+                Lynk09Settings.instrumentToIphone(this)) {
+                Lynk09Settings.setInstrumentToIphone(this, it)
+                markReconnectNeeded()
+            }
+            if (Lynk09Settings.instrumentToIphone(this)) return@section
             card.addView(button(getString(if (bydVehicleAdvancedExpanded)
                 R.string.hide_advanced_vehicle_data else R.string.advanced_vehicle_data), false) {
                 bydVehicleAdvancedExpanded = !bydVehicleAdvancedExpanded
@@ -1464,7 +1543,18 @@ class DiPlayActivity : ComponentActivity(), AppAppearanceOwner {
             card.addView(exportButton, matchButton(10, 60))
             card.addView(button(getString(R.string.choose_save_location), false) { chooseReportDestination() }, matchButton(10, 60))
             val destination = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) getString(R.string.reports_save_to_downloads_diplay) else getString(R.string.choose_where_to_save_your_report)
-            card.addView(label(destination + getString(R.string.nothing_is_sent_automatically_protocol_payloads_and_creden), 14, MUTED).apply { setPadding(0, dp(12), 0, 0) })
+            card.addView(label(destination, 14, MUTED).apply { setPadding(0, dp(12), 0, 0) })
+            val cloudConfig = CosLogSettings.load(this)
+            card.addView(button(getString(R.string.settings_cloud_log_configure), false) { showCosLogConfigDialog() }, matchButton(10, 60))
+            card.addView(button(getString(R.string.settings_cloud_log_import), false) {
+                cosConfigPicker.launch(arrayOf("application/json", "text/*"))
+            }, matchButton(10, 60))
+            toggle(card, getString(R.string.settings_cloud_log_upload), getString(R.string.settings_cloud_log_upload_description),
+                cloudConfig?.enabled == true, cloudConfig != null) { enabled ->
+                cloudConfig?.let { CosLogSettings.save(this, it.copy(enabled = enabled)) }
+                CloudLogArchive.configurationChanged()
+                render()
+            }
         }
         filteredSection(content, SettingsSection.AUTOMATIC_CONNECTION,
             getString(R.string.automatic_connection), R.drawable.ic_dp_automation) { card ->
@@ -3105,15 +3195,13 @@ class DiPlayActivity : ComponentActivity(), AppAppearanceOwner {
     /** Steering-wheel keys for the dashboard map zoom and the CarPlay joystick: the switches, the key service and the keys. */
     // One place for the key service setup, above every feature that needs it.
     private fun wheelKeysSettings(card: LinearLayout) {
-        // The joystick and map zoom use BYD's media and custom keys.
-        val byd = CarHotspotSetup.isBydHeadUnit(this)
         val zoomAvailable = wheelMapZoomAvailable()
         val vehicleKeysOn = WheelZoomSettings.joystick(this) ||
             (zoomAvailable && WheelZoomSettings.enabled(this))
         if (WheelZoomSettings.siriKey(this) || vehicleKeysOn) wheelKeyServiceControls(card)
         siriKeyControls(card)
-        // Keep previously configured controls reachable even if package detection misses the car.
-        if (byd || zoomAvailable || WheelZoomSettings.joystick(this)) wheelKeyControls(card)
+        // Learnable joystick keys work on any car that delivers them to the accessibility service.
+        wheelKeyControls(card)
     }
 
     // Map zoom only works where the dashboard map card used to show these controls.

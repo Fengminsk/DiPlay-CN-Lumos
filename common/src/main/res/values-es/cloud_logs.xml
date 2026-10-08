@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="settings_cloud_log_configure">Configuración de registros en la nube</string>
+    <string name="settings_cloud_log_import">Importar configuración COS JSON</string>
+    <string name="settings_cloud_log_upload">Subir registros de ejecución a COS</string>
+    <string name="settings_cloud_log_upload_description">Al activarlo, los registros depurados de DiPlay se suben a Logs/&lt;nombre del paquete&gt;/ en COS. Las claves permanecen en este dispositivo.</string>
+    <string name="settings_cloud_log_bucket">Nombre del depósito</string>
+    <string name="settings_cloud_log_endpoint">Endpoint de COS</string>
+    <string name="settings_cloud_log_secret_id">SecretId</string>
+    <string name="settings_cloud_log_secret_key">SecretKey</string>
+    <string name="settings_cloud_log_secret_hint">Deja las claves vacías para conservar los valores guardados. La subida permanece desactivada hasta que la actives.</string>
+    <string name="settings_cloud_log_invalid">Configuración COS no válida. Revisa depósito, endpoint, SecretId y SecretKey.</string>
+</resources>

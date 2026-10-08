@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="lynk09_instrument_to_iphone">Скорость и передача Lynk &amp; Co 09</string>
+    <string name="lynk09_instrument_to_iphone_description">Передавать скорость и передачу на iPhone через CarsBridge на этом устройстве. Также включите передачу местоположения на iPhone. Неизвестные показания пропускаются. Действует при следующем подключении CarPlay.</string>
+</resources>

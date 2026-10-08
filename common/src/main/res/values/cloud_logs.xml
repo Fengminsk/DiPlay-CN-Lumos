@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="settings_cloud_log_configure">Cloud log settings</string>
+    <string name="settings_cloud_log_import">Import COS settings JSON</string>
+    <string name="settings_cloud_log_upload">Upload run logs to COS</string>
+    <string name="settings_cloud_log_upload_description">When enabled, redacted DiPlay logs upload to Logs/&lt;package name&gt;/ in your COS bucket. Credentials stay on this device.</string>
+    <string name="settings_cloud_log_bucket">Bucket name</string>
+    <string name="settings_cloud_log_endpoint">COS endpoint</string>
+    <string name="settings_cloud_log_secret_id">SecretId</string>
+    <string name="settings_cloud_log_secret_key">SecretKey</string>
+    <string name="settings_cloud_log_secret_hint">Leave credentials blank to keep saved values. Cloud upload is off until you enable it.</string>
+    <string name="settings_cloud_log_invalid">Invalid COS configuration. Check bucket, endpoint, SecretId and SecretKey.</string>
+</resources>

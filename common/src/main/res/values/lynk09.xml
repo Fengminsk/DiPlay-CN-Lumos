@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="lynk09_instrument_to_iphone">Lynk &amp; Co 09 wheel speed and gear</string>
+    <string name="lynk09_instrument_to_iphone_description">Send wheel speed and gear to iPhone using CarsBridge on this head unit. Also enable Report location to iPhone. Unknown readings are skipped. Takes effect on the next CarPlay connection.</string>
+</resources>

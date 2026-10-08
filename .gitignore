@@ -31,6 +31,11 @@ Thumbs.db
 !signing/diplay-cn.jks
 *.keystore
 release-signing.properties
+*.local.properties
+*.local.json
+cos-log-settings.json
+__pycache__/
+*.pyc
 
 # Never commit credential containers or installable distribution artifacts.
 *.pk8

@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="settings_cloud_log_configure">Налаштування хмарних журналів</string>
+    <string name="settings_cloud_log_import">Імпорт налаштувань COS із JSON</string>
+    <string name="settings_cloud_log_upload">Завантажувати журнали роботи в COS</string>
+    <string name="settings_cloud_log_upload_description">Після ввімкнення очищені журнали DiPlay надсилаються в Logs/&lt;назва пакета&gt;/ бакета COS. Ключі залишаються на пристрої.</string>
+    <string name="settings_cloud_log_bucket">Назва бакета</string>
+    <string name="settings_cloud_log_endpoint">Адреса COS</string>
+    <string name="settings_cloud_log_secret_id">SecretId</string>
+    <string name="settings_cloud_log_secret_key">SecretKey</string>
+    <string name="settings_cloud_log_secret_hint">Залиште поля ключів порожніми, щоб зберегти попередні значення. Перед увімкненням нічого не надсилається.</string>
+    <string name="settings_cloud_log_invalid">Неправильна конфігурація COS. Перевірте бакет, адресу, SecretId і SecretKey.</string>
+</resources>

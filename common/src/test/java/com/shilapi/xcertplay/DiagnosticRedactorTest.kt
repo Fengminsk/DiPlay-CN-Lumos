@@ -5,6 +5,12 @@ import org.junit.Test
 import java.nio.file.Files
 
 class DiagnosticRedactorTest {
+    @Test fun cosCredentialsAndSignedRequestsNeverEnterLogFiles() {
+        for (line in listOf("secretId=example", "secretKey=example", "Authorization=q-signature=example")) {
+            assertNull(DiagnosticRedactor.redact(line))
+        }
+    }
+
     @Test fun additionalTroubleshootingMetadataSurvivesSavedReportWithoutPayloads() {
         val lines = listOf(
             "wireless startup elapsedMs=10000 authenticated=true wifiConfigs=2 startRequests=1 tcpAccepted=0 sessionActive=false waitingFor=WiFi_discovery_or_AirPlay_TCP startRequestAgeMs=9000 firstTcpAfterStartMs=none",

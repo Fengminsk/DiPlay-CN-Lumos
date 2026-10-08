@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="settings_cloud_log_configure">雲端日誌設定</string>
+    <string name="settings_cloud_log_import">匯入 COS 設定 JSON</string>
+    <string name="settings_cloud_log_upload">上傳執行日誌至 COS</string>
+    <string name="settings_cloud_log_upload_description">啟用後，已去識別的 DiPlay 日誌會上傳至 COS 儲存桶的 Logs/&lt;套件名稱&gt;/。金鑰只儲存在本機。</string>
+    <string name="settings_cloud_log_bucket">儲存桶名稱</string>
+    <string name="settings_cloud_log_endpoint">COS Endpoint</string>
+    <string name="settings_cloud_log_secret_id">SecretId</string>
+    <string name="settings_cloud_log_secret_key">SecretKey</string>
+    <string name="settings_cloud_log_secret_hint">金鑰留空可保留已儲存的值。啟用開關前不會上傳。</string>
+    <string name="settings_cloud_log_invalid">COS 設定無效，請檢查儲存桶、Endpoint、SecretId 和 SecretKey。</string>
+</resources>

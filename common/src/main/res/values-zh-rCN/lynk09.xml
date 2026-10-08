@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="lynk09_instrument_to_iphone">领克 09 车速与挡位</string>
+    <string name="lynk09_instrument_to_iphone_description">通过本车机上的 CarsBridge 向 iPhone 发送车速与挡位。还需开启“向 iPhone 报告位置”。未知读数不会发送；下次连接 CarPlay 时生效。</string>
+</resources>

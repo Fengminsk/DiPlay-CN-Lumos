@@ -13,6 +13,9 @@ blocked_suffixes = {'.pk8', '.p7b', '.pem', '.key', '.p12', '.pfx', '.jks', '.ke
 # ships the public Carlinkit-derived identity described in docs/THIRD_PARTY_NOTICES.md.
 allowed = {'signing/diplay-cn.jks'}
 private_block = re.compile(rb'-----BEGIN (?:[A-Z0-9 ]+ )?PRIVATE KEY-----\s+[A-Za-z0-9+/=\r\n]{40,}')
+cos_secret_id = re.compile(rb'AKID[A-Za-z0-9]{12,}')
+cos_json_credential = re.compile(rb'"(?:secretKey|secret_key)"\s*:')
+cos_properties_credential = re.compile(rb'(?m)^\s*(?:secretId|secretKey|secret_id|secret_key)\s*=')
 failures = []
 for name in filter(None, names):
     path = root / name
@@ -22,7 +25,11 @@ for name in filter(None, names):
         continue
     if '.private' in path.relative_to(root).parts or path.suffix.lower() in blocked_suffixes:
         failures.append(name)
-    elif private_block.search(path.read_bytes()):
+    elif private_block.search(path.read_bytes()) or cos_secret_id.search(path.read_bytes()):
+        failures.append(name)
+    elif path.suffix.lower() == '.json' and cos_json_credential.search(path.read_bytes()):
+        failures.append(name)
+    elif path.suffix.lower() == '.properties' and cos_properties_credential.search(path.read_bytes()):
         failures.append(name)
 if failures:
     raise SystemExit('Credential or distribution files are forbidden in the public tree:\n' + '\n'.join(failures))

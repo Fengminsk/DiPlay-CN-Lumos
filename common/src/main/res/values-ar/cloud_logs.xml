@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="settings_cloud_log_configure">إعدادات السجلات السحابية</string>
+    <string name="settings_cloud_log_import">استيراد إعدادات COS من JSON</string>
+    <string name="settings_cloud_log_upload">رفع سجلات التشغيل إلى COS</string>
+    <string name="settings_cloud_log_upload_description">عند التفعيل، تُرفع سجلات DiPlay المنقحة إلى Logs/&lt;اسم الحزمة&gt;/ في حاوية COS. تبقى المفاتيح على هذا الجهاز.</string>
+    <string name="settings_cloud_log_bucket">اسم الحاوية</string>
+    <string name="settings_cloud_log_endpoint">نقطة نهاية COS</string>
+    <string name="settings_cloud_log_secret_id">SecretId</string>
+    <string name="settings_cloud_log_secret_key">SecretKey</string>
+    <string name="settings_cloud_log_secret_hint">اترك حقول المفاتيح فارغة للإبقاء على القيم المحفوظة. لن يبدأ الرفع حتى تفعّله.</string>
+    <string name="settings_cloud_log_invalid">إعداد COS غير صالح. تحقق من الحاوية ونقطة النهاية وSecretId وSecretKey.</string>
+</resources>
