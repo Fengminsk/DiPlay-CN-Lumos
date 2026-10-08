@@ -761,7 +761,7 @@
     <string name="cluster_small_window_card_theme_follow">Follow the turn card theme</string>
     <string name="cluster_small_window_card_horizontal">Small-window turn card · left/right</string>
     <string name="cluster_small_window_card_vertical">Small-window turn card · up/down</string>
-    <string name="cluster_small_window_marker_description">When the cluster switches to its small navi window, only part of the panel is visible. This keeps a second car-marker position for that window (default: right of centre) so the route shows inside it, and the custom turn card gets its own size and position inside the window; full-screen positions are unchanged. Changes apply after you select Reconnect now.</string>
+    <string name="cluster_small_window_marker_description">When the cluster switches to its small navi window, only part of the panel is visible. This keeps a second car-marker position for that window (default: right of centre) so the route shows inside it, and the custom turn card gets its own size and position inside the window; full-screen positions are unchanged. Changes reconnect the cluster map.</string>
     <string name="cluster_small_window_horizontal">Small-window marker · left/right</string>
     <string name="cluster_small_window_vertical">Small-window marker · up/down</string>
     <string name="cluster_small_window_hint">Default is three steps (30 %) right of centre. Adjust to wherever the small window sits on your cluster.</string>
@@ -785,4 +785,8 @@
     <string name="settings_interface_size">Interface size</string>
     <string name="settings_interface_size_auto">Automatic</string>
     <string name="settings_interface_size_hint">Size of text and controls on DiPlay\'s own screens. Automatic enlarges them on large screens with a low density. CarPlay is not affected.</string>
+    <string name="settings_cluster_menu_small_title">Small-window navi</string>
+    <string name="settings_cluster_menu_small_state_small">small window active</string>
+    <string name="settings_cluster_menu_small_state_full">full window</string>
+    <string name="settings_cluster_menu_small_state_unknown">waiting for the cluster</string>
 </resources>

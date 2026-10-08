@@ -709,7 +709,7 @@
     <string name="cluster_small_window_card_theme_follow">跟隨轉向卡主題</string>
     <string name="cluster_small_window_card_horizontal">小螢幕轉向卡 · 左右</string>
     <string name="cluster_small_window_card_vertical">小螢幕轉向卡 · 上下</string>
-    <string name="cluster_small_window_marker_description">儀表切到小螢幕導航時只顯示面板的一部分。為小螢幕視窗單獨儲存一個車標位置（預設居中偏右 30%），讓導航落進視窗裡；自訂轉向卡也有獨立的大小和位置。全螢幕位置不受影響。更改後點選「立即重新連線」才會生效。</string>
+    <string name="cluster_small_window_marker_description">儀表切到小螢幕導航時只顯示面板的一部分。為小螢幕視窗單獨儲存一個車標位置（預設居中偏右 30%），讓導航落進視窗裡；自訂轉向卡也有獨立的大小和位置。全螢幕位置不受影響。更改後儀表板地圖會重連。</string>
     <string name="cluster_small_window_horizontal">小螢幕車標 · 左右</string>
     <string name="cluster_small_window_vertical">小螢幕車標 · 上下</string>
     <string name="cluster_small_window_hint">預設向右 30%。按你車小螢幕視窗的實際位置微調。</string>
@@ -748,4 +748,8 @@
     <string name="settings_interface_size">介面大小</string>
     <string name="settings_interface_size_auto">自動</string>
     <string name="settings_interface_size_hint">DiPlay 自身畫面中文字與控制項的大小。自動模式會在大尺寸低密度螢幕上放大它們。不影響 CarPlay。</string>
+    <string name="settings_cluster_menu_small_title">儀表小螢幕導航</string>
+    <string name="settings_cluster_menu_small_state_small">小螢幕中</string>
+    <string name="settings_cluster_menu_small_state_full">全螢幕</string>
+    <string name="settings_cluster_menu_small_state_unknown">等待識別</string>
 </resources>

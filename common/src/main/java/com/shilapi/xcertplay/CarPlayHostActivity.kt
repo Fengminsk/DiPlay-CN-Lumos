@@ -1668,14 +1668,39 @@ class CarPlayHostActivity : ComponentActivity() {
             setPadding(dp(48), dp(36), dp(48), dp(36))
         }
         content.addView(
-            menuText(getString(R.string.carplay_settings), 32f, Color.WHITE, bold = true).apply {
-                setPadding(dp(56), 0, 0, 0)
+            menuText(getString(R.string.carplay_settings), 30f, Color.WHITE, bold = true).apply {
+                setPadding(dp(4), 0, 0, dp(2))
             },
             LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,
                 ViewGroup.LayoutParams.WRAP_CONTENT,
             ),
         )
+        // CN: live small-window state so 自动 mode is observable straight from CarPlay.
+        if (AirPlayPersistence.loadClusterMapEnabled(this) &&
+            AirPlayPersistence.loadClusterSmallWindowMode(this) != CLUSTER_SMALL_WINDOW_OFF) {
+            val mode = AirPlayPersistence.loadClusterSmallWindowMode(this)
+            val state = when {
+                mode == CLUSTER_SMALL_WINDOW_ON -> getString(R.string.settings_cluster_menu_small_state_small)
+                detectedCluster.smallWindow -> getString(R.string.settings_cluster_menu_small_state_small)
+                detectedCluster.mapVisible -> getString(R.string.settings_cluster_menu_small_state_full)
+                else -> getString(R.string.settings_cluster_menu_small_state_unknown)
+            }
+            content.addView(
+                menuText("${getString(R.string.settings_cluster_menu_small_title)} · $state", 15f, MENU_ACCENT).apply {
+                    setPadding(dp(4), dp(6), 0, 0)
+                },
+                LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT),
+            )
+            if (mode == CLUSTER_SMALL_WINDOW_AUTO && !DiLink51ClusterMonitor.hasAccess(this)) {
+                content.addView(
+                    menuText(getString(R.string.cluster_small_window_access_missing), 14f, MENU_DANGER).apply {
+                        setPadding(dp(4), dp(4), 0, 0)
+                    },
+                    LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT),
+                )
+            }
+        }
         if (sessionDisplay?.viewAreas?.sidePanel() != null) {
             content.addView(Button(this).apply {
                 text = getString(if (sidePanelShown) R.string.side_panel_full_screen else R.string.side_panel_show)
@@ -1722,7 +1747,7 @@ class CarPlayHostActivity : ComponentActivity() {
             LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,
                 ViewGroup.LayoutParams.WRAP_CONTENT,
-            ).apply { topMargin = dp(30) },
+            ).apply { topMargin = dp(18) },
         )
 
         content.addView(
@@ -2039,31 +2064,19 @@ class CarPlayHostActivity : ComponentActivity() {
             ).apply { topMargin = dp(30) },
         )
 
-        val save = Button(this).apply {
-            text = getString(R.string.save_and_reconnect)
-            isAllCaps = false
-            textSize = 17f
-            setTextColor(MENU_BUTTON_TEXT)
-            backgroundTintList = ColorStateList.valueOf(MENU_ACCENT)
-            minHeight = dp(52)
-            setOnClickListener { saveSettingsAndReconnect() }
+        val save = menuButton(getString(R.string.save_and_reconnect), MENU_ACCENT, MENU_BUTTON_TEXT) {
+            saveSettingsAndReconnect()
         }
         content.addView(
             save,
             LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,
                 ViewGroup.LayoutParams.WRAP_CONTENT,
-            ).apply { topMargin = dp(46) },
+            ).apply { topMargin = dp(32) },
         )
 
-        val exitApplicationButton = Button(this).apply {
-            text = getString(R.string.exit_application)
-            isAllCaps = false
-            textSize = 17f
-            setTextColor(Color.WHITE)
-            backgroundTintList = ColorStateList.valueOf(MENU_DANGER)
-            minHeight = dp(52)
-            setOnClickListener { exitApplication() }
+        val exitApplicationButton = menuButton(getString(R.string.exit_application), MENU_DANGER, Color.WHITE) {
+            exitApplication()
         }
         content.addView(
             exitApplicationButton,
@@ -2073,18 +2086,13 @@ class CarPlayHostActivity : ComponentActivity() {
             ).apply { topMargin = dp(12) },
         )
 
-        content.addView(Button(this).apply {
-            text = getString(R.string.language_app_language)
-            isAllCaps = false
-            setOnClickListener { AppLocale.showPicker(this@CarPlayHostActivity) }
+        content.addView(menuButton(getString(R.string.language_app_language), MENU_TRACK_OFF, Color.WHITE) {
+            AppLocale.showPicker(this@CarPlayHostActivity)
         }, LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(12) })
 
-        val gestureButton = Button(this).apply {
-            isAllCaps = false
-            setOnClickListener {
-                gestureFingerCount = if (gestureFingerCount >= 4) 2 else gestureFingerCount + 1
-                text = getString(R.string.settings_gesture_fingers, gestureFingerCount)
-            }
+        val gestureButton = menuButton("", MENU_TRACK_OFF, Color.WHITE) {
+            gestureFingerCount = if (gestureFingerCount >= 4) 2 else gestureFingerCount + 1
+            it.text = getString(R.string.settings_gesture_fingers, gestureFingerCount)
         }
         gestureButton.text = getString(R.string.settings_gesture_fingers, gestureFingerCount)
         content.addView(gestureButton, LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(12) })
@@ -2115,17 +2123,9 @@ class CarPlayHostActivity : ComponentActivity() {
         )
 
         // CN: keep the old full settings reachable — the in-session menu covers only a subset.
-        content.addView(Button(this).apply {
-            text = getString(R.string.open_full_settings)
-            isAllCaps = false
-            textSize = 17f
-            setTextColor(Color.WHITE)
-            backgroundTintList = ColorStateList.valueOf(MENU_TRACK_OFF)
-            minHeight = dp(52)
-            setOnClickListener {
-                cancelSettingsEdits()
-                showDiPlayHome("settings")
-            }
+        content.addView(menuButton(getString(R.string.open_full_settings), MENU_TRACK_OFF, Color.WHITE) {
+            cancelSettingsEdits()
+            showDiPlayHome("settings")
         }, LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(12) })
 
         val scroll = ScrollView(this).apply {
@@ -3310,6 +3310,23 @@ class CarPlayHostActivity : ComponentActivity() {
         WirelessHotspotMode.MANUAL -> getString(R.string.manual_hotspot)
         WirelessHotspotMode.EXISTING_WIFI -> getString(R.string.existing_wifi_title)
     }
+
+    /** Rounded in-session menu button: one shape for primary, danger and quiet actions. */
+    private fun menuButton(text: String, background: Int, foreground: Int, onClick: (Button) -> Unit): Button =
+        Button(this).apply {
+            this.text = text
+            isAllCaps = false
+            textSize = 17f
+            setTextColor(foreground)
+            setPadding(dp(20), 0, dp(20), 0)
+            minHeight = dp(52)
+            stateListAnimator = null
+            background = android.graphics.drawable.GradientDrawable().apply {
+                setColor(background)
+                cornerRadius = dp(14).toFloat()
+            }
+            setOnClickListener { onClick(it as Button) }
+        }
 
     private fun menuText(
         text: String,

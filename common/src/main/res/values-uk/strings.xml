@@ -700,4 +700,8 @@
     <string name="settings_interface_size">Розмір інтерфейсу</string>
     <string name="settings_interface_size_auto">Автоматично</string>
     <string name="settings_interface_size_hint">Розмір тексту й елементів керування на екранах DiPlay. В автоматичному режимі вони збільшуються на великих екранах із низькою щільністю. CarPlay не змінюється.</string>
+    <string name="settings_cluster_menu_small_title">Навігація в малому вікні</string>
+    <string name="settings_cluster_menu_small_state_small">мале вікно активне</string>
+    <string name="settings_cluster_menu_small_state_full">повне вікно</string>
+    <string name="settings_cluster_menu_small_state_unknown">очікування панелі</string>
 </resources>

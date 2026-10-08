@@ -748,4 +748,8 @@
     <string name="settings_interface_size">界面大小</string>
     <string name="settings_interface_size_auto">自动</string>
     <string name="settings_interface_size_hint">DiPlay 自身界面中文字和控件的大小。自动模式会在大尺寸低密度屏幕上放大它们。不影响 CarPlay。</string>
+    <string name="settings_cluster_menu_small_title">仪表小屏导航</string>
+    <string name="settings_cluster_menu_small_state_small">小屏中</string>
+    <string name="settings_cluster_menu_small_state_full">全屏</string>
+    <string name="settings_cluster_menu_small_state_unknown">等待识别</string>
 </resources>
