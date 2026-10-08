@@ -1784,7 +1784,7 @@ class CarPlayHostActivity : ComponentActivity() {
             setPadding(dp(48), dp(36), dp(48), dp(36))
         }
         content.addView(
-            menuText(getString(R.string.carplay_settings), 30f, Color.WHITE, bold = true).apply {
+            menuText(getString(R.string.carplay_settings), 30f, MENU_PRIMARY, bold = true).apply {
                 setPadding(dp(4), 0, 0, dp(2))
             },
             LinearLayout.LayoutParams(
