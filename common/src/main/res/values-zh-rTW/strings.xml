@@ -717,8 +717,9 @@
     <string name="cluster_small_window_horizontal">小螢幕車標 · 左右</string>
     <string name="cluster_small_window_vertical">小螢幕車標 · 上下</string>
     <string name="cluster_small_window_hint">預設向右 30%。按你車小螢幕視窗的實際位置微調。</string>
-    <string name="cluster_small_window_access_ok">已授權使用情況存取 · 下次連線起自動跟隨儀表小螢幕。</string>
-    <string name="cluster_small_window_access_missing">自動模式需要「使用情況存取」權限才能感知儀表小螢幕狀態——授權後重連即生效。</string>
+    <string name="cluster_small_window_access_ok">已授權使用情況存取 · 讀不到 ADB 儀表模式時作為備用。</string>
+    <string name="cluster_small_window_access_missing">自動優先用 ADB 讀方向盤「小螢幕/全螢幕導航」。未授權 ADB 時，可再授予「使用情況存取」作為備用，然後重連。</string>
+    <string name="cluster_small_window_adb_ok">ADB 儀表模式：%1$s · 自動跟隨方向盤小螢幕/全螢幕導航。</string>
     <string name="cluster_small_window_grant_access">去授權使用情況存取</string>
     <string name="boot_start_repair">開機自啟 · ADB 修復（實驗）</string>
     <string name="boot_start_repair_desc">部分韌體會攔截第三方應用的開機廣播。此操作透過車機自身的 ADB 通道，把 DiPlay 加入背景執行白名單，讓開機廣播能送達。執行一次即可；車機韌體升級後如失效可重新執行。</string>

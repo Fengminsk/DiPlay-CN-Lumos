@@ -442,6 +442,8 @@ class CarPlayHostActivity : ComponentActivity() {
     // The marker safe area is fixed when stream 111 is requested. Compare it with the
     // observed instrument mode so a late Usage Access result or a live mode change is applied.
     private var requestedSmallWindowForStream: Boolean? = null
+    /** Wheel-menu navi mode from ADB (DiLink 5). Null until a successful read. */
+    @Volatile private var adbNaviMode: com.shilapi.xcertplay.hud.BydClusterNaviMode? = null
     private var sessionLog: SessionLogFile? = null
     private var gestureFingerCount = 3
     private var swipeOpensFullSettings = false
@@ -847,14 +849,24 @@ class CarPlayHostActivity : ComponentActivity() {
         advancedAudioChannelMapping =
             advancedAudioChannelMappingSupported &&
                 AirPlayPersistence.loadAdvancedAudioChannelMapping(this)
-        // The usage monitor feeds both the 5.1 theme follow and the experimental small-window auto.
+        // Usage Access is the fallback for small-window auto; ADB navi mode is preferred on DiLink 5.
         val followClusterUsage = DiLink51ClusterLayout.automatic(this) ||
-            AirPlayPersistence.loadClusterSmallWindowMode(this) == CLUSTER_SMALL_WINDOW_AUTO
+            (AirPlayPersistence.loadClusterSmallWindowMode(this) == CLUSTER_SMALL_WINDOW_AUTO &&
+                adbNaviMode == null)
         if (followClusterUsage && clusterMonitor == null) {
             clusterMonitor = DiLink51ClusterMonitor(this, ::onClusterActivityState).also { it.start() }
         } else if (!followClusterUsage) {
             clusterMonitor?.stop()
             clusterMonitor = null
+        }
+        val followAdbNavi = AirPlayPersistence.loadClusterSmallWindowMode(this) == CLUSTER_SMALL_WINDOW_AUTO
+        if (followAdbNavi) {
+            com.shilapi.xcertplay.hud.BydNavigationOutputs.setClusterNaviModeListener { mode ->
+                mainHandler.post { onAdbNaviMode(mode) }
+            }
+        } else {
+            com.shilapi.xcertplay.hud.BydNavigationOutputs.setClusterNaviModeListener(null)
+            adbNaviMode = null
         }
         if (!menuOpen) {
             gestureFingerCount = AirPlayPersistence.loadSettingsGestureFingers(this)
@@ -891,6 +903,23 @@ class CarPlayHostActivity : ComponentActivity() {
         if (DiLink51ClusterLayout.automatic(this)) detectedCluster.theme ?: DiLink51ClusterLayout.theme(this)
         else DiLink51ClusterLayout.theme(this)
 
+    private fun onAdbNaviMode(mode: com.shilapi.xcertplay.hud.BydClusterNaviMode?) {
+        val previous = adbNaviMode
+        if (mode == previous) return
+        adbNaviMode = mode
+        appendLog("Cluster map: ADB navi mode=${mode?.label ?: "unknown"}")
+        if (AirPlayPersistence.loadClusterSmallWindowMode(this) != CLUSTER_SMALL_WINDOW_AUTO) return
+        if (mode == com.shilapi.xcertplay.hud.BydClusterNaviMode.SMALL ||
+            mode == com.shilapi.xcertplay.hud.BydClusterNaviMode.FULL) {
+            applyClusterTurnOverlay()
+            if (CarPlayBackgroundSession.active && requestedSmallWindowForStream != null &&
+                requestedSmallWindowForStream != smallWindowActive()) {
+                if (menuOpen) recoveryPendingAfterMenu = true
+                else reconnectAfterLoss("Cluster small-window navi ${if (smallWindowActive()) "on" else "off"}")
+            }
+        }
+    }
+
     private fun onClusterActivityState(state: ClusterActivityState.Snapshot) {
         val previous = detectedCluster
         if (state != previous) appendLog("Cluster map: detected theme=${state.theme} mapVisible=${state.mapVisible} smallWindow=${state.smallWindow}")
@@ -898,6 +927,7 @@ class CarPlayHostActivity : ComponentActivity() {
         if (!AirPlayPersistence.loadClusterMapEnabled(this)) { dismissClusterPresentation(); return }
         ensureClusterPresentation()
         if (AirPlayPersistence.loadClusterSmallWindowMode(this) == CLUSTER_SMALL_WINDOW_AUTO &&
+            adbNaviMode == null &&
             (previous.smallWindow != state.smallWindow || previous.mapVisible != state.mapVisible)) {
             // A covered map (360 camera on the turn signal, another cluster page) hides the map
             // activities momentarily; that is not a real full/small switch — do not reconnect.
@@ -1007,7 +1037,11 @@ class CarPlayHostActivity : ComponentActivity() {
     /** Small-window positions apply when forced on, or when the cluster reports the small navi. */
     private fun smallWindowActive(): Boolean = when (AirPlayPersistence.loadClusterSmallWindowMode(this)) {
         CLUSTER_SMALL_WINDOW_ON -> true
-        CLUSTER_SMALL_WINDOW_AUTO -> detectedCluster.smallWindow
+        CLUSTER_SMALL_WINDOW_AUTO -> when (adbNaviMode) {
+            com.shilapi.xcertplay.hud.BydClusterNaviMode.SMALL -> true
+            com.shilapi.xcertplay.hud.BydClusterNaviMode.FULL -> false
+            else -> detectedCluster.smallWindow
+        }
         else -> false
     }
 
@@ -1366,6 +1400,7 @@ class CarPlayHostActivity : ComponentActivity() {
         mainHandler.removeCallbacks(refreshTurnOverlay)
         AirPlayPersistence.overlaySettingsListener = null
         com.shilapi.xcertplay.hud.BydNavigationOutputs.setTurnOverlayListener(null)
+        com.shilapi.xcertplay.hud.BydNavigationOutputs.setClusterNaviModeListener(null)
         clusterMonitor?.stop()
         getSystemService(android.hardware.display.DisplayManager::class.java)
             ?.unregisterDisplayListener(clusterDisplayListener)
@@ -1687,8 +1722,9 @@ class CarPlayHostActivity : ComponentActivity() {
             val mode = AirPlayPersistence.loadClusterSmallWindowMode(this)
             val state = when {
                 mode == CLUSTER_SMALL_WINDOW_ON -> getString(R.string.settings_cluster_menu_small_state_small)
-                detectedCluster.smallWindow -> getString(R.string.settings_cluster_menu_small_state_small)
-                detectedCluster.mapVisible -> getString(R.string.settings_cluster_menu_small_state_full)
+                smallWindowActive() -> getString(R.string.settings_cluster_menu_small_state_small)
+                adbNaviMode == com.shilapi.xcertplay.hud.BydClusterNaviMode.FULL ||
+                    detectedCluster.mapVisible -> getString(R.string.settings_cluster_menu_small_state_full)
                 else -> getString(R.string.settings_cluster_menu_small_state_unknown)
             }
             content.addView(
@@ -1697,7 +1733,8 @@ class CarPlayHostActivity : ComponentActivity() {
                 },
                 LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT),
             )
-            if (mode == CLUSTER_SMALL_WINDOW_AUTO && !DiLink51ClusterMonitor.hasAccess(this)) {
+            if (mode == CLUSTER_SMALL_WINDOW_AUTO && adbNaviMode == null &&
+                !DiLink51ClusterMonitor.hasAccess(this)) {
                 content.addView(
                     menuText(getString(R.string.cluster_small_window_access_missing), 14f, MENU_DANGER).apply {
                         setPadding(dp(4), dp(4), 0, 0)

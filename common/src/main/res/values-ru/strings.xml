@@ -657,8 +657,9 @@
     <string name="cluster_small_window_horizontal">Метка в малом окне · влево / вправо</string>
     <string name="cluster_small_window_vertical">Метка в малом окне · вверх / вниз</string>
     <string name="cluster_small_window_hint">По умолчанию три шага (30 %) правее центра. Настройте под фактическое положение окна на вашей панели.</string>
-    <string name="cluster_small_window_access_ok">Доступ к использованию предоставлен · панель отслеживается автоматически со следующего подключения.</string>
-    <string name="cluster_small_window_access_missing">Автоматическому режиму нужен доступ к статистике использования, чтобы видеть состояние малой карты — предоставьте его и переподключитесь.</string>
+    <string name="cluster_small_window_access_ok">Доступ к использованию предоставлен · запасной вариант, если ADB не читает режим навигации.</string>
+    <string name="cluster_small_window_access_missing">Авто предпочитает ADB для чтения «малый/полный экран навигации» на руле. Если ADB не разрешён, предоставьте доступ к использованию и переподключитесь.</string>
+    <string name="cluster_small_window_adb_ok">Режим навигации ADB: %1$s · авто следует малому/полному экрану навигации на руле.</string>
     <string name="cluster_small_window_grant_access">Предоставить доступ к использованию</string>
     <string name="boot_start_repair">Автозапуск · ремонт ADB (экспериментально)</string>
     <string name="boot_start_repair_desc">Некоторые прошивки блокируют сторонние приёмники загрузки. Эта операция через собственный ADB автомобиля исключает DiPlay из фоновых ограничений, чтобы широковещание загрузки доходило. Один раз; повторите после обновления прошивки.</string>

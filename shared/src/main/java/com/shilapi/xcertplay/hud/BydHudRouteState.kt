@@ -108,15 +108,30 @@ internal class BydHudRouteState(
     // The road the driver turns onto is what the next instruction is about; fall back to the current one.
     private fun roadFor(maneuver: Maneuver): String = maneuver.afterRoad.ifEmpty { currentRoad }
 
+    /** Apple destination maneuver types, or remaining distance already at the pin. */
+    private fun isAtDestination(): Boolean {
+        if (remainingMeters == 0L || distanceMeters == 0) return true
+        val type = maneuvers[activeIndex]?.type ?: return false
+        return type in DESTINATION_MANEUVER_TYPES
+    }
+
     private fun parseRouteUpdate(data: ByteArray): BydHudRouteChange {
         // A teardown NoRouteSet is not fresh guidance. Do not let repeated teardown frames
         // extend the retained instruction's lifetime or replace its road/arrival metadata.
+        // Arrival itself is often sent as NoRouteSet (0) rather than Arrived (2): if the
+        // current instruction is already the destination (or remaining distance is 0),
+        // treat that NoRouteSet as the real end so the card does not sit on the last turn.
         if (keepAcrossNoRoute) {
             var noRoute = false
             forEachTlv(data) { type, value, valueLength ->
                 if (type == 0x01 && valueLength >= 1) noRoute = data[value] == 0.toByte()
             }
-            if (noRoute) return BydHudRouteChange.NONE
+            if (noRoute) {
+                if (isAtDestination()) {
+                    return if (clear()) BydHudRouteChange.CLEAR else BydHudRouteChange.NONE
+                }
+                return BydHudRouteChange.NONE
+            }
         }
         lastRouteUpdateNs = nanoTime()
         var state: Int? = null
@@ -223,5 +238,7 @@ internal class BydHudRouteState(
         private const val TLV_HEADER_BYTES = 4
         private const val STALE_ROUTE_NS = 30_000_000_000L
         private const val EMPTY_LIST_HIDE_NS = 3_000_000_000L
+        /** Apple iAP2 RouteGuidanceManeuverType values that mean the destination pin. */
+        private val DESTINATION_MANEUVER_TYPES = setOf(10, 12, 24, 25, 27)
     }
 }

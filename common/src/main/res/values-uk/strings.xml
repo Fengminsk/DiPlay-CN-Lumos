@@ -669,8 +669,9 @@
     <string name="cluster_small_window_horizontal">Мітка в малому вікні · ліворуч / праворуч</string>
     <string name="cluster_small_window_vertical">Мітка в малому вікні · вгору / вниз</string>
     <string name="cluster_small_window_hint">Стандартно три кроки (30 %) праворуч від центру. Налаштуйте під фактичне положення вікна на вашій панелі.</string>
-    <string name="cluster_small_window_access_ok">Доступ до використання надано · панель відстежується автоматично з наступного підключення.</string>
-    <string name="cluster_small_window_access_missing">Автоматичному режиму потрібен доступ до статистики використання, щоб бачити стан малої карти — надайте його та перепідключіться.</string>
+    <string name="cluster_small_window_access_ok">Доступ до використання надано · запасний варіант, якщо ADB не читає режим навігації.</string>
+    <string name="cluster_small_window_access_missing">Авто надає перевагу ADB, щоб читати «малий/повний екран навігації» на кермі. Якщо ADB не дозволено, надайте доступ до використання й перепідключіться.</string>
+    <string name="cluster_small_window_adb_ok">Режим навігації ADB: %1$s · авто слідкує за малим/повним екраном навігації на кермі.</string>
     <string name="cluster_small_window_grant_access">Надати доступ до використання</string>
     <string name="boot_start_repair">Автозапуск · ремонт ADB (експериментально)</string>
     <string name="boot_start_repair_desc">Деякі прошивки блокують сторонні приймачі завантаження. Ця дія через власний ADB автомобіля виводить DiPlay з фонових обмежень, щоб широкомовлення завантаження доходило. Один раз; повторіть після оновлення прошивки.</string>

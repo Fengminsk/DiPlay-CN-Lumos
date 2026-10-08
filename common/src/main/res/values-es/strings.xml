@@ -657,8 +657,9 @@
     <string name="cluster_small_window_horizontal">Marcador en ventana pequeña · izquierda / derecha</string>
     <string name="cluster_small_window_vertical">Marcador en ventana pequeña · arriba / abajo</string>
     <string name="cluster_small_window_hint">Predeterminado: tres pasos (30 %) a la derecha del centro. Ajusta según dónde esté la ventana en tu cuadro.</string>
-    <string name="cluster_small_window_access_ok">Acceso de uso concedido · el cuadro se sigue automáticamente en la próxima conexión.</string>
-    <string name="cluster_small_window_access_missing">El modo automático necesita el permiso de acceso de uso para ver el estado del mapa pequeño; concédelo y reconecta.</string>
+    <string name="cluster_small_window_access_ok">Acceso de uso concedido · se usa si ADB no puede leer el modo de navegación.</string>
+    <string name="cluster_small_window_access_missing">El modo automático prefiere ADB para leer Pequeña/Pantalla completa en el volante. Si ADB no está aprobado, concede el acceso de uso y reconecta.</string>
+    <string name="cluster_small_window_adb_ok">Modo de navegación ADB: %1$s · Auto sigue Pequeña/Pantalla completa del volante.</string>
     <string name="cluster_small_window_grant_access">Conceder acceso de uso</string>
     <string name="boot_start_repair">Arranque automático · reparación ADB (experimental)</string>
     <string name="boot_start_repair_desc">Algunos firmwares bloquean los receptores de arranque de terceros. Esto pide a la unidad, por su propio enlace ADB, eximir a DiPlay de los límites en segundo plano para que llegue el aviso de arranque. Una vez; repetir tras una actualización de firmware.</string>
