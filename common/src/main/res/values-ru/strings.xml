@@ -635,6 +635,8 @@
     <string name="settings_swipe_target_overlay">Настройки сеанса</string>
     <string name="settings_swipe_target_full">Настройки домашнего экрана</string>
     <string name="settings_swipe_target_hint">Выберите, какие настройки открывает свайп вниз в CarPlay. Меню сеанса остаётся доступным; его кнопка полных настроек всегда открывает домашнюю страницу настроек.</string>
+    <string name="settings_launcher_returns_to_carplay">Значок DiPlay возвращает в CarPlay</string>
+    <string name="settings_launcher_returns_to_carplay_description">Если CarPlay уже запущен, нажатие значка DiPlay в списке приложений автомобиля возвращает в CarPlay. Выключите, чтобы открыть домашний экран DiPlay.</string>
     <string name="app_rename_title">Имя приложения (список приложений авто)</string>
     <string name="app_rename_note">Переключение между готовыми именами; произвольный текст в Android невозможен. Применяется сразу — если в списке осталось старое имя, откройте список заново или перезапустите головное устройство.</string>
     <string name="update_auto_found">Доступна новая версия %1$s.</string>

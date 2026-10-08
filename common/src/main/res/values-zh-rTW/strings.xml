@@ -694,7 +694,9 @@
     <string name="settings_swipe_target_label">下滑開啟</string>
     <string name="settings_swipe_target_overlay">獨立設定頁</string>
     <string name="settings_swipe_target_full">啟動頁設定頁</string>
-    <string name="settings_swipe_target_hint">選擇下滑手勢開啟哪一套設定。獨立設定頁是 CarPlay 內的選單；啟動頁設定頁是改名、轉向卡、小螢幕、更新等完整選項。下滑選單底部的「開啟 DiPlay 完整設定」始終進入啟動頁設定頁。</string>
+    <string name="settings_swipe_target_hint">選擇下滑手勢開啟哪一套設定。獨立設定頁是 CarPlay 內的選單；啟動頁設定頁是改名、轉向卡、小螢幕、更新等完整選項。下滑選單頂部的「開啟 DiPlay 完整設定」始終進入啟動頁設定頁。</string>
+    <string name="settings_launcher_returns_to_carplay">點 DiPlay 圖示回到 CarPlay</string>
+    <string name="settings_launcher_returns_to_carplay_description">CarPlay 已在執行時，點車機應用列表裡的 DiPlay 圖示回到 CarPlay。關掉則開啟 DiPlay 首頁。</string>
     <string name="app_rename_title">應用名稱（車機應用列表）</string>
     <string name="app_rename_note">在預置名稱中切換；安卓無法自訂任意文字。立即生效——若列表仍顯示舊名，重新開啟應用列表或重啟車機即可。</string>
     <string name="update_auto_found">發現新版本 %1$s</string>

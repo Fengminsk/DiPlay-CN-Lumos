@@ -88,6 +88,7 @@ object AirPlayPersistence {
     private const val KEY_CENTER_MAP_FOLLOWS_DASHBOARD = "center_map_follows_dashboard"
     private const val KEY_SETTINGS_GESTURE_FINGERS = "settings_gesture_fingers"
     private const val KEY_SWIPE_OPENS_FULL_SETTINGS = "swipe_opens_full_settings"
+    private const val KEY_LAUNCHER_RETURNS_TO_CARPLAY = "launcher_returns_to_carplay"
     private const val KEY_WIDTH_PHYSICAL_MM = "display_width_physical_mm"
     private const val KEY_PHYSICAL_SIZE_BASIS = "display_physical_size_basis"
     private const val KEY_MAX_DETECTED_WIDTH = "display_max_detected_width"
@@ -709,6 +710,16 @@ object AirPlayPersistence {
     fun saveSwipeOpensFullSettings(context: Context, enabled: Boolean) {
         context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit()
             .putBoolean(KEY_SWIPE_OPENS_FULL_SETTINGS, enabled).apply()
+    }
+
+    /** When true, tapping the DiPlay launcher icon while CarPlay runs returns to CarPlay. */
+    fun loadLauncherReturnsToCarPlay(context: Context): Boolean =
+        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+            .getBoolean(KEY_LAUNCHER_RETURNS_TO_CARPLAY, true)
+
+    fun saveLauncherReturnsToCarPlay(context: Context, enabled: Boolean) {
+        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit()
+            .putBoolean(KEY_LAUNCHER_RETURNS_TO_CARPLAY, enabled).apply()
     }
 
     fun loadCenterMapFollowsDashboard(context: Context): Boolean =

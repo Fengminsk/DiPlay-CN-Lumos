@@ -635,6 +635,8 @@
     <string name="settings_swipe_target_overlay">Ajustes de la sesión</string>
     <string name="settings_swipe_target_full">Ajustes de la pantalla de inicio</string>
     <string name="settings_swipe_target_hint">Elige qué ajustes abre el deslizamiento en CarPlay. El menú de la sesión sigue disponible; su botón de ajustes completos siempre abre la página de inicio.</string>
+    <string name="settings_launcher_returns_to_carplay">El icono de DiPlay vuelve a CarPlay</string>
+    <string name="settings_launcher_returns_to_carplay_description">Si CarPlay ya está en marcha, tocar el icono de DiPlay en la lista de apps del coche vuelve a CarPlay. Desactívalo para abrir la pantalla de inicio de DiPlay.</string>
     <string name="app_rename_title">Nombre de la app (lista del coche)</string>
     <string name="app_rename_note">Cambia entre nombres predefinidos; Android no admite texto libre. Se aplica al instante; si la lista sigue mostrando el nombre anterior, vuelve a abrirla o reinicia la unidad.</string>
     <string name="update_auto_found">Nueva versión %1$s disponible.</string>

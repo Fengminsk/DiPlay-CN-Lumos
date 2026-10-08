@@ -1676,6 +1676,11 @@ class CarPlayHostActivity : ComponentActivity() {
                 ViewGroup.LayoutParams.WRAP_CONTENT,
             ),
         )
+        // Keep the full settings at the top — the in-session menu covers only a subset.
+        content.addView(menuButton(getString(R.string.open_full_settings), MENU_TRACK_OFF, Color.WHITE) {
+            cancelSettingsEdits()
+            showDiPlayHome("settings")
+        }, LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(16) })
         // CN: live small-window state so 自动 mode is observable straight from CarPlay.
         if (AirPlayPersistence.loadClusterMapEnabled(this) &&
             AirPlayPersistence.loadClusterSmallWindowMode(this) != 0) {
@@ -2121,12 +2126,6 @@ class CarPlayHostActivity : ComponentActivity() {
                 ViewGroup.LayoutParams.WRAP_CONTENT,
             ).apply { topMargin = dp(6) },
         )
-
-        // CN: keep the old full settings reachable — the in-session menu covers only a subset.
-        content.addView(menuButton(getString(R.string.open_full_settings), MENU_TRACK_OFF, Color.WHITE) {
-            cancelSettingsEdits()
-            showDiPlayHome("settings")
-        }, LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(12) })
 
         val scroll = ScrollView(this).apply {
             isFillViewport = true

@@ -341,6 +341,7 @@ class AdaptiveSettingsUiTest {
             assertFalse(text(it), text(it) in audio)
         }
         assertTrue(text(R.string.right_hand_drive) in vehicle)
+        assertTrue(text(R.string.settings_launcher_returns_to_carplay) in vehicle)
         assertTrue(text(R.string.car_button_in_carplay) in vehicle)
         assertTrue(text(R.string.wheel_siri_key) in vehicle)
         assertTrue(text(R.string.settings_wheel_keys) in vehicle)

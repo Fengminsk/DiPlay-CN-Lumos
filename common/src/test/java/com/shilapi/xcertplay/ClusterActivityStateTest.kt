@@ -104,4 +104,11 @@ class ClusterActivityStateTest {
         state.event("unrelated.app", ClusterActivityState.FULL_MAP, 1, 1, 100)
         assertNull(state.snapshot().theme)
     }
+
+    @Test fun automapPackageReportsTheSameSmallAndFullWindows() {
+        state.event("com.byd.automap", ClusterActivityState.MINI_MAP, 1, 1, 100)
+        assertEquals(ClusterActivityState.Snapshot(null, true, true), state.snapshot())
+        state.event("com.byd.automap", ClusterActivityState.FULL_MAP, 1, 1, 200)
+        assertEquals(ClusterActivityState.Snapshot(Theme.MAP, true, false), state.snapshot())
+    }
 }

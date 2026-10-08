@@ -732,6 +732,8 @@
     <string name="settings_swipe_target_overlay">In-session settings</string>
     <string name="settings_swipe_target_full">Home settings page</string>
     <string name="settings_swipe_target_hint">Choose which settings the CarPlay swipe-down opens. The in-session menu stays available; its Open full DiPlay settings button always opens the home settings page.</string>
+    <string name="settings_launcher_returns_to_carplay">DiPlay icon returns to CarPlay</string>
+    <string name="settings_launcher_returns_to_carplay_description">When CarPlay is already running, tapping the DiPlay icon on the car\'s app list goes back to CarPlay. Turn this off to open the DiPlay home screen instead.</string>
     <string name="boot_start_repair">Boot auto-start · ADB repair (experimental)</string>
     <string name="boot_start_repair_desc">Some firmwares block third-party boot receivers. This asks the head unit, over its own ADB link, to exempt DiPlay from background limits so the boot broadcast can reach it. One-time; re-run after a firmware update.</string>
     <string name="boot_start_repair_result">Boot auto-start repair:%1$s</string>

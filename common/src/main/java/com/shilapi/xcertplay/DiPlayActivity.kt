@@ -274,7 +274,8 @@ class DiPlayActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         // Back on the home page finishes this activity while the session runs on, so the icon lands here.
-        if (savedInstanceState == null && isLauncherIntent(intent) && CarPlayBackgroundSession.hasSession()) {
+        if (savedInstanceState == null && isLauncherIntent(intent) && CarPlayBackgroundSession.hasSession() &&
+            AirPlayPersistence.loadLauncherReturnsToCarPlay(this)) {
             openProjection(); finish(); return
         }
         enforceInterfaceSize()
@@ -315,7 +316,8 @@ class DiPlayActivity : ComponentActivity() {
         connectionSettingsReturnCategory = null
         // CarPlay runs in its own task, so the launcher icon resumes this one. Settings opened from
         // CarPlay carry a "page" extra, which isLauncherIntent rejects.
-        if (isLauncherIntent(intent) && CarPlayBackgroundSession.hasSession()) {
+        if (isLauncherIntent(intent) && CarPlayBackgroundSession.hasSession() &&
+            AirPlayPersistence.loadLauncherReturnsToCarPlay(this)) {
             page = "home"; render(); openProjection(); return
         }
         page = intent.getStringExtra("page") ?: "home"; render()
@@ -1248,6 +1250,11 @@ class DiPlayActivity : ComponentActivity() {
             card.addView(label(getString(R.string.settings_swipe_target_hint), 14, MUTED).apply {
                 setPadding(0, dp(10), 0, 0)
             })
+            toggle(card, getString(R.string.settings_launcher_returns_to_carplay),
+                getString(R.string.settings_launcher_returns_to_carplay_description),
+                AirPlayPersistence.loadLauncherReturnsToCarPlay(this)) {
+                AirPlayPersistence.saveLauncherReturnsToCarPlay(this, it)
+            }
             toggle(card, getString(R.string.right_hand_drive), getString(R.string.place_carplay_s_controls_closer_to_the_driver), AirPlayPersistence.loadRightHandDrive(this)) { AirPlayPersistence.saveRightHandDrive(this, it); markReconnectNeeded() }
         }
         filteredSection(content, SettingsSection.WHEEL_KEYS,
