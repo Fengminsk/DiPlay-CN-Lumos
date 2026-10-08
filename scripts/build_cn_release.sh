@@ -27,7 +27,10 @@ if [ -z "$GITEE_TOKEN" ]; then
   log "probing variable channels (names only)"
   env | grep -iE 'token|secret|hidden|param|jc_' | cut -d= -f1 | sort || true
   for d in "${SYSTEM_FILE_PARAMETER_CACHE:-}" "${SYSTEM_PARAMETER_RESULT_DIR:-}" "${SYSTEM_FILE_RESULT_DIR:-}"; do
-    [ -n "$d" ] && { ls -ld "$d" 2>&1 | head -2; [ -f "$d" ] && log "file $d masked head: $(head -c 200 "$d" | sed -E 's/[0-9a-fA-F]{12,}/<HEX>/g')"; }
+    if [ -n "$d" ]; then
+      ls -ld "$d" 2>&1 | head -2 || true
+      if [ -f "$d" ]; then log "file $d masked head: $(head -c 200 "$d" | sed -E 's/[0-9a-fA-F]{12,}/<HEX>/g')"; fi
+    fi
   done
   v="${JC_HIDDEN_VALUE_FROM_PIPE:-}"
   log "JC_HIDDEN_VALUE_FROM_PIPE length=${#v}"
