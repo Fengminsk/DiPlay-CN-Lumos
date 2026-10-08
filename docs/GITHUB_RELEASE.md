@@ -4,7 +4,7 @@
 
 **下载**
 
-- APK：本 Release 附带的 `DiPlay-cn-{{VERSION}}.apk`（Gitee 同步：https://gitee.com/oneeyear/DiPlay-CN/releases/latest）
+- APK：本 Release 附带的 `DiPlay-cn-v{{VERSION}}.apk`（Gitee 同步：https://gitee.com/oneeyear/DiPlay-CN/releases/latest）
 - 完整优化记录：[docs/CN_OPTIMIZATIONS.md](https://github.com/serein-morii/DiPlay-CN/blob/main/docs/CN_OPTIMIZATIONS.md)
 
 **本版更新**
@@ -16,6 +16,7 @@
 - 修复应用内更新下载完成后不弹安装器：安装权限在 0.2.11 同步时丢失，已补回。本版需手动安装一次，装完后首次更新会请求一次「允许安装未知应用」，之后恢复一键更新。
 - 打转向灯不再触发仪表地图重连：360 影像暂时盖住导航窗被误判成全屏/小屏切换；现在画面被覆盖期间保持不动，仅真实切换才重连。
 - 应用名称预置去掉重复的「DiPlay」（与「DiPlay CN」在车机显示相同）；已选它会自动回到「DiPlay CN」。
+- 小屏导航切换「关／开／自动」及调整小屏车标位置后立即重连；CarPlay 下滑菜单显示识别状态并调整按钮样式。地图被 360 影像盖住后再以另一种窗口模式出现时，也会重新核对码流位置。以上小屏改动尚需 DiLink 5 实车复测。
 
 请安装在车机上，不要安装在 iPhone 上。车机必须允许安装 APK。
 
