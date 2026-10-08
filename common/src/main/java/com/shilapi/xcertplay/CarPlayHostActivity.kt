@@ -1678,7 +1678,7 @@ class CarPlayHostActivity : ComponentActivity() {
         )
         // CN: live small-window state so 自动 mode is observable straight from CarPlay.
         if (AirPlayPersistence.loadClusterMapEnabled(this) &&
-            AirPlayPersistence.loadClusterSmallWindowMode(this) != CLUSTER_SMALL_WINDOW_OFF) {
+            AirPlayPersistence.loadClusterSmallWindowMode(this) != 0) {
             val mode = AirPlayPersistence.loadClusterSmallWindowMode(this)
             val state = when {
                 mode == CLUSTER_SMALL_WINDOW_ON -> getString(R.string.settings_cluster_menu_small_state_small)
@@ -3312,19 +3312,19 @@ class CarPlayHostActivity : ComponentActivity() {
     }
 
     /** Rounded in-session menu button: one shape for primary, danger and quiet actions. */
-    private fun menuButton(text: String, background: Int, foreground: Int, onClick: (Button) -> Unit): Button =
+    private fun menuButton(label: String, bgColor: Int, fgColor: Int, onClick: (Button) -> Unit): Button =
         Button(this).apply {
-            this.text = text
+            text = label
             isAllCaps = false
             textSize = 17f
-            setTextColor(foreground)
+            setTextColor(fgColor)
             setPadding(dp(20), 0, dp(20), 0)
             minHeight = dp(52)
             stateListAnimator = null
-            background = android.graphics.drawable.GradientDrawable().apply {
-                setColor(background)
+            setBackgroundDrawable(android.graphics.drawable.GradientDrawable().apply {
+                setColor(bgColor)
                 cornerRadius = dp(14).toFloat()
-            }
+            })
             setOnClickListener { onClick(it as Button) }
         }
 
