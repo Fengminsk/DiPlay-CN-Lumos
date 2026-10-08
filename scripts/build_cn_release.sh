@@ -21,7 +21,12 @@ if [ -z "$TAG" ] || [ "$TAG" = "none" ]; then
 fi
 APK="DiPlay-cn-$TAG.apk"
 
-GITEE_TOKEN="${GITEE_TOKEN:?GITEE_TOKEN must be set (pipeline common variable)}"
+GITEE_TOKEN="${GITEE_TOKEN:-${DIPLAY_GITEE_TOKEN:-}}"
+if [ -z "$GITEE_TOKEN" ]; then
+  log "injected environment variable names: $(env | cut -d= -f1 | sort | tr '\n' ' ')"
+  log "GITEE_TOKEN/DIPLAY_GITEE_TOKEN missing; set the DIPLAY_GITEE_TOKEN pipeline variable"
+  exit 1
+fi
 OFFICIAL_TAG="${OFFICIAL_TAG:-v0.2.14}"
 OFFICIAL_SHA256="${OFFICIAL_SHA256:-62b31f79db32bc7c85013ae830460b697a5952fad571ed0030b97341dde0b2e3}"
 
