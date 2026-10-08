@@ -1533,6 +1533,12 @@ class DiPlayActivity : ComponentActivity(), AppAppearanceOwner {
             getString(R.string.connection_setup), R.drawable.ic_dp_connection) { card ->
             card.addView(label(getString(R.string.choose_how_to_connect_follow_the_setup_steps_and_save_your), 16, MUTED))
             card.addView(button(getString(R.string.open_connection_setup), false, ::openConnectionSetupFromSettings), matchButton(12, 60))
+            toggle(card, getString(R.string.settings_carplay_name_from_hotspot),
+                getString(R.string.settings_carplay_name_from_hotspot_description),
+                CarPlayNameSettings.useHotspotName(this)) {
+                CarPlayNameSettings.setUseHotspotName(this, it)
+                markReconnectNeeded()
+            }
         }
         filteredSection(content, SettingsSection.DIAGNOSTICS,
             getString(R.string.diagnostics), R.drawable.ic_dp_diagnostics) { card ->

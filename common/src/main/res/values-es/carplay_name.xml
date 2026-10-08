@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="settings_carplay_name_from_hotspot">Usar el nombre del punto de acceso para CarPlay</string>
+    <string name="settings_carplay_name_from_hotspot_description">En conexiones inalámbricas, usa el SSID del punto de acceso activo como nombre de CarPlay. Por USB, usa el nombre guardado del punto de acceso del coche si está seleccionado; de lo contrario, DiPlay. Se aplica en la próxima conexión.</string>
+</resources>

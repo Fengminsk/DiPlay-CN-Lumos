@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="settings_carplay_name_from_hotspot">CarPlay 设备名使用热点名</string>
+    <string name="settings_carplay_name_from_hotspot_description">无线连接使用当前热点的 SSID 作为 CarPlay 设备名。有线连接在选择车机热点时使用已保存的热点名，否则使用 DiPlay。下次连接生效。</string>
+</resources>

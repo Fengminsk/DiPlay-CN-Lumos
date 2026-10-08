@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="settings_carplay_name_from_hotspot">CarPlay 裝置名稱使用熱點名稱</string>
+    <string name="settings_carplay_name_from_hotspot_description">無線連線使用目前熱點的 SSID 作為 CarPlay 裝置名稱。有線連線在選擇車機熱點時使用已儲存的熱點名稱，否則使用 DiPlay。下次連線生效。</string>
+</resources>

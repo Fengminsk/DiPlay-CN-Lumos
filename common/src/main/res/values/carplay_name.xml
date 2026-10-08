@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="settings_carplay_name_from_hotspot">Use hotspot name for CarPlay</string>
+    <string name="settings_carplay_name_from_hotspot_description">On wireless connections, use the active hotspot SSID as the CarPlay device name. On USB, use the saved car hotspot name if selected; otherwise use DiPlay. Takes effect on the next connection.</string>
+</resources>

@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="settings_carplay_name_from_hotspot">Використовувати назву точки доступу для CarPlay</string>
+    <string name="settings_carplay_name_from_hotspot_description">За бездротового підключення назва CarPlay береться з SSID активної точки доступу. Через USB використовується збережена назва точки доступу автомобіля, якщо її вибрано; інакше DiPlay. Діє після наступного підключення.</string>
+</resources>

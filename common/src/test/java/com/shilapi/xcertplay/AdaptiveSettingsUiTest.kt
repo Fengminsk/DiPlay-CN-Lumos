@@ -502,6 +502,7 @@ class AdaptiveSettingsUiTest {
         }
         fun text(id: Int) = screen.getString(id)
 
+        val connection = visibleIn(R.string.connection)
         val display = visibleIn(R.string.settings_display)
         val audio = visibleIn(R.string.audio)
         val vehicle = visibleIn(R.string.settings_vehicle)
@@ -514,6 +515,8 @@ class AdaptiveSettingsUiTest {
         }
         assertTrue(text(R.string.right_hand_drive) in vehicle)
         assertTrue(text(R.string.settings_launcher_returns_to_carplay) in vehicle)
+        assertTrue(text(R.string.settings_carplay_name_from_hotspot) in connection)
+        assertFalse(text(R.string.settings_carplay_name_from_hotspot) in vehicle)
         assertTrue(text(R.string.car_button_in_carplay) in vehicle)
         assertTrue(text(R.string.wheel_siri_key) in vehicle)
         assertTrue(text(R.string.settings_wheel_keys) in vehicle)

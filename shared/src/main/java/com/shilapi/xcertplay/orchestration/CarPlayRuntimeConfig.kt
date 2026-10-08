@@ -68,6 +68,8 @@ class CarPlayRuntimeConfig(
     val wifiP2pPreferredChannel: Int = WifiP2pChannels.AUTO,
     val existingWifiSsid: String = "",
     val existingWifiPassphrase: String = "",
+    /** Use the actual hotspot SSID for accessory display names once wireless bring-up completes. */
+    val useHotspotNameForDevice: Boolean = false,
 ) {
     init {
         require(iphoneDevices.all { it.vendorId == APPLE_VENDOR_ID }) {

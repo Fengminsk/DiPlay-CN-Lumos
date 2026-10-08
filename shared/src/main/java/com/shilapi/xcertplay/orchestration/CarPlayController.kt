@@ -1232,6 +1232,7 @@ class CarPlayController(
                     "address=${device.address} localBt=$hostBluetoothMac",
             )
             val wirelessAirPlayConfig = airPlayConfig.copy(
+                deviceName = CarPlayDeviceName.fromHotspot(config.useHotspotNameForDevice, hotspotInfo.ssid),
                 deviceId = deviceIdentifier,
                 btMac = hostBluetoothMac,
             )
@@ -1355,11 +1356,12 @@ class CarPlayController(
                 return
             }
             val wirelessIdentification = Iap2WirelessIdentification(hostBluetoothMac, hotspotInfo.ssid)
-            val bootstrapIdentification = config.identification.forWirelessLink(
+            val namedIdentification = config.identification.copy(name = wirelessAirPlayConfig.deviceName)
+            val bootstrapIdentification = namedIdentification.forWirelessLink(
                 Iap2WirelessLinkRole.BLUETOOTH_BOOTSTRAP,
                 wirelessIdentification,
             )
-            val runtimeIdentification = config.identification.forWirelessLink(
+            val runtimeIdentification = namedIdentification.forWirelessLink(
                 Iap2WirelessLinkRole.RUNTIME_TUNNEL,
                 wirelessIdentification,
             )

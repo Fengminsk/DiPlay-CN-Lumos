@@ -90,6 +90,7 @@ import com.shilapi.xcertplay.orchestration.ManualHotspotBand
 import com.shilapi.xcertplay.orchestration.ManualHotspotSecurity
 import com.shilapi.xcertplay.orchestration.MfiTarget
 import com.shilapi.xcertplay.orchestration.WirelessHotspotMode
+import com.shilapi.xcertplay.orchestration.CarPlayDeviceName
 import com.shilapi.xcertplay.orchestration.isManualHotspotChannelCompatible
 import com.shilapi.xcertplay.settings.ConnectionSettingsSection
 import com.shilapi.xcertplay.settings.DisplaySettingsSection
@@ -140,6 +141,11 @@ class CarPlayHostActivity : ComponentActivity() {
         super.attachBaseContext(AppLocale.wrap(newBase))
     }
 
+    private fun configuredCarPlayDeviceName(): String = CarPlayDeviceName.fromHotspot(
+        CarPlayNameSettings.useHotspotName(this),
+        manualHotspotSsid.takeIf { wirelessHotspotMode == WirelessHotspotMode.MANUAL },
+    )
+
     // CH341 USB\VID_1A86&PID_5512&REV_0304 is the deployment-supplied bridge identity.
     private fun createRuntimeConfig(): CarPlayRuntimeConfig = CarPlayRuntimeConfig(
         mfiTarget = mfiTarget,
@@ -158,7 +164,7 @@ class CarPlayHostActivity : ComponentActivity() {
         remoteMfiServer = remoteMfiServer.trim().takeIf { it.isNotEmpty() },
         remoteMfiToken = remoteMfiToken.takeIf { it.isNotEmpty() },
         identification = Iap2IdentificationConfig(
-            name = "DiPlay",
+            name = configuredCarPlayDeviceName(),
             modelIdentifier = normalizedModel(),
             manufacturer = normalizedManufacturer(),
             serialNumber = "DIPLAY-" + DiPlayBootstrap.deviceId(airPlayIdentity).replace(":", ""),
@@ -187,6 +193,7 @@ class CarPlayHostActivity : ComponentActivity() {
         manualHotspotSecurity = manualHotspotSecurity,
         existingWifiSsid = existingWifiSsid,
         existingWifiPassphrase = existingWifiPassphrase,
+        useHotspotNameForDevice = CarPlayNameSettings.useHotspotName(this),
         locationReportingEnabled = locationReportingEnabled,
     )
 
@@ -3836,7 +3843,7 @@ class CarPlayHostActivity : ComponentActivity() {
         val carBluetoothAudio = AirPlayPersistence.loadCarBluetoothAudio(this)
         if (carBluetoothAudio) logCarBluetoothAudio()
         return AirPlayConfig(
-            deviceName = "DiPlay",
+            deviceName = configuredCarPlayDeviceName(),
             deviceId = DiPlayBootstrap.deviceId(airPlayIdentity),
             btMac = DiPlayBluetooth.localAddress(this) ?: DiPlayBootstrap.deviceId(airPlayIdentity),
             sourceVersion = "950.7.1",
