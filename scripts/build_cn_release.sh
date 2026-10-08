@@ -82,8 +82,8 @@ else:
     print(' '.join(str(names[n]) for n in (apk, apk + '.sha256') if n in names))
 PY
 }
-delete_asset() { curl -fsS -X DELETE "$API/releases/attach_files/$1?access_token=$GITEE_TOKEN" >/dev/null \
-  || log "could not delete asset $1 (continuing)"; }
+delete_asset() { curl -fsS -X DELETE "$API/releases/$1/attach_files/$2?access_token=$GITEE_TOKEN" >/dev/null \
+  || log "could not delete asset $2 (continuing)"; }
 
 detail="$(curl -fsS --retry 3 "$API/releases/tags/$TAG?access_token=$GITEE_TOKEN" || true)"
 id="$(printf %s "$detail" | grep -o '"id": *[0-9]\+' | head -1 | grep -o '[0-9]\+' || true)"
@@ -166,7 +166,7 @@ if [ -z "$id" ]; then
 fi
 [ -n "$id" ] || { log "no Gitee release id for $TAG"; exit 1; }
 for aid in $(attach_state "$id"); do
-  [ "$aid" = "READY" ] || delete_asset "$aid"
+  [ "$aid" = "READY" ] || delete_asset "$id" "$aid"
 done
 log "attaching to release $id"
 for f in "$APK.sha256" "$APK"; do
