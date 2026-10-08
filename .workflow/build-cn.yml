@@ -23,5 +23,4 @@ stages:
         displayName: Build CN APK and attach
         jdkVersion: 17
         commands:
-          - export GITEE_TOKEN=${{ DIPLAY_GITEE_TOKEN }}
           - bash scripts/build_cn_release.sh

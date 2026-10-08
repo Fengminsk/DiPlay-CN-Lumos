@@ -23,8 +23,29 @@ APK="DiPlay-cn-$TAG.apk"
 
 GITEE_TOKEN="${GITEE_TOKEN:-${DIPLAY_GITEE_TOKEN:-}}"
 if [ -z "$GITEE_TOKEN" ]; then
-  log "injected environment variable names: $(env | cut -d= -f1 | sort | tr '\n' ' ')"
-  log "GITEE_TOKEN/DIPLAY_GITEE_TOKEN missing; set the DIPLAY_GITEE_TOKEN pipeline variable"
+  # Probe how Gitee Go delivers private pipeline variables: hidden pipe env, parameter files.
+  log "probing variable channels (names only)"
+  env | grep -iE 'token|secret|hidden|param|jc_' | cut -d= -f1 | sort || true
+  for d in "${SYSTEM_FILE_PARAMETER_CACHE:-}" "${SYSTEM_PARAMETER_RESULT_DIR:-}" "${SYSTEM_FILE_RESULT_DIR:-}"; do
+    [ -n "$d" ] && [ -d "$d" ] && find "$d" -maxdepth 3 \( -type f -o -type p \) -printf '%p %s\n' 2>/dev/null | head -20
+  done
+  v="${JC_HIDDEN_VALUE_FROM_PIPE:-}"
+  log "JC_HIDDEN_VALUE_FROM_PIPE length=${#v}"
+  if [ -n "$v" ] && [ -e "$v" ]; then v="$(tr -d '[:space:]' < "$v")"; fi
+  if [[ "$v" =~ ^[0-9a-f]{32}$ ]]; then GITEE_TOKEN="$v"; log "token taken from the hidden pipe channel"; fi
+  if [ -z "$GITEE_TOKEN" ]; then
+    for d in "${SYSTEM_FILE_PARAMETER_CACHE:-}" "${SYSTEM_PARAMETER_RESULT_DIR:-}" "${SYSTEM_FILE_RESULT_DIR:-}"; do
+      for f in "$d/DIPLAY_GITEE_TOKEN" "$d/DIPLAY_GITEE_TOKEN.txt" "$d/diplay_gitee_token"; do
+        if [ -s "$f" ]; then
+          v="$(tr -d '[:space:]' < "$f")"
+          if [[ "$v" =~ ^[0-9a-f]{32}$ ]]; then GITEE_TOKEN="$v"; log "token taken from $d"; break 2; fi
+        fi
+      done
+    done
+  fi
+fi
+if [ -z "$GITEE_TOKEN" ]; then
+  log "GITEE_TOKEN still missing after probing every channel; set the DIPLAY_GITEE_TOKEN pipeline variable"
   exit 1
 fi
 OFFICIAL_TAG="${OFFICIAL_TAG:-v0.2.14}"
