@@ -5,6 +5,8 @@
 为兼容的比亚迪安卓车机提供有线及无线 CarPlay，采用 DiAuto 风格界面。
 
 > 这些项目专注于比亚迪汽车。它们可能在其他品牌上运行，但其他品牌不在支持范围内，也没有增加支持或修复其品牌特定兼容性问题的计划。
+>
+> **测试车辆：2025 款比亚迪汉 DM-i，车机 DiLink 5.0。** 其他车型、其他车机系统不保证所有功能可用。请自行测试，或拉取源代码按本车修改。
 
 [下载最新版](https://github.com/serein-morii/DiPlay-CN/releases/latest) · [Gitee 国内下载](https://gitee.com/oneeyear/DiPlay-CN/releases/latest) · [CN 优化日志](docs/CN_OPTIMIZATIONS.md) · [全部发版](https://github.com/serein-morii/DiPlay-CN/releases) · [完整说明](README.md)
 
@@ -44,7 +46,7 @@
 
 ### 请提供 0.2.14 的新诊断报告
 
-1. 更新到 **0.2.14-cn.3**，复现问题并记录发生时间。开机／自动启动问题发生后，可手动打开 DiPlay 导出。
+1. 更新到 **0.2.14-cn.4**，复现问题并记录发生时间。开机／自动启动问题发生后，可手动打开 DiPlay 导出。
 2. 打开“**设置 → 诊断 → 保存诊断报告**”。Android 10+ 通常保存到 **Downloads/DiPlay**；Android 9 使用文件选择器，也可点“选择保存位置”。如选择器或公共存储不可用，应用会使用专用外部或私有目录，并在确认中说明目的地。
 3. 使用确认中的**查看报告／分享**；没有分享应用时，可在报告视图中选择并复制文本。检查 `.txt` 并删除隐私信息，再附到匹配的[现有问题](https://github.com/shihabal3amri/DiPlay/issues)，或[新建问题](https://github.com/shihabal3amri/DiPlay/issues/new/choose)。报告不会自动上传，请勿公开热点密码或私有认证文件。
 4. 注明车型／车机、DiLink/Android/完整固件版本、iPhone/iOS、USB／车机热点／Wi-Fi Direct／同一局域网、相关设置、复现步骤、预期与实际结果及故障时间。
