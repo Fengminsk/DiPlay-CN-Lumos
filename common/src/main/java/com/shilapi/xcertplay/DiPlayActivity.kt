@@ -347,7 +347,9 @@ class DiPlayActivity : ComponentActivity(), AppAppearanceOwner {
         onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
             override fun handleOnBackPressed() {
                 if (page != "home") navigateBack()
-                else { isEnabled = false; onBackPressedDispatcher.onBackPressed(); isEnabled = true }
+                // Back on the home page only hides the app: a car app must return exactly where
+                // it left off instead of reopening from scratch.
+                else moveTaskToBack(true)
             }
         })
     }

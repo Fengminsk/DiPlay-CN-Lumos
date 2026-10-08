@@ -921,8 +921,7 @@ class CarPlayHostActivity : ComponentActivity() {
         if (mode == com.shilapi.xcertplay.hud.BydClusterNaviMode.SMALL ||
             mode == com.shilapi.xcertplay.hud.BydClusterNaviMode.FULL) {
             applyClusterTurnOverlay()
-            if (CarPlayBackgroundSession.active && requestedSmallWindowForStream != null &&
-                requestedSmallWindowForStream != smallWindowActive()) {
+            if (CarPlayBackgroundSession.active && requestedSmallWindowForStream != smallWindowActive()) {
                 if (menuOpen) recoveryPendingAfterMenu = true
                 else reconnectAfterLoss("Cluster small-window navi ${if (smallWindowActive()) "on" else "off"}")
             }
