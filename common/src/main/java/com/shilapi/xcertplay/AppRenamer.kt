@@ -13,7 +13,6 @@ object AppRenamer {
     private val ALIASES = listOf(
         "LauncherAliasCn",
         "LauncherAliasDiplayCn",
-        "LauncherAliasDiplay",
         "LauncherAliasCarplay",
         "LauncherAliasNavi",
         "LauncherAliasMap",
@@ -43,11 +42,13 @@ object AppRenamer {
 
     /** The chosen index lives beside the component states so both stay in sync. */
     fun current(context: Context): Int {
+        migrateRemovedDiplayAlias(context)
         val prefs = context.getSharedPreferences(RENAME_PREFS, Context.MODE_PRIVATE)
         return prefs.getInt(KEY_NAME_INDEX, 0).coerceIn(0, (aliasesInfo(context).size - 1).coerceAtLeast(0))
     }
 
     fun apply(context: Context, index: Int) {
+        migrateRemovedDiplayAlias(context)
         val app = context.applicationContext
         val list = ALIASES
             .map { ComponentName(app.packageName, "com.shilapi.xcertplay.$it") }
@@ -70,6 +71,37 @@ object AppRenamer {
             .putInt(KEY_NAME_INDEX, chosen).apply()
     }
 
+    /**
+     * The plain "DiPlay" preset was removed (it looked identical to "DiPlay CN" on the car,
+     * whose list truncates at the first space). Its old index was 2; later indexes shift down
+     * by one. A saved 2 falls back to the default alias, which is also re-enabled because the
+     * removed component no longer exists and the launcher needs a live entry point.
+     */
+    private fun migrateRemovedDiplayAlias(context: Context) {
+        val app = context.applicationContext
+        val prefs = app.getSharedPreferences(RENAME_PREFS, Context.MODE_PRIVATE)
+        if (prefs.getBoolean(KEY_DIPLAY_REMOVED, false)) return
+        val saved = prefs.getInt(KEY_NAME_INDEX, 0)
+        val migrated = when {
+            saved == 2 -> 0
+            saved > 2 -> saved - 1
+            else -> saved
+        }
+        if (saved == 2) {
+            val default = ComponentName(app.packageName, "com.shilapi.xcertplay.LauncherAliasCn")
+            app.packageManager.setComponentEnabledSetting(
+                default,
+                PackageManager.COMPONENT_ENABLED_STATE_ENABLED,
+                PackageManager.DONT_KILL_APP,
+            )
+        }
+        prefs.edit()
+            .putInt(KEY_NAME_INDEX, migrated)
+            .putBoolean(KEY_DIPLAY_REMOVED, true)
+            .apply()
+    }
+
     private const val RENAME_PREFS = "diplay_rename"
     private const val KEY_NAME_INDEX = "name_index"
+    private const val KEY_DIPLAY_REMOVED = "diplay_alias_removed"
 }
