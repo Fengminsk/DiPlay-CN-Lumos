@@ -70,6 +70,39 @@ class BydHudRouteStateTest {
     }
 
     @Test
+    fun `overlay treats NoRouteSet at the destination as the real end`() {
+        val state = BydHudRouteState(keepAcrossNoRoute = true)
+        state.accept(
+            BydHudRouteState.ROUTE_GUIDANCE_MANEUVER_UPDATE,
+            tlvs(tlv(0x01, 0, 1), tlv(0x03, 10), tlv(0x08, 0)),
+        )
+        state.accept(
+            BydHudRouteState.ROUTE_GUIDANCE_UPDATE,
+            tlvs(tlv(0x01, 1), tlv(0x0a, 0, 0, 0, 8), tlv(0x0d, 0, 1)),
+        )
+        assertEquals(8, state.current()!!.distanceMeters)
+
+        val change = state.accept(BydHudRouteState.ROUTE_GUIDANCE_UPDATE, tlvs(tlv(0x01, 0)))
+
+        assertEquals(BydHudRouteChange.CLEAR, change)
+        assertNull(state.current())
+    }
+
+    @Test
+    fun `overlay treats NoRouteSet at remaining zero as the real end`() {
+        val state = populatedState(keepAcrossNoRoute = true)
+        state.accept(
+            BydHudRouteState.ROUTE_GUIDANCE_UPDATE,
+            tlvs(tlv(0x01, 1), tlv(0x07, 0, 0, 0, 0, 0, 0, 0, 0), tlv(0x0d, 0, 1)),
+        )
+
+        val change = state.accept(BydHudRouteState.ROUTE_GUIDANCE_UPDATE, tlvs(tlv(0x01, 0)))
+
+        assertEquals(BydHudRouteChange.CLEAR, change)
+        assertNull(state.current())
+    }
+
+    @Test
     fun `malformed frame does not alter active guidance`() {
         val state = populatedState()
         val before = state.current()

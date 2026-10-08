@@ -24,6 +24,10 @@ object ClusterTurnCardOverlay {
     val sizePercents = listOf(30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80, 85, 90, 95)
     const val DEFAULT_SIZE_PERCENT = 55
 
+    /** Small-window card placement (percent of the panel), 1 % steps. */
+    val smallWindowXPercents = (10..90 step 1).toList()
+    val smallWindowYPercents = (15..70 step 1).toList()
+
     fun card(
         panelWidth: Int,
         panelHeight: Int,

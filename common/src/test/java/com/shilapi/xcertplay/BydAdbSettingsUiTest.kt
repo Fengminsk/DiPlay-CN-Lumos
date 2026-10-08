@@ -83,7 +83,7 @@ class BydAdbSettingsUiTest {
             render(LocalAdb.Access.READY)
             assertEquals(if (mode == WirelessHotspotMode.MANUAL) View.VISIBLE else View.GONE, controls.visibility)
             assertEquals(mode == WirelessHotspotMode.MANUAL, labels(controls).contains(activity.getString(R.string.auto_car_hotspot_title)))
-            assertEquals(3, switches(advancedVehicleData()).size)
+            assertEquals(4, switches(advancedVehicleData()).size)
             assertTrue(CarHotspotSettings.enabled(activity))
             assertTrue(AirPlayPersistence.loadAutoStartOnBoot(activity))
         }

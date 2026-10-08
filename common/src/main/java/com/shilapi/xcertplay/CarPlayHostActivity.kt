@@ -300,6 +300,7 @@ class CarPlayHostActivity : ComponentActivity() {
     private var statusView: TextView? = null
     private var statusScrollView: ScrollView? = null
     private var stageStatusView: TextView? = null
+    private var stageHintView: TextView? = null
     private var resolutionValueView: TextView? = null
     private var resolutionPreviewView: TextView? = null
     private var hotspotStatusView: TextView? = null
@@ -443,10 +444,14 @@ class CarPlayHostActivity : ComponentActivity() {
     private var startAfterHandshakeReset = false
     private var restartGeneration = 0
     private var reconnectScheduled = false
+    // The marker safe area is fixed when stream 111 is requested. Compare it with the
+    // observed instrument mode so a late Usage Access result or a live mode change is applied.
     private var requestedSmallWindowForStream: Boolean? = null
+    /** Wheel-menu navi mode from ADB (DiLink 5). Null until a successful read. */
     @Volatile private var adbNaviMode: com.shilapi.xcertplay.hud.BydClusterNaviMode? = null
     private var sessionLog: SessionLogFile? = null
     private var gestureFingerCount = 3
+    private var swipeOpensFullSettings = false
     private var settingsGestureHint: TextView? = null
     private var gestureSequenceActive = false
     private var gestureTracking = false
@@ -637,6 +642,7 @@ class CarPlayHostActivity : ComponentActivity() {
             nightSchedule,
         )
         gestureFingerCount = AirPlayPersistence.loadSettingsGestureFingers(this)
+        swipeOpensFullSettings = AirPlayPersistence.loadSwipeOpensFullSettings(this)
         displayScalePercent = AirPlayPersistence.loadDisplayScalePercent(this)
         displayScaleTenths = CarPlayDisplayScale.sanitize((displayScalePercent + 5) / 10)
         // Size is now chosen only through CarPlaySize; ignore the canvas scale older builds stored.
@@ -852,15 +858,18 @@ class CarPlayHostActivity : ComponentActivity() {
         advancedAudioChannelMapping =
             advancedAudioChannelMappingSupported &&
                 AirPlayPersistence.loadAdvancedAudioChannelMapping(this)
+        // Usage Access is the fallback for small-window auto; ADB navi mode is preferred on DiLink 5.
         val followClusterUsage = DiLink51ClusterLayout.automatic(this) ||
-            AirPlayPersistence.loadClusterSmallWindowMode(this) == CLUSTER_SMALL_WINDOW_AUTO
+            (AirPlayPersistence.loadClusterSmallWindowMode(this) == CLUSTER_SMALL_WINDOW_AUTO &&
+                adbNaviMode == null)
         if (followClusterUsage && clusterMonitor == null) {
             clusterMonitor = DiLink51ClusterMonitor(this, ::onClusterActivityState).also { it.start() }
         } else if (!followClusterUsage) {
             clusterMonitor?.stop()
             clusterMonitor = null
         }
-        if (AirPlayPersistence.loadClusterSmallWindowMode(this) == CLUSTER_SMALL_WINDOW_AUTO) {
+        val followAdbNavi = AirPlayPersistence.loadClusterSmallWindowMode(this) == CLUSTER_SMALL_WINDOW_AUTO
+        if (followAdbNavi) {
             com.shilapi.xcertplay.hud.BydNavigationOutputs.setClusterNaviModeListener { mode ->
                 mainHandler.post { onAdbNaviMode(mode) }
             }
@@ -868,7 +877,10 @@ class CarPlayHostActivity : ComponentActivity() {
             com.shilapi.xcertplay.hud.BydNavigationOutputs.setClusterNaviModeListener(null)
             adbNaviMode = null
         }
-        if (!menuOpen) gestureFingerCount = AirPlayPersistence.loadSettingsGestureFingers(this)
+        if (!menuOpen) {
+            gestureFingerCount = AirPlayPersistence.loadSettingsGestureFingers(this)
+            swipeOpensFullSettings = AirPlayPersistence.loadSwipeOpensFullSettings(this)
+        }
         settingsGestureHint?.text = getString(R.string.open_diplay_settings_hint, gestureFingerCount)
         ensureClusterPresentation()
         AirPlayPersistence.overlaySettingsListener = { runOnUiThread { applyClusterTurnOverlay() } }
@@ -911,7 +923,8 @@ class CarPlayHostActivity : ComponentActivity() {
             applyClusterTurnOverlay()
             if (CarPlayBackgroundSession.active && requestedSmallWindowForStream != null &&
                 requestedSmallWindowForStream != smallWindowActive()) {
-                reconnectAfterLoss("Cluster small-window navi ${if (smallWindowActive()) "on" else "off"}")
+                if (menuOpen) recoveryPendingAfterMenu = true
+                else reconnectAfterLoss("Cluster small-window navi ${if (smallWindowActive()) "on" else "off"}")
             }
         }
     }
@@ -925,6 +938,8 @@ class CarPlayHostActivity : ComponentActivity() {
         if (AirPlayPersistence.loadClusterSmallWindowMode(this) == CLUSTER_SMALL_WINDOW_AUTO &&
             adbNaviMode == null &&
             (previous.smallWindow != state.smallWindow || previous.mapVisible != state.mapVisible)) {
+            // A covered map (360 camera on the turn signal, another cluster page) hides the map
+            // activities momentarily; that is not a real full/small switch — do not reconnect.
             if (!state.mapVisible) {
                 appendLog("Cluster map: map covered; keeping the stream at smallWindow=$requestedSmallWindowForStream")
             } else {
@@ -935,16 +950,6 @@ class CarPlayHostActivity : ComponentActivity() {
                 }
             }
         }
-    }
-
-    private fun smallWindowActive(): Boolean = when (AirPlayPersistence.loadClusterSmallWindowMode(this)) {
-        CLUSTER_SMALL_WINDOW_ON -> true
-        CLUSTER_SMALL_WINDOW_AUTO -> when (adbNaviMode) {
-            com.shilapi.xcertplay.hud.BydClusterNaviMode.SMALL -> true
-            com.shilapi.xcertplay.hud.BydClusterNaviMode.FULL -> false
-            else -> detectedCluster.smallWindow
-        }
-        else -> false
     }
 
     private fun ensureClusterPresentation() {
@@ -967,7 +972,10 @@ class CarPlayHostActivity : ComponentActivity() {
             ensureDiLink51ClusterPresentation(theme)
             return
         }
-        if (clusterPresentation != null) return
+        if (clusterPresentation != null) {
+            applyClusterTurnOverlay()
+            return
+        }
         val display = ClusterMapPresentation.findDisplay(this, theme) ?: run {
             appendLog("Cluster map: no cluster projection display among ${ClusterMapPresentation.describeDisplays(this)}")
             return
@@ -1035,22 +1043,46 @@ class CarPlayHostActivity : ComponentActivity() {
         applyClusterTurnOverlay()
     }
 
+    /** Small-window positions apply when forced on, or when the cluster reports the small navi. */
+    private fun smallWindowActive(): Boolean = when (AirPlayPersistence.loadClusterSmallWindowMode(this)) {
+        CLUSTER_SMALL_WINDOW_ON -> true
+        CLUSTER_SMALL_WINDOW_AUTO -> when (adbNaviMode) {
+            com.shilapi.xcertplay.hud.BydClusterNaviMode.SMALL -> true
+            com.shilapi.xcertplay.hud.BydClusterNaviMode.FULL -> false
+            else -> detectedCluster.smallWindow
+        }
+        else -> false
+    }
+
     private fun applyClusterTurnOverlay() {
         val overlay = CarPlayClusterDisplay.usesCustomTurnCard(AirPlayPersistence.loadClusterContent(this))
+        // CN: the small-window navi keeps a second card rect, and the card glass has a theme override.
+        val smallWindow = smallWindowActive()
+        val xPercent = if (smallWindow) AirPlayPersistence.loadClusterSmallWindowCardXPercent(this)
+            else AirPlayPersistence.loadClusterTurnCardOverlayXPercent(this)
+        val yPercent = if (smallWindow) AirPlayPersistence.loadClusterSmallWindowCardYPercent(this)
+            else AirPlayPersistence.loadClusterTurnCardOverlayYPercent(this)
+        val sizePercent = if (smallWindow) AirPlayPersistence.loadClusterSmallWindowCardSizePercent(this)
+            else AirPlayPersistence.loadClusterTurnCardOverlaySizePercent(this)
+        val cardNight = when (AirPlayPersistence.loadClusterTurnCardTheme(this)) {
+            1 -> false
+            2 -> true
+            else -> darkMode
+        }
+        val smallCardNight = when (AirPlayPersistence.loadClusterSmallWindowCardTheme(this)) {
+            1 -> false
+            2 -> true
+            else -> cardNight
+        }
+        val effectiveNight = if (smallWindow) smallCardNight else cardNight
         ClusterActivityOutput.setTurnCard(if (overlay) clusterTurnGuidance else null,
-            AirPlayPersistence.loadClusterTurnCardOverlayXPercent(this),
-            AirPlayPersistence.loadClusterTurnCardOverlayYPercent(this),
-            AirPlayPersistence.loadClusterTurnCardOverlaySizePercent(this),
-            AirPlayPersistence.loadClusterTurnCardOpacityPercent(this), darkMode)
+            xPercent, yPercent, sizePercent,
+            AirPlayPersistence.loadClusterTurnCardOpacityPercent(this), effectiveNight)
         val presentations = (clusterLayers.values + listOfNotNull(clusterPresentation)).distinct()
         for (presentation in presentations) {
-            presentation.setTurnCardOverlay(
-                AirPlayPersistence.loadClusterTurnCardOverlayXPercent(this),
-                AirPlayPersistence.loadClusterTurnCardOverlayYPercent(this),
-                AirPlayPersistence.loadClusterTurnCardOverlaySizePercent(this),
-            )
+            presentation.setTurnCardOverlay(xPercent, yPercent, sizePercent)
             presentation.setTurnCardOpacity(AirPlayPersistence.loadClusterTurnCardOpacityPercent(this))
-            presentation.setTurnCardNightMode(darkMode)
+            presentation.setTurnCardNightMode(effectiveNight)
             presentation.setTurnCardGuidance(if (overlay) clusterTurnGuidance else null)
         }
     }
@@ -1144,18 +1176,21 @@ class CarPlayHostActivity : ComponentActivity() {
                         AirPlayPersistence.loadClusterSafeAreaRect(this),
                     ).also { MapMirrors.streamAspect = it.widthPixels.toDouble() / it.heightPixels }
                 }
-                val requestedScale = AirPlayPersistence.loadClusterMapScalePercent(this)
+                // CN: in small-window navi the marker keeps a second position inside the visible window.
                 val smallWindow = smallWindowActive()
                 requestedSmallWindowForStream = smallWindow
+                val requestedScale = AirPlayPersistence.loadClusterMapScalePercent(this)
                 fun streamAt(scale: Int) = CarPlayClusterDisplay.config(
                     size.x,
                     size.y,
                     scale,
-                    if (smallWindow) AirPlayPersistence.loadClusterSmallWindowMarkerHorizontalStep(this)
-                    else AirPlayPersistence.loadClusterMarkerHorizontalStep(this),
-                    if (smallWindow) AirPlayPersistence.loadClusterSmallWindowMarkerVerticalStep(this)
-                    else AirPlayPersistence.loadClusterMarkerVerticalStep(this),
+                    0,
+                    0,
                     AirPlayPersistence.loadClusterContent(this),
+                    markerXPercent = if (smallWindow) AirPlayPersistence.loadClusterSmallWindowMarkerXPercent(this)
+                    else AirPlayPersistence.loadClusterMarkerXPercent(this),
+                    markerYPercent = if (smallWindow) AirPlayPersistence.loadClusterSmallWindowMarkerYPercent(this)
+                    else AirPlayPersistence.loadClusterMarkerYPercent(this),
                 )
                 val requested = streamAt(requestedScale)
                 // The smaller-map preset enlarges the encoded canvas beyond this panel. Probe
@@ -1174,7 +1209,7 @@ class CarPlayHostActivity : ComponentActivity() {
                 } else requested
                 return effective.also {
                     MapMirrors.streamAspect = it.widthPixels.toDouble() / it.heightPixels
-                    appendLog("Cluster map: requesting ${it.widthPixels}x${it.heightPixels} on ${size.x}x${size.y} safeArea=${it.safeArea} url=${it.initialUrl}")
+                    appendLog("Cluster map: requesting ${it.widthPixels}x${it.heightPixels} on ${size.x}x${size.y} smallWindow=$smallWindow safeArea=${it.safeArea} url=${it.initialUrl}")
                 }
             }
         }
@@ -1450,6 +1485,11 @@ class CarPlayHostActivity : ComponentActivity() {
             gravity = Gravity.CENTER
         }
         panel.addView(stage)
+        val stageHint = TextView(this).apply {
+            gravity = Gravity.CENTER
+            text = getString(R.string.connection_stage_diagnostic_hint)
+        }
+        panel.addView(stageHint)
         val instructions = TextView(this).apply {
             text = if (wirelessEnabled) getString(R.string.keep_your_iphone_nearby_with_bluetooth_and_wi_fi_on_allow)
                 else getString(R.string.use_a_usb_data_cable_and_unlock_your_iphone_allow_trust_an)
@@ -1496,6 +1536,7 @@ class CarPlayHostActivity : ComponentActivity() {
             viewport.setBackgroundColor(colors.background)
             title.setTextColor(colors.text)
             stage.setTextColor(colors.text)
+            stageHint.setTextColor(colors.secondary)
             instructions.setTextColor(colors.secondary)
             gestureHint.setTextColor(colors.secondary)
             val buttonPalette = DiPlayPalette.of(darkMode)
@@ -1533,6 +1574,8 @@ class CarPlayHostActivity : ComponentActivity() {
             title.textSize = size(26f, 34f)
             title.setPadding(0, spacing(8f, 18f), 0, spacing(6f, 14f))
             stage.textSize = size(19f, 22f)
+            stageHint.textSize = size(14f, 16f)
+            stageHint.setPadding(0, spacing(5f, 8f), 0, 0)
             instructions.textSize = size(15f, 17f)
             instructions.setPadding(0, spacing(8f, 14f), 0, spacing(12f, 24f))
             for (button in listOf(back, recovery, retry)) {
@@ -1572,6 +1615,7 @@ class CarPlayHostActivity : ComponentActivity() {
         gestureOverlay = gestureLayer
         settingsGestureHint = gestureHint
         stageStatusView = stage
+        stageHintView = stageHint
         connectionPanel = viewport
         updateDebugOverlays()
         return root
@@ -1740,14 +1784,46 @@ class CarPlayHostActivity : ComponentActivity() {
             setPadding(dp(48), dp(36), dp(48), dp(36))
         }
         content.addView(
-            menuText(getString(R.string.carplay_settings), 32f, MENU_PRIMARY, bold = true).apply {
-                setPadding(dp(56), 0, 0, 0)
+            menuText(getString(R.string.carplay_settings), 30f, Color.WHITE, bold = true).apply {
+                setPadding(dp(4), 0, 0, dp(2))
             },
             LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,
                 ViewGroup.LayoutParams.WRAP_CONTENT,
             ),
         )
+        // Keep the full settings at the top — the in-session menu covers only a subset.
+        content.addView(menuButton(getString(R.string.open_full_settings), MENU_TRACK_OFF, Color.WHITE) {
+            cancelSettingsEdits()
+            showDiPlayHome("settings")
+        }, LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(16) })
+        // CN: live small-window state so 自动 mode is observable straight from CarPlay.
+        if (AirPlayPersistence.loadClusterMapEnabled(this) &&
+            AirPlayPersistence.loadClusterSmallWindowMode(this) != 0) {
+            val mode = AirPlayPersistence.loadClusterSmallWindowMode(this)
+            val state = when {
+                mode == CLUSTER_SMALL_WINDOW_ON -> getString(R.string.settings_cluster_menu_small_state_small)
+                smallWindowActive() -> getString(R.string.settings_cluster_menu_small_state_small)
+                adbNaviMode == com.shilapi.xcertplay.hud.BydClusterNaviMode.FULL ||
+                    detectedCluster.mapVisible -> getString(R.string.settings_cluster_menu_small_state_full)
+                else -> getString(R.string.settings_cluster_menu_small_state_unknown)
+            }
+            content.addView(
+                menuText("${getString(R.string.settings_cluster_menu_small_title)} · $state", 15f, MENU_ACCENT).apply {
+                    setPadding(dp(4), dp(6), 0, 0)
+                },
+                LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT),
+            )
+            if (mode == CLUSTER_SMALL_WINDOW_AUTO && adbNaviMode == null &&
+                !DiLink51ClusterMonitor.hasAccess(this)) {
+                content.addView(
+                    menuText(getString(R.string.cluster_small_window_access_missing), 14f, MENU_DANGER).apply {
+                        setPadding(dp(4), dp(4), 0, 0)
+                    },
+                    LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT),
+                )
+            }
+        }
         if (sessionDisplay?.viewAreas?.sidePanel() != null) {
             content.addView(Button(this).apply {
                 text = getString(if (sidePanelShown) R.string.side_panel_full_screen else R.string.side_panel_show)
@@ -1794,7 +1870,7 @@ class CarPlayHostActivity : ComponentActivity() {
             LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,
                 ViewGroup.LayoutParams.WRAP_CONTENT,
-            ).apply { topMargin = dp(30) },
+            ).apply { topMargin = dp(18) },
         )
 
         content.addView(
@@ -2111,31 +2187,19 @@ class CarPlayHostActivity : ComponentActivity() {
             ).apply { topMargin = dp(30) },
         )
 
-        val save = Button(this).apply {
-            text = getString(R.string.save_and_reconnect)
-            isAllCaps = false
-            textSize = 17f
-            setTextColor(MENU_BUTTON_TEXT)
-            backgroundTintList = ColorStateList.valueOf(MENU_ACCENT)
-            minHeight = dp(52)
-            setOnClickListener { saveSettingsAndReconnect() }
+        val save = menuButton(getString(R.string.save_and_reconnect), MENU_ACCENT, MENU_BUTTON_TEXT) {
+            saveSettingsAndReconnect()
         }
         content.addView(
             save,
             LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,
                 ViewGroup.LayoutParams.WRAP_CONTENT,
-            ).apply { topMargin = dp(46) },
+            ).apply { topMargin = dp(32) },
         )
 
-        val exitApplicationButton = Button(this).apply {
-            text = getString(R.string.exit_application)
-            isAllCaps = false
-            textSize = 17f
-            setTextColor(Color.WHITE)
-            backgroundTintList = ColorStateList.valueOf(MENU_DANGER)
-            minHeight = dp(52)
-            setOnClickListener { exitApplication() }
+        val exitApplicationButton = menuButton(getString(R.string.exit_application), MENU_DANGER, Color.WHITE) {
+            exitApplication()
         }
         content.addView(
             exitApplicationButton,
@@ -2145,40 +2209,40 @@ class CarPlayHostActivity : ComponentActivity() {
             ).apply { topMargin = dp(12) },
         )
 
-        content.addView(Button(this).apply {
-            text = getString(R.string.language_app_language)
-            isAllCaps = false
-            setOnClickListener { AppLocale.showPicker(this@CarPlayHostActivity) }
+        content.addView(menuButton(getString(R.string.language_app_language), MENU_TRACK_OFF, Color.WHITE) {
+            AppLocale.showPicker(this@CarPlayHostActivity)
         }, LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(12) })
 
-        val gestureButton = Button(this).apply {
-            isAllCaps = false
-            setOnClickListener {
-                gestureFingerCount = if (gestureFingerCount >= 4) 2 else gestureFingerCount + 1
-                text = getString(R.string.settings_gesture_fingers, gestureFingerCount)
-            }
+        val gestureButton = menuButton("", MENU_TRACK_OFF, Color.WHITE) {
+            gestureFingerCount = if (gestureFingerCount >= 4) 2 else gestureFingerCount + 1
+            it.text = getString(R.string.settings_gesture_fingers, gestureFingerCount)
         }
         gestureButton.text = getString(R.string.settings_gesture_fingers, gestureFingerCount)
         content.addView(gestureButton, LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(12) })
 
-        val openDiPlaySettingsButton = Button(this).apply {
-            text = "${getString(R.string.app_name)} ${getString(R.string.settings)}"
-            isAllCaps = false
-            textSize = 17f
-            setTextColor(MENU_PRIMARY)
-            backgroundTintList = ColorStateList.valueOf(MENU_TRACK_OFF)
-            minHeight = dp(52)
-            setOnClickListener {
-                cancelSettingsEdits()
-                showDiPlayHome("settings")
-            }
-        }
         content.addView(
-            openDiPlaySettingsButton,
+            settingsChoiceRow(
+                label = getString(R.string.settings_swipe_target_label),
+                options = listOf(
+                    false to getString(R.string.settings_swipe_target_overlay),
+                    true to getString(R.string.settings_swipe_target_full),
+                ),
+                selected = swipeOpensFullSettings,
+            ) { value ->
+                swipeOpensFullSettings = value
+                AirPlayPersistence.saveSwipeOpensFullSettings(this, value)
+            },
             LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,
                 ViewGroup.LayoutParams.WRAP_CONTENT,
             ).apply { topMargin = dp(12) },
+        )
+        content.addView(
+            menuText(getString(R.string.settings_swipe_target_hint), 16f, MENU_SECONDARY),
+            LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT,
+            ).apply { topMargin = dp(6) },
         )
 
         val scroll = ScrollView(this).apply {
@@ -2243,6 +2307,7 @@ class CarPlayHostActivity : ComponentActivity() {
 
     private fun persistMenuSettings() {
         AirPlayPersistence.saveSettingsGestureFingers(this, gestureFingerCount)
+        AirPlayPersistence.saveSwipeOpensFullSettings(this, swipeOpensFullSettings)
         AirPlayPersistence.saveWirelessEnabled(this, wirelessEnabled)
         AirPlayPersistence.saveMfiTarget(this, mfiTarget)
         AirPlayPersistence.saveMfiI2cPath(this, mfiI2cPath)
@@ -3355,6 +3420,23 @@ class CarPlayHostActivity : ComponentActivity() {
         WirelessHotspotMode.EXISTING_WIFI -> getString(R.string.existing_wifi_title)
     }
 
+    /** Rounded in-session menu button: one shape for primary, danger and quiet actions. */
+    private fun menuButton(label: String, bgColor: Int, fgColor: Int, onClick: (Button) -> Unit): Button =
+        Button(this).apply {
+            text = label
+            isAllCaps = false
+            textSize = 17f
+            setTextColor(fgColor)
+            setPadding(dp(20), 0, dp(20), 0)
+            minHeight = dp(52)
+            stateListAnimator = null
+            setBackgroundDrawable(android.graphics.drawable.GradientDrawable().apply {
+                setColor(bgColor)
+                cornerRadius = dp(14).toFloat()
+            })
+            setOnClickListener { onClick(it as Button) }
+        }
+
     private fun menuText(
         text: String,
         sizeSp: Float,
@@ -3955,11 +4037,13 @@ class CarPlayHostActivity : ComponentActivity() {
                     reconnectAttempts = 0
                     logThemeState(ThemeModeDiagnostics.Source.SESSION_ACTIVE, resources.configuration)
                     syncAirPlayDarkMode(ThemeModeDiagnostics.Source.SESSION_ACTIVE)
+                    // A monitor result may arrive after the stream geometry was requested.
                     applyClusterTurnOverlay()
                     if (AirPlayPersistence.loadClusterSmallWindowMode(this@CarPlayHostActivity) == CLUSTER_SMALL_WINDOW_AUTO &&
                         requestedSmallWindowForStream != null &&
                         requestedSmallWindowForStream != smallWindowActive()) {
-                        reconnectAfterLoss("Cluster small-window navi ${if (smallWindowActive()) "on" else "off"}")
+                        if (menuOpen) recoveryPendingAfterMenu = true
+                        else reconnectAfterLoss("Cluster small-window navi ${if (smallWindowActive()) "on" else "off"}")
                     }
                     if (menuOpen) return@runOnUiThread
                     appendLog("AirPlay session active")
@@ -4053,6 +4137,7 @@ class CarPlayHostActivity : ComponentActivity() {
         updateHotspotStatus(status)
         val description = status.describe()
         setConnectionStage(description)
+        stageHintView?.text = connectionStageHint(status)
         when (status) {
             is CarPlayStatus.Failed -> if (status.wifiResetRequired) {
                 wifiRecoveryButton?.visibility = View.VISIBLE
@@ -4087,6 +4172,7 @@ class CarPlayHostActivity : ComponentActivity() {
         adbClusterConfigured = AdbClusterRouter.enabled(this) && snapshot.controller.configuredClusterSize() ==
             (DiLink4ClusterDisplay.STREAM_WIDTH to DiLink4ClusterDisplay.STREAM_HEIGHT)
         controller = snapshot.controller
+        requestedSmallWindowForStream = snapshot.requestedSmallWindowForStream
         updateClusterMapShown()
         sink = snapshot.sink
         sessionDisplay = snapshot.display
@@ -4100,7 +4186,7 @@ class CarPlayHostActivity : ComponentActivity() {
         }
         MapMirrors.reapply()
         CarPlayBackgroundSession.store(snapshot.controller, snapshot.sink, snapshot.width, snapshot.height,
-            this, snapshot.display) { completion ->
+            this, snapshot.display, requestedSmallWindowForStream) { completion ->
             runOnUiThread {
                 shutdown(false, "DiPlay disconnect", completion)
                 finish()
@@ -4235,7 +4321,8 @@ class CarPlayHostActivity : ComponentActivity() {
         )
         sessionDisplay = display
         videoView?.let { updateVideoLayout(it.width, it.height) }
-        CarPlayBackgroundSession.store(next, renderer, size.width, size.height, this, display) { completion ->
+        CarPlayBackgroundSession.store(next, renderer, size.width, size.height, this, display,
+            requestedSmallWindowForStream) { completion ->
             runOnUiThread {
                 shutdown(terminateProcess = false, reason = "DiPlay disconnect", completion = completion)
                 finish()
@@ -4566,6 +4653,8 @@ class CarPlayHostActivity : ComponentActivity() {
         mainHandler.postDelayed(
             {
                 reconnectScheduled = false
+                if (reason.startsWith("Cluster small-window navi") && CarPlayBackgroundSession.active &&
+                    requestedSmallWindowForStream == smallWindowActive()) return@postDelayed
                 if (menuOpen && generation == restartGeneration) recoveryPendingAfterMenu = true
                 if (
                     shuttingDown.get() ||
@@ -4900,7 +4989,11 @@ class CarPlayHostActivity : ComponentActivity() {
                 ) {
                     gestureSequenceActive = false
                     gestureTracking = false
-                    openSettingsMenu()
+                    if (AirPlayPersistence.loadSwipeOpensFullSettings(this)) {
+                        showDiPlayHome("settings")
+                    } else {
+                        openSettingsMenu()
+                    }
                     return true
                 }
             }
@@ -4977,8 +5070,24 @@ class CarPlayHostActivity : ComponentActivity() {
     private fun setConnectionStage(message: String) {
         latestStage = message
         stageStatusView?.text = friendlyStage(message)
+        stageHintView?.text = getString(R.string.connection_stage_diagnostic_hint)
         updateDebugOverlays()
     }
+
+    private fun connectionStageHint(status: CarPlayStatus): String = getString(when (status) {
+        CarPlayStatus.WaitingForPairedIphone, CarPlayStatus.ConnectingBluetooth ->
+            R.string.connection_stage_bluetooth_hint
+        CarPlayStatus.StartingHotspot, is CarPlayStatus.HotspotReady,
+        CarPlayStatus.AttachingNetwork -> R.string.connection_stage_wifi_hint
+        CarPlayStatus.RunningWireless, CarPlayStatus.WirelessActive,
+        CarPlayStatus.WirelessActiveFallback, CarPlayStatus.ConnectingControl,
+        CarPlayStatus.RunningControl -> R.string.connection_stage_session_hint
+        CarPlayStatus.DiscoveringIphone, CarPlayStatus.WaitingForIphone,
+        CarPlayStatus.RequestingIphonePermission, CarPlayStatus.WaitingForReenumeration ->
+            R.string.connection_stage_usb_hint
+        is CarPlayStatus.Failed, CarPlayStatus.ControlEnded -> R.string.connection_stage_failed_hint
+        else -> R.string.connection_stage_diagnostic_hint
+    })
 
     private fun updateDebugOverlays() {
         statusScrollView?.visibility = View.GONE
@@ -5191,6 +5300,7 @@ internal object CarPlayBackgroundSession {
         val width: Int,
         val height: Int,
         val display: CarPlaySessionDisplay,
+        val requestedSmallWindowForStream: Boolean?,
     )
 
     private var controller: CarPlayController? = null
@@ -5198,18 +5308,26 @@ internal object CarPlayBackgroundSession {
     private var width = 0
     private var height = 0
     private var display: CarPlaySessionDisplay? = null
+    private var requestedSmallWindowForStream: Boolean? = null
 
     @Synchronized
     fun snapshot(): Snapshot? {
         val currentController = controller ?: return null
         val currentSink = sink ?: return null
         val currentDisplay = display ?: return null
-        return Snapshot(currentController, currentSink, width, height, currentDisplay)
+        return Snapshot(currentController, currentSink, width, height, currentDisplay, requestedSmallWindowForStream)
     }
 
     @Synchronized
     fun store(controller: CarPlayController, sink: AndroidMediaSink, width: Int, height: Int,
         owner: Any, display: CarPlaySessionDisplay, stop: (() -> Unit) -> Unit) {
+        store(controller, sink, width, height, owner, display, null, stop)
+    }
+
+    @Synchronized
+    fun store(controller: CarPlayController, sink: AndroidMediaSink, width: Int, height: Int,
+        owner: Any, display: CarPlaySessionDisplay, requestedSmallWindowForStream: Boolean?,
+        stop: (() -> Unit) -> Unit) {
         this.stopAction = stop
         this.owner = owner
         this.controller = controller
@@ -5217,6 +5335,7 @@ internal object CarPlayBackgroundSession {
         this.width = width
         this.height = height
         this.display = display
+        this.requestedSmallWindowForStream = requestedSmallWindowForStream
     }
 
     @Synchronized
@@ -5229,5 +5348,6 @@ internal object CarPlayBackgroundSession {
         width = 0
         height = 0
         display = null
+        requestedSmallWindowForStream = null
     }
 }

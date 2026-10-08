@@ -1,0 +1,70 @@
+name: Gitee attach
+
+# Manual fallback when the release workflow's own Gitee sync stalls:
+# scripts/gitee_attach_tag.txt names the tag whose assets (re)attach to Gitee.
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  attach:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - name: Read the pending tag
+        id: tag
+        run: echo "tag=$(cat scripts/gitee_attach_tag.txt | tr -d '[:space:]')" >> "$GITHUB_OUTPUT"
+      - name: Nothing pending
+        if: steps.tag.outputs.tag == '' || steps.tag.outputs.tag == 'none'
+        run: echo "no pending tag; skipping"
+      - name: Attach release assets to Gitee
+        if: steps.tag.outputs.tag != '' && steps.tag.outputs.tag != 'none'
+        env:
+          GITEE_TOKEN: ${{ secrets.GITEE_TOKEN }}
+          TAG: ${{ steps.tag.outputs.tag }}
+        run: |
+          set -euo pipefail
+          api="https://gitee.com/api/v5/repos/oneeyear/DiPlay-CN"
+          apk="DiPlay-cn-$TAG.apk"
+          base="https://github.com/serein-morii/DiPlay-CN/releases/download/$TAG"
+          curl -fsSL --retry 5 -o "$apk" "$base/$apk"
+          curl -fsSL --retry 5 -o "$apk.sha256" "$base/$apk.sha256"
+          expected=$(cut -d' ' -f1 "$apk.sha256")
+          actual=$(sha256sum "$apk" | cut -d' ' -f1)
+          [ "$expected" = "$actual" ] || { echo "::error::downloaded APK hash mismatch"; exit 1; }
+          id="$(curl -fsS "$api/releases/tags/$TAG?access_token=$GITEE_TOKEN" | python3 -c 'import json,sys; print(json.load(sys.stdin).get("id") or "")' || true)"
+          if [ -z "$id" ]; then
+            code="$(curl -sS -o /tmp/gitee-create.json -w '%{http_code}' -X POST "$api/releases" \
+              --data-urlencode "access_token=$GITEE_TOKEN" \
+              --data-urlencode "tag_name=$TAG" \
+              --data-urlencode "name=DiPlay CN ${TAG#v}" \
+              --data-urlencode "target_commitish=main" \
+              --data-urlencode "body=See https://github.com/serein-morii/DiPlay-CN/releases/tag/$TAG")"
+            id="$(python3 -c 'import json; print(json.load(open("/tmp/gitee-create.json")).get("id") or "")' 2>/dev/null || true)"
+            [ -n "$id" ] || { echo "::error::Gitee release creation failed (HTTP $code)"; exit 1; }
+          fi
+          for f in "$apk.sha256" "$apk"; do
+            ok=""
+            for attempt in 1 2 3 4 5; do
+              if curl -fsS --max-time 600 -X POST "$api/releases/$id/attach_files" \
+                  -F "access_token=$GITEE_TOKEN" -F "file=@$f" >/dev/null; then ok=1; break; fi
+              echo "attach $f attempt $attempt failed; retrying in 15s"
+              sleep 15
+            done
+            [ -n "$ok" ] || { echo "::error::attaching $f failed after retries"; exit 1; }
+          done
+          curl -fsS --max-time 600 -o "/tmp/verify.apk" "$api/releases/download/$TAG/$apk" 2>/dev/null || \
+            curl -fsSL --max-time 600 -o "/tmp/verify.apk" "https://gitee.com/oneeyear/DiPlay-CN/releases/download/$TAG/$apk"
+          got=$(sha256sum /tmp/verify.apk | cut -d' ' -f1)
+          [ "$got" = "$expected" ] || { echo "::error::Gitee asset differs from the GitHub artifact"; exit 1; }
+          echo "Gitee attach verified: $TAG id=$id"
+          echo "none" > scripts/gitee_attach_tag.txt
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git commit -am "ci: clear the Gitee attach queue ($TAG)" || true
+          git push

@@ -87,8 +87,12 @@ class ClusterMapScaleCapabilityTest {
         AirPlayPersistence.saveClusterSafeAreaRect(activity, SafeAreaRect(300, 100, 1500, 620))
 
         val actual = cluster(100)
+        // CN keeps the marker on a 1 % grid, so the expected safe area follows the migrated
+        // percents (from the saved steps) instead of the raw step math.
+        val markerX = AirPlayPersistence.loadClusterMarkerXPercent(activity)
+        val markerY = AirPlayPersistence.loadClusterMarkerYPercent(activity)
         val expected = CarPlayClusterDisplay.config(1280, 480, 100, 1, -1,
-            CarPlayClusterDisplay.Content.INSTRUMENTS)
+            CarPlayClusterDisplay.Content.INSTRUMENTS, markerXPercent = markerX, markerYPercent = markerY)
         assertEquals(expected, actual)
         assertEquals(1280.0 / 480.0, MapMirrors.streamAspect, 0.0001)
         assertTrue(activity.javaClass.getDeclaredField("clusterStreamOnDisplay")
