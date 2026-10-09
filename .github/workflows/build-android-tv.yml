@@ -1,4 +1,4 @@
-name: Build DiPlay Android TV source APK
+name: Build DiPlay Android TV APKs
 
 on:
   workflow_dispatch:
@@ -9,7 +9,7 @@ permissions:
 jobs:
   build:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 45
     steps:
       - uses: actions/checkout@v4
       - name: Reject credential files in public source
@@ -30,3 +30,43 @@ jobs:
           path: mobile/build/outputs/apk/debug/*.apk
           if-no-files-found: error
           retention-days: 7
+      - name: Provision published experimental authentication identity
+        shell: bash
+        run: |
+          set -euo pipefail
+          apk="$RUNNER_TEMP/DiPlay-0.2.14.apk"
+          assets="$RUNNER_TEMP/auth-assets"
+          curl -fsSL --retry 3 -o "$apk" \
+            'https://github.com/shihabal3amri/DiPlay/releases/download/v0.2.14/DiPlay-0.2.14.apk'
+          python3 scripts/extract_official_identity.py "$apk" "$assets" \
+            '62b31f79db32bc7c85013ae830460b697a5952fad571ed0030b97341dde0b2e3'
+          echo "DIPLAY_AUTH_ASSETS_DIR=$assets" >> "$GITHUB_ENV"
+      - name: Build standalone release APK
+        run: ./gradlew :mobile:assembleStandaloneRelease --stacktrace
+      - name: Verify package and embedded authentication identity
+        shell: bash
+        run: |
+          set -euo pipefail
+          apk=mobile/build/outputs/apk/release/mobile-release.apk
+          python3 scripts/verify_apk_identity.py "$apk"
+          python3 - "$apk" "$DIPLAY_AUTH_ASSETS_DIR" <<'PY'
+          import sys
+          import zipfile
+          from pathlib import Path
+
+          with zipfile.ZipFile(sys.argv[1]) as archive:
+              for name in ('identity.pk8', 'certificate.p7b'):
+                  expected = (Path(sys.argv[2]) / 'offline-mfi' / name).read_bytes()
+                  actual = archive.read('assets/offline-mfi/' + name)
+                  if actual != expected:
+                      raise SystemExit(f'Embedded {name} does not match the verified input')
+          print('Embedded authentication identity matches the verified public input')
+          PY
+          "$ANDROID_HOME/build-tools/36.0.0/apksigner" verify "$apk"
+          python3 scripts/check_public_tree.py
+      - uses: actions/upload-artifact@v4
+        with:
+          name: DiPlay-ColinJZ-standalone-release
+          path: mobile/build/outputs/apk/release/mobile-release.apk
+          if-no-files-found: error
+          retention-days: 3
