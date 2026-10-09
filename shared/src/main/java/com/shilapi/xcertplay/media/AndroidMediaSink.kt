@@ -566,6 +566,9 @@ class AndroidMediaSink(
                 Log.i("xcertplay-usb", "audio mode restored to ${manager.mode}")
             } catch (error: RuntimeException) {
                 Log.w("xcertplay-usb", "could not restore audio mode $savedAudioMode", error)
+                val currentMode = runCatching { manager.mode.toString() }.getOrDefault("unknown")
+                "Audio: mode restore failed requested=$savedAudioMode now=$currentMode" +
+                    " error=${error.javaClass.simpleName}"
             }
         }
     }
