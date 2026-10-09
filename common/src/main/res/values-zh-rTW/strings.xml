@@ -653,6 +653,7 @@
     <string name="car_button_icon_custom">自訂圖示</string>
     <string name="car_button_in_carplay">CarPlay 中的車輛按鈕</string>
     <string name="car_button_name">名稱</string>
+    <string name="car_button_return_vehicle">返回車輛</string>
     <string name="car_button_saved_next_connection">已儲存。下次連線時，CarPlay 會顯示新的圖示和名稱。</string>
     <string name="carplay_call_controls_experimental">CarPlay 通話按鍵（實驗性）</string>
     <string name="carplay_call_controls_experimental_description">啟用尚未驗證的 DiLink 3 通話、語音與播放／暫停按鍵。仍需實車測試。預設關閉；儀表通話資訊卡是獨立設定。</string>
