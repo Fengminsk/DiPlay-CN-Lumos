@@ -301,8 +301,12 @@ class DiPlayActivity : ComponentActivity(), AppAppearanceOwner {
         interfaceOverride = InterfaceSize.attach(this, base)
     }
 
+    /** Routes an attached phone to the selected projection engine. See [com.shilapi.xcertplay.link.PhoneLinkRouter]. */
+    private var phoneLinkUsb: java.io.Closeable? = null
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        phoneLinkUsb = runCatching { com.shilapi.xcertplay.link.PhoneLinkUsb.attach(this) }.getOrNull()
         CloudLogArchive.start(applicationContext)
         // Back on the home page finishes this activity while the session runs on, so the icon lands here.
         if (savedInstanceState == null && isLauncherIntent(intent) && CarPlayBackgroundSession.hasSession() &&
@@ -488,6 +492,8 @@ class DiPlayActivity : ComponentActivity(), AppAppearanceOwner {
     }
 
     override fun onDestroy() {
+        phoneLinkUsb?.close()
+        phoneLinkUsb = null
         appearanceObserverRemoval?.invoke()
         appearanceObserverRemoval = null
         handler.removeCallbacks(appearancePoll)

@@ -28,4 +28,5 @@ dependencies {
     // The SDK keeps its trust-device table in Room, and defines no androidx.room classes itself.
     implementation("androidx.room:room-runtime:2.4.3")
     implementation(libs.androidx.core.ktx)
+    implementation(libs.kotlinx.coroutines.core)
 }
