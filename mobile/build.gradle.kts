@@ -152,47 +152,66 @@ tasks.register("assembleStandaloneRelease") {
 // =============================================================================================
 val iccoaSdkDex = rootProject.file("icoca/libs/icar-sdk.dex")
 
-fun iccoaBuildTools(): File {
-    val props = Properties()
-    val local = rootProject.file("local.properties")
-    if (local.exists()) FileInputStream(local).use { props.load(it) }
-    val candidates = mutableListOf<File>()
-    System.getenv("ANDROID_HOME")?.let { candidates.add(File(it)) }
-    System.getenv("ANDROID_SDK_ROOT")?.let { candidates.add(File(it)) }
-    props.getProperty("sdk.dir")?.let { candidates.add(File(it)) }
-    val sdkDir = candidates.firstOrNull { it.isDirectory }
-        ?: error("找不到 Android SDK：设置 ANDROID_HOME 或在 local.properties 写 sdk.dir")
-    return sdkDir.resolve("build-tools").listFiles()
-        ?.filter { it.isDirectory }
-        ?.filter { it.resolve("lib/apksigner.jar").isFile }
-        ?.filter { it.resolve("zipalign.exe").isFile || it.resolve("zipalign").isFile }
-        ?.maxByOrNull { it.name }
-        ?: error("找不到可用的 build-tools（需要 zipalign 与 lib/apksigner.jar）")
-}
-
-/** Runs a tool and fails the build with its output when it does not exit cleanly. */
-fun runTool(command: List<String>) {
-    val process = ProcessBuilder(command).redirectErrorStream(true).start()
-    val output = process.inputStream.bufferedReader().readText()
-    val code = process.waitFor()
-    check(code == 0) { "${command.first()} 失败（退出码 $code）：\n$output" }
-}
-
+/**
+ * Everything the injection task needs is resolved here, at configuration time, so the action only
+ * captures plain values. Capturing the script object would make the task incompatible with the
+ * configuration cache, which this build enables.
+ */
 val injectIccoaDex by tasks.registering {
     group = "build"
     description = "Append the ICCOA CarLink SDK dex to the packaged APKs and re-sign them"
-    // Reads the signing configs and the output tree at execution time by design.
-    notCompatibleWithConfigurationCache("injects a prebuilt dex after AGP has signed the APK")
-    outputs.upToDateWhen { false }
-    onlyIf { iccoaSdkDex.isFile }
-    doLast {
-        val dexBytes = iccoaSdkDex.readBytes()
-        val buildTools = iccoaBuildTools()
-        val zipalign = buildTools.resolve("zipalign.exe").takeIf { it.isFile }
-            ?: buildTools.resolve("zipalign")
-        val apksignerJar = buildTools.resolve("lib/apksigner.jar")
 
-        val apkRoot = layout.buildDirectory.dir("outputs/apk").get().asFile
+    val dexFile = iccoaSdkDex
+    val buildToolsDir = run {
+        val props = Properties()
+        val local = rootProject.file("local.properties")
+        if (local.exists()) FileInputStream(local).use { props.load(it) }
+        val candidates = mutableListOf<File>()
+        System.getenv("ANDROID_HOME")?.let { candidates.add(File(it)) }
+        System.getenv("ANDROID_SDK_ROOT")?.let { candidates.add(File(it)) }
+        props.getProperty("sdk.dir")?.let { candidates.add(File(it)) }
+        val sdkDir = candidates.firstOrNull { it.isDirectory }
+        sdkDir?.resolve("build-tools")?.listFiles()
+            ?.filter { it.isDirectory }
+            ?.filter { it.resolve("lib/apksigner.jar").isFile }
+            ?.filter { it.resolve("zipalign.exe").isFile || it.resolve("zipalign").isFile }
+            ?.maxByOrNull { it.name }
+    }
+    val zipalignFile = buildToolsDir?.let {
+        it.resolve("zipalign.exe").takeIf { tool -> tool.isFile } ?: it.resolve("zipalign")
+    }
+    val apksignerFile = buildToolsDir?.resolve("lib/apksigner.jar")
+    val apkRootDir = layout.buildDirectory.dir("outputs/apk").get().asFile
+    val signingByType: Map<String, Map<String, String?>> = listOf("debug", "release").associateWith { name ->
+        val config = android.signingConfigs.getByName(name)
+        mapOf(
+            "storeFile" to config.storeFile?.absolutePath,
+            "storePassword" to config.storePassword,
+            "keyAlias" to config.keyAlias,
+            "keyPassword" to config.keyPassword,
+        )
+    }
+
+    inputs.file(dexFile).withPropertyName("iccoaSdkDex").optional()
+    outputs.upToDateWhen { false }
+    onlyIf { dexFile.isFile }
+
+    doLast {
+        val dexBytes = dexFile.readBytes()
+        requireNotNull(buildToolsDir) {
+            "找不到可用的 build-tools：设置 ANDROID_HOME 或在 local.properties 写 sdk.dir"
+        }
+        val zipalign = requireNotNull(zipalignFile) { "build-tools 里没有 zipalign" }
+        val apksignerJar = requireNotNull(apksignerFile) { "build-tools 里没有 lib/apksigner.jar" }
+
+        fun runTool(command: List<String>) {
+            val process = ProcessBuilder(command).redirectErrorStream(true).start()
+            val output = process.inputStream.bufferedReader().readText()
+            val code = process.waitFor()
+            check(code == 0) { "${command.first()} 失败（退出码 $code）：\n$output" }
+        }
+
+        val apkRoot = apkRootDir
         val apks = listOf("debug", "release")
             .map { apkRoot.resolve(it) }
             .filter { it.isDirectory }
@@ -253,22 +272,23 @@ val injectIccoaDex by tasks.registering {
                 zout.close()
             }
             zip.close()
-            logger.lifecycle(">>> [${apk.name}] 已附加 $dexName (${iccoaSdkDex.length()} B)")
+            logger.lifecycle(">>> [${apk.name}] 已附加 $dexName (${dexFile.length()} B)")
 
             // --- 2. align ---
             runTool(listOf(zipalign.absolutePath, "-p", "-f", "4", injected.absolutePath, aligned.absolutePath))
 
             // --- 3. re-sign with the variant's own signing config ---
-            val signing = android.signingConfigs.getByName(if (isRelease) "release" else "debug")
-            val storeFile = signing.storeFile
+            val signing = signingByType.getValue(if (isRelease) "release" else "debug")
+            val storeFilePath = signing["storeFile"]
+            val storeFile = storeFilePath?.let { File(it) }
             if (storeFile != null && storeFile.isFile) {
                 val args = mutableListOf(
                     "java", "-jar", apksignerJar.absolutePath, "sign",
                     "--ks", storeFile.absolutePath,
-                    "--ks-pass", "pass:" + (signing.storePassword ?: ""),
+                    "--ks-pass", "pass:" + (signing["storePassword"] ?: ""),
                 )
-                signing.keyAlias?.let { args += listOf("--ks-key-alias", it) }
-                signing.keyPassword?.let { args += listOf("--key-pass", "pass:$it") }
+                signing["keyAlias"]?.let { args += listOf("--ks-key-alias", it) }
+                signing["keyPassword"]?.let { args += listOf("--key-pass", "pass:$it") }
                 args += listOf("--out", apk.absolutePath, aligned.absolutePath)
                 runTool(args)
                 logger.lifecycle(">>> ${apk.name} 已注入 ICCOA SDK 并重签：${apk.absolutePath}")
