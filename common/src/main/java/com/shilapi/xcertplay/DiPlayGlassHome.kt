@@ -45,6 +45,7 @@ internal class DiPlayGlassHome(
     onCarPlay: () -> Unit,
     onIccoa: () -> Unit,
     onSettings: () -> Unit,
+    onPermissions: () -> Unit,
     onCarHome: () -> Unit,
     onTransport: (Boolean) -> Unit,
 ) : FrameLayout(context) {
@@ -61,6 +62,26 @@ internal class DiPlayGlassHome(
     private val iconTint = if (night) 0xFFEAF2FF.toInt() else 0xFF1C2A3D.toInt()
     private val carButton = topButton(R.drawable.ic_dp_car, R.string.car_home) { onCarHome() }
     private val gearButton = topButton(R.drawable.ic_dp_gear, R.string.settings) { onSettings() }
+    private val permissionButton = TextView(context).apply {
+        gravity = Gravity.CENTER
+        setTextColor(0xFF1B2433.toInt())
+        textSize = 12f
+        typeface = Typeface.create("sans-serif-medium", Typeface.NORMAL)
+        background = RippleDrawable(
+            ColorStateList.valueOf(0x33FFFFFF),
+            GradientDrawable().apply {
+                shape = GradientDrawable.OVAL
+                setColor(0xFFFFC880.toInt())
+            },
+            null,
+        )
+        outlineProvider = roundedOutline(0.5f)
+        elevation = dp(6f)
+        visibility = GONE
+        contentDescription = context.getString(R.string.permission_center_title)
+        setOnClickListener { onPermissions() }
+        DiPlayGlassTouch.install(this)
+    }
     private val carTile = glassTile(
         label = context.getString(R.string.carplay),
         iconRes = R.drawable.ic_carplay,
@@ -87,6 +108,7 @@ internal class DiPlayGlassHome(
         background = null
         addView(carButton)
         addView(gearButton)
+        addView(permissionButton)
         addView(carTile)
         addView(iccoaTile)
         carTile.glassRenderer = { canvas -> drawTileGlassInTile(canvas, carTile) }
@@ -232,6 +254,7 @@ internal class DiPlayGlassHome(
         }
         measure(carButton, 50f, 50f)
         measure(gearButton, 50f, 50f)
+        measure(permissionButton, 50f, 50f)
         measure(carTile, 297f, 297f)
         measure(iccoaTile, 297f, 297f)
         measure(transport, 274f, 60f)
@@ -257,6 +280,7 @@ internal class DiPlayGlassHome(
         }
         place(carButton, 1117f, 39f)
         place(gearButton, 1181f, 39f)
+        place(permissionButton, 1181f, 101f)
         place(carTile, 324f, 177f)
         place(iccoaTile, 659f, 177f)
         place(transport, 503f, 541f)
@@ -654,19 +678,10 @@ internal class DiPlayGlassHome(
         }
     }
 
+
+    /** Home badge under the settings entry: hidden while every permission is already granted. */
+    fun setPermissionBadge(count: Int) {
+        permissionButton.visibility = if (count > 0) View.VISIBLE else View.GONE
+        permissionButton.text = if (count > 9) "9+" else count.toString()
+    }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

@@ -698,6 +698,7 @@ class DiPlayActivity : ComponentActivity(), AppAppearanceOwner {
                     else connect(loadHomeWireless())
                 },
                 onIccoa = { openIccoaPairing() },
+                onPermissions = { showPermissionCenter() },
                 onSettings = {
                     page = "settings"
                     render()
@@ -1400,21 +1401,7 @@ class DiPlayActivity : ComponentActivity(), AppAppearanceOwner {
      * Tapping it opens the permission list.
      */
     private fun updateHomePermissionBadge() {
-        val missing = PermissionCenter.missing(this).size
-        if (page != "home" || missing == 0) {
-            permissionBadgeView?.let { runCatching { (it.parent as? ViewGroup)?.removeView(it) } }
-            permissionBadgeView = null
-            return
-        }
-        val badge = permissionBadgeView ?: permissionBadge(missing).also {
-            permissionBadgeView = it
-            addContentView(it, FrameLayout.LayoutParams(dp(44), dp(44)).apply {
-                gravity = Gravity.TOP or Gravity.END
-                topMargin = dp(96)
-                rightMargin = dp(20)
-            })
-        }
-        (badge as TextView).text = if (missing > 9) "9+" else missing.toString()
+        glassHome?.setPermissionBadge(PermissionCenter.missing(this).size)
     }
 
     private fun permissionBadge(count: Int): View = TextView(this).apply {
@@ -5984,4 +5971,3 @@ private const val STARTUP_PERMISSION_REVIEW_DELAY_MS = 1200L
 
 private var permissionDialogRefresh: (() -> Unit)? = null
 
-private var permissionBadgeView: View? = null
