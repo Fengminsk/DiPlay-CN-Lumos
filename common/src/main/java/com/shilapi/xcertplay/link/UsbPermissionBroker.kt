@@ -28,6 +28,9 @@ object UsbPermissionBroker {
 
     private val pending = ConcurrentHashMap<Int, (Boolean) -> Unit>()
 
+    /** Device ids this process already asked about, so a poll loop cannot stack up dialogs. */
+    private val asked = ConcurrentHashMap.newKeySet<Int>()
+
     @Volatile
     private var receiver: BroadcastReceiver? = null
 
@@ -37,6 +40,9 @@ object UsbPermissionBroker {
     /**
      * Returns the grant through [onResult]. The callback runs on the main thread; a device that is
      * already permitted answers immediately.
+     *
+     * A device is only ever asked about once per process: the attach receiver and the device poller
+     * both see the same phone, and re-posting the prompt for it is what produced a burst of dialogs.
      */
     fun request(context: Context, device: UsbDevice, onResult: (Boolean) -> Unit) {
         val app = context.applicationContext
@@ -45,6 +51,7 @@ object UsbPermissionBroker {
             onResult(true)
             return
         }
+        if (!asked.add(device.deviceId)) return
         ensureReceiver(app)
         pending[device.deviceId] = onResult
         val base = Intent(ACTION)

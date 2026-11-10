@@ -29,7 +29,7 @@ object LinkLog {
     private val sdkMarkers = listOf(
         "UCar_", "easylog_", "UCarProtocol", "AOAHostSetup", "AOAConnectManager",
         "AOAAccessoryReceiver", "ShareLinkService", "BluetoothLeService",
-        "WifiApService", "WifiP2pService",
+        "WifiApService", "WifiP2pService", "MiAuto",
     )
 
     private val stamp = SimpleDateFormat("MM-dd HH:mm:ss.SSS", Locale.US)

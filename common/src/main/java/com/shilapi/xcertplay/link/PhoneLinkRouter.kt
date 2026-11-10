@@ -7,6 +7,7 @@ import android.hardware.usb.UsbManager
 import android.util.Log
 import androidx.core.content.IntentCompat
 import com.shilapi.xcertplay.CarPlayHostActivity
+import com.shilapi.xcertplay.IcocaSettings
 import com.shilapi.xcertplay.icoca.IcocaEngine
 
 /**
@@ -68,8 +69,7 @@ object PhoneLinkRouter {
 
             LinkAction.START_ICCOA -> {
                 LinkLog.startCapture(context)
-                IcocaEngine.start(context)
-                requestUsbAccess(context, device)
+                startIccoa(context, wiredOnly = IcocaSettings.usb(context)) {}
             }
 
             LinkAction.IGNORE -> if (PhoneLinkPolicy.needsUsbAccess(kind, source)) {
@@ -82,12 +82,52 @@ object PhoneLinkRouter {
     }
 
     /**
+     * Starts the engine, but in wired mode only after the phone's USB permission is granted.
+     *
+     * The order is not cosmetic. The SDK's `AOAHostSetup.isPotentialMobileDevice()` calls
+     * `UsbDevice.getSerialNumber()` *before* it checks `hasPermission`, and that throws
+     * `SecurityException` when permission is missing. The scan thread treats any exception as fatal
+     * and returns, so a grant that arrives afterwards can never revive it — the engine has to be
+     * started with the permission already in hand.
+     */
+    fun startIccoa(context: Context, wiredOnly: Boolean, onStarted: () -> Unit) {
+        if (!wiredOnly) {
+            IcocaEngine.start(context, wiredOnly = false)
+            onStarted()
+            return
+        }
+        val usb = context.getSystemService(Context.USB_SERVICE) as UsbManager
+        val device = usb.deviceList.values
+            .firstOrNull { it.vendorId != UsbPhoneClassifier.APPLE_VENDOR_ID }
+        if (device == null) {
+            LinkLog.append(context, "wired: no phone attached yet, starting the engine to wait")
+            IcocaEngine.start(context, wiredOnly = true)
+            onStarted()
+            return
+        }
+        if (UsbPermissionBroker.has(context, device)) {
+            LinkLog.append(context, "wired: permission already held, starting the engine")
+            IcocaEngine.start(context, wiredOnly = true)
+            IcocaEngine.refreshUsb(context)
+            onStarted()
+            return
+        }
+        LinkLog.append(context, "wired: asking for USB permission before starting the engine")
+        UsbPermissionBroker.request(context, device) { granted ->
+            LinkLog.append(context, "wired: permission granted=$granted, starting the engine")
+            IcocaEngine.start(context, wiredOnly = true)
+            IcocaEngine.refreshUsb(context)
+            onStarted()
+        }
+    }
+
+    /**
      * Prompts for USB permission on an attached phone and re-arms the wired scan afterwards.
      *
      * Without this the ICCOA SDK never sees the device: it requires `UsbManager.hasPermission()`
      * and its own automatic grant needs the signature-level `MANAGE_USB`.
      */
-    fun requestUsbAccess(context: Context, device: UsbDevice) {
+    fun requestUsbAccess(context: Context, device: UsbDevice, onResult: ((Boolean) -> Unit)? = null) {
         LinkLog.append(context, "requesting USB permission for vid=0x${device.vendorId.toString(16)}")
         UsbPermissionBroker.request(context, device) { granted ->
             LinkLog.append(context, "USB permission granted=$granted")
@@ -96,6 +136,7 @@ object PhoneLinkRouter {
             } else {
                 Log.w(TAG, "USB permission refused for vid=0x${device.vendorId.toString(16)}")
             }
+            onResult?.invoke(granted)
         }
     }
 

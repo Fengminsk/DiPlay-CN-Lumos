@@ -4852,13 +4852,13 @@ class DiPlayActivity : ComponentActivity(), AppAppearanceOwner {
         PhoneLinkSettings.saveSource(this, ProjectionSource.ICCOA)
         // Keep a file record: a Pad testing against a phone is not on adb, so logcat alone loses it.
         LinkLog.startCapture(this)
-        iccoaStarted = iccoaSdkRuntimeAvailable() && runCatching {
-            IcocaEngine.start(this, wiredOnly = IcocaSettings.usb(this) && !IcocaSettings.wireless(this))
-        }.isSuccess
-        // A phone that was already plugged in never triggers an attach event, so ask for its USB
-        // permission here; without it the SDK's AOA scan skips the device and the link goes wireless.
-        LinkLog.append(this, "ICCOA selected: iccoaStarted=$iccoaStarted")
-        PhoneLinkRouter.requestUsbAccessForAttachedPhones(this)
+        val wired = IcocaSettings.usb(this) && !IcocaSettings.wireless(this)
+        LinkLog.append(this, "ICCOA selected: wired=$wired")
+        // Wired needs the USB grant *before* the SDK scans: the SDK reads the serial number before
+        // checking permission and a SecurityException kills its scan thread for good.
+        PhoneLinkRouter.startIccoa(this, wiredOnly = wired) {
+            iccoaStarted = true
+        }
         val overlay = DiPlayIccoaPairingOverlay(
             context = this,
             night = appNight,
