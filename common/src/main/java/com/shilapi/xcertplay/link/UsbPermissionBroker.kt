@@ -17,26 +17,25 @@ import java.util.concurrent.ConcurrentHashMap
  * The ICCOA SDK's AOA path cannot work without this: `AOAHostSetup.scanUsbDevices()` only accepts
  * devices where `UsbManager.hasPermission()` is already true, and its fallback
  * (`IUsbManager.grantDevicePermission`) needs the signature-level `MANAGE_USB`. The SDK never shows
- * the permission dialog itself, and its scan thread just keeps polling, so granting permission
- * here is enough for the next poll to pick the device up.
+ * the permission dialog itself, and its scan thread treats a missing grant as fatal, so the grant
+ * has to reach us before the device is opened.
+ *
+ * Callers that ask while a prompt for the same device is already in flight are queued instead of
+ * being answered with a made-up "false": deduplicating by replying early silently disabled the
+ * whole path once, because the caller started the engine from that answer.
  */
 object UsbPermissionBroker {
 
     private const val TAG = "DiPlay/UsbPermission"
     private const val ACTION = "com.shilapi.xcertplay.USB_DEVICE_PERMISSION"
     private const val EXTRA_DEVICE_ID = "device_id"
-    private const val MAX_ASKS_PER_PROCESS = 3
+    private const val EXTRA_DEVICE_KEY = "device_key"
 
-    private val pending = ConcurrentHashMap<Int, (Boolean) -> Unit>()
+    /** Prompts allowed per process for one vendor/product pair (AOA re-enumeration needs two). */
+    private const val MAX_PROMPTS_PER_DEVICE = 3
 
-    /** Device keys this process already asked about, so a poll loop cannot stack up dialogs. */
-    private val asked = ConcurrentHashMap.newKeySet<String>()
-
-    /**
-     * A phone re-enumerates when it switches to AOA, and the ROM may bounce it more than once. Cap
-     * the prompts per process so a failing attempt cannot trap the driver in a dialog loop.
-     */
-    private var askCount = 0
+    private val waiting = ConcurrentHashMap<String, MutableList<(Boolean) -> Unit>>()
+    private val prompts = ConcurrentHashMap<String, Int>()
 
     @Volatile
     private var receiver: BroadcastReceiver? = null
@@ -45,11 +44,8 @@ object UsbPermissionBroker {
         usbManager(context).hasPermission(device)
 
     /**
-     * Returns the grant through [onResult]. The callback runs on the main thread; a device that is
-     * already permitted answers immediately.
-     *
-     * A device is only ever asked about once per process: the attach receiver and the device poller
-     * both see the same phone, and re-posting the prompt for it is what produced a burst of dialogs.
+     * Returns the grant through [onResult]. The callback runs on the main thread; an already
+     * permitted device answers immediately, and every caller is answered exactly once.
      */
     fun request(context: Context, device: UsbDevice, onResult: (Boolean) -> Unit) {
         val app = context.applicationContext
@@ -58,22 +54,25 @@ object UsbPermissionBroker {
             onResult(true)
             return
         }
+        val key = "${device.vendorId}:${device.productId}"
         synchronized(this) {
-            if (askCount >= MAX_ASKS_PER_PROCESS ||
-                !asked.add("${device.vendorId}:${device.productId}")
-            ) {
-                // Already asked (or capped). Answer now so callers never wait forever; a permission
-                // that arrives later still reaches the scan through the broadcast below.
+            waiting[key]?.let {
+                it.add(onResult)
+                return
+            }
+            val promptsUsed = prompts[key] ?: 0
+            if (promptsUsed >= MAX_PROMPTS_PER_DEVICE) {
                 onResult(false)
                 return
             }
-            askCount++
+            prompts[key] = promptsUsed + 1
+            waiting[key] = mutableListOf(onResult)
         }
         ensureReceiver(app)
-        pending[device.deviceId] = onResult
         val base = Intent(ACTION)
             .setPackage(app.packageName)
             .putExtra(EXTRA_DEVICE_ID, device.deviceId)
+            .putExtra(EXTRA_DEVICE_KEY, key)
         val flags = PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_MUTABLE
         manager.requestPermission(device, PendingIntent.getBroadcast(app, device.deviceId, base, flags))
     }
@@ -84,10 +83,12 @@ object UsbPermissionBroker {
             if (receiver != null) return
             val created = object : BroadcastReceiver() {
                 override fun onReceive(context: Context, intent: Intent) {
-                    val deviceId = intent.getIntExtra(EXTRA_DEVICE_ID, -1)
                     val granted = intent.getBooleanExtra(UsbManager.EXTRA_PERMISSION_GRANTED, false)
-                    Log.i(TAG, "device $deviceId permission granted=$granted")
-                    pending.remove(deviceId)?.invoke(granted)
+                    val key = intent.getStringExtra(EXTRA_DEVICE_KEY)
+                        ?: intent.getIntExtra(EXTRA_DEVICE_ID, -1).toString()
+                    Log.i(TAG, "device $key permission granted=$granted")
+                    val callbacks = synchronized(this@UsbPermissionBroker) { waiting.remove(key) }
+                    callbacks?.forEach { it(granted) }
                 }
             }
             ContextCompat.registerReceiver(

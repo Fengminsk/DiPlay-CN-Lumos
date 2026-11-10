@@ -78,26 +78,20 @@ object UsbPhoneClassifier {
 }
 
 /**
- * Turns "this phone is attached" plus "the driver chose this projection source" into one action.
+ * Turns "this phone is attached" into one action.
  *
- * The rule is deliberately conservative: a phone only launches the engine the driver picked. An
- * iPhone attached while ICCOA is selected does nothing rather than starting CarPlay behind the
- * driver's back — the UI is what tells them the choice and the phone disagree.
+ * Routing follows the phone, not the saved preference: an iPhone always starts CarPlay and an
+ * Android phone always starts ICCOA. The two-way setting decides what the home screen's buttons
+ * drive, it is not a gate that makes a plugged phone do nothing.
  */
 object PhoneLinkPolicy {
-    fun decide(kind: PhoneKind, source: ProjectionSource): LinkAction = when {
-        kind == PhoneKind.IPHONE && source == ProjectionSource.CARPLAY -> LinkAction.START_CARPLAY
-        kind == PhoneKind.ANDROID && source == ProjectionSource.ICCOA -> LinkAction.START_ICCOA
-        else -> LinkAction.IGNORE
+    fun decide(kind: PhoneKind): LinkAction = when (kind) {
+        PhoneKind.IPHONE -> LinkAction.START_CARPLAY
+        PhoneKind.ANDROID -> LinkAction.START_ICCOA
+        PhoneKind.UNKNOWN -> LinkAction.IGNORE
     }
 
-    /**
-     * Whether an attached device should prompt for USB permission.
-     *
-     * With ICCOA selected, any non-Apple device is a candidate: the SDK's AOA handshake switches a
-     * phone out of whatever mode it started in, so a device we cannot classify yet may still work
-     * once it may be opened. CarPlay has its own permission flow and is left alone.
-     */
+    /** Whether an attached device should prompt for USB permission. */
     fun needsUsbAccess(kind: PhoneKind, source: ProjectionSource): Boolean =
-        source == ProjectionSource.ICCOA && kind != PhoneKind.IPHONE
+        kind == PhoneKind.ANDROID
 }

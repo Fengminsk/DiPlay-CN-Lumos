@@ -47,14 +47,14 @@ object PhoneLinkRouter {
     /** What would happen for this device, without doing it. */
     fun decide(context: Context, device: UsbDevice): LinkAction {
         val kind = UsbPhoneClassifier.classify(signature(device))
-        return PhoneLinkPolicy.decide(kind, PhoneLinkSettings.loadSource(context))
+        return PhoneLinkPolicy.decide(kind)
     }
 
     /** Applies the decision and returns it, so callers (and tests) can see what was chosen. */
     fun onUsbAttached(context: Context, device: UsbDevice): LinkAction {
         val kind = UsbPhoneClassifier.classify(signature(device))
         val source = PhoneLinkSettings.loadSource(context)
-        val action = PhoneLinkPolicy.decide(kind, source)
+        val action = PhoneLinkPolicy.decide(kind)
         Log.i(TAG, "attached vid=0x${device.vendorId.toString(16)} kind=$kind source=$source -> $action")
         LinkLog.append(
             context,

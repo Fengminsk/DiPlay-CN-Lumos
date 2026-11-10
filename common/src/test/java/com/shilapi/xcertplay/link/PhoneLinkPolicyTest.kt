@@ -7,7 +7,7 @@ import org.junit.Test
 
 /**
  * Pins the two rules the auto-launch path depends on: what counts as an iPhone vs an Android
- * phone on the USB bus, and which engine a given phone-plus-choice pair starts.
+ * phone on the USB bus, and which engine an attached phone starts.
  */
 class PhoneLinkPolicyTest {
 
@@ -74,48 +74,25 @@ class PhoneLinkPolicyTest {
     }
 
     @Test
-    fun iphoneStartsCarPlayOnlyWhenCarPlayIsSelected() {
-        assertEquals(
-            LinkAction.START_CARPLAY,
-            PhoneLinkPolicy.decide(PhoneKind.IPHONE, ProjectionSource.CARPLAY),
-        )
-        assertEquals(
-            LinkAction.IGNORE,
-            PhoneLinkPolicy.decide(PhoneKind.IPHONE, ProjectionSource.ICCOA),
-        )
+    fun anIphoneAlwaysStartsCarPlay() {
+        assertEquals(LinkAction.START_CARPLAY, PhoneLinkPolicy.decide(PhoneKind.IPHONE))
     }
 
     @Test
-    fun androidPhoneStartsIccoaOnlyWhenIccoaIsSelected() {
-        assertEquals(
-            LinkAction.START_ICCOA,
-            PhoneLinkPolicy.decide(PhoneKind.ANDROID, ProjectionSource.ICCOA),
-        )
-        assertEquals(
-            LinkAction.IGNORE,
-            PhoneLinkPolicy.decide(PhoneKind.ANDROID, ProjectionSource.CARPLAY),
-        )
+    fun anAndroidPhoneAlwaysStartsIccoa() {
+        assertEquals(LinkAction.START_ICCOA, PhoneLinkPolicy.decide(PhoneKind.ANDROID))
     }
 
     @Test
     fun unrecognisedDeviceNeverStartsAnEngine() {
-        for (source in ProjectionSource.entries) {
-            assertEquals(LinkAction.IGNORE, PhoneLinkPolicy.decide(PhoneKind.UNKNOWN, source))
-        }
+        assertEquals(LinkAction.IGNORE, PhoneLinkPolicy.decide(PhoneKind.UNKNOWN))
     }
 
     @Test
-    fun iccoaAsksForUsbAccessEvenWhenTheDeviceCannotBeClassifiedYet() {
-        // A phone plugged in "charging only" still becomes an AOA accessory once it may be opened.
-        assertTrue(PhoneLinkPolicy.needsUsbAccess(PhoneKind.UNKNOWN, ProjectionSource.ICCOA))
+    fun onlyAndroidPhonesAreAskedForUsbAccess() {
+        // An iPhone's cable belongs to CarPlay's own USB flow.
         assertTrue(PhoneLinkPolicy.needsUsbAccess(PhoneKind.ANDROID, ProjectionSource.ICCOA))
+        assertFalse(PhoneLinkPolicy.needsUsbAccess(PhoneKind.IPHONE, ProjectionSource.CARPLAY))
         assertFalse(PhoneLinkPolicy.needsUsbAccess(PhoneKind.IPHONE, ProjectionSource.ICCOA))
-    }
-
-    @Test
-    fun carplayNeverPromptsForUsbFromThisPath() {
-        for (kind in PhoneKind.entries) {
-            assertFalse(PhoneLinkPolicy.needsUsbAccess(kind, ProjectionSource.CARPLAY))
-        }
     }
 }
