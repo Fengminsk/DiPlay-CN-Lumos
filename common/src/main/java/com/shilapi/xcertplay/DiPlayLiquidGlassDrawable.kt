@@ -57,7 +57,7 @@ internal class DiPlayLiquidGlassDrawable(
 
         paint.shader = if (opaque && dark) {
             LinearGradient(b.left, b.top, b.right, b.bottom,
-                intArrayOf(0xFA24344B.toInt(), 0xFA101D30.toInt()), null, Shader.TileMode.CLAMP)
+                intArrayOf(0xFF24344B.toInt(), 0xFF101D30.toInt()), null, Shader.TileMode.CLAMP)
         } else if (opaque) {
             LinearGradient(b.left, b.top, b.right, b.bottom,
                 intArrayOf(0xFFFFFFFF.toInt(), 0xFFF4F8FF.toInt()), null, Shader.TileMode.CLAMP)
