@@ -2295,12 +2295,24 @@ public class IccoaManager {
      * 扫描线程会一直空转（500ms 一轮）却永远不认这台手机。授权完成后调这里，线程下一轮就能接上。
      */
     public void refreshUsbTransport() {
+        refreshUsbTransport(false);
+    }
+
+    /**
+     * @param force 清掉可能残留的「会话仍在」标记后再武装。断开之后 SDK 状态与本地标记可能不同步，
+     *              那时非强制的重启会被自己拦下，表现就是「断了再也连不上」。
+     */
+    public void refreshUsbTransport(boolean force) {
         if (adapter == null) {
             log("USB 权限已拿到，但 SDK 尚未初始化 —— 初始化时会重新开启有线发现");
             return;
         }
+        if (force) {
+            sessionActive = false;
+            log("USB: 强制重新武装有线扫描（清除残留会话标记）");
+        }
         enableUsbTransport();
-        startAoaScanFallback();
+        startAoaScanFallback(force);
     }
 
     /**
@@ -2313,7 +2325,11 @@ public class IccoaManager {
      * 所以可以直接反射拉起。只在没有会话时做，避免连接中途另开一条链路。
      */
     private void startAoaScanFallback() {
-        if (sessionActive) return;
+        startAoaScanFallback(false);
+    }
+
+    private void startAoaScanFallback(boolean force) {
+        if (sessionActive && !force) return;
         try {
             Class<?> manager = Class.forName("com.ucar.connect.aoa.AOAConnectManager");
             Object instance = manager.getMethod("getInstance").invoke(null);

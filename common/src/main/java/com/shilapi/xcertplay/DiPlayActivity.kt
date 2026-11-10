@@ -4981,6 +4981,7 @@ class DiPlayActivity : ComponentActivity(), AppAppearanceOwner {
         }
         // Keep a file record: a Pad testing against a phone is not on adb, so logcat alone loses it.
         LinkLog.startCapture(this)
+        com.shilapi.xcertplay.icoca.IcocaEngine.startWatchdog(this)
         val wired = IcocaSettings.usb(this) && !IcocaSettings.wireless(this)
         LinkLog.append(this, "ICCOA selected: wired=$wired")
         // Wired needs the USB grant *before* the SDK scans: the SDK reads the serial number before
