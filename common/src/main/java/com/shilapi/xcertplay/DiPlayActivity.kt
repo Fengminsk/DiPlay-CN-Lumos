@@ -60,6 +60,8 @@ import com.shilapi.xcertplay.hud.BydVehicleFieldStore
 import com.shilapi.xcertplay.hud.BydVehicleProbeOutcome
 import com.shilapi.xcertplay.host.R
 import com.shilapi.xcertplay.icoca.IcocaEngine
+import com.shilapi.xcertplay.link.LinkLog
+import com.shilapi.xcertplay.link.PhoneLinkRouter
 import com.shilapi.xcertplay.link.PhoneLinkSettings
 import com.shilapi.xcertplay.link.ProjectionSource
 import com.shilapi.xcertplay.network.CarHotspotSettings
@@ -4838,7 +4840,13 @@ class DiPlayActivity : ComponentActivity(), AppAppearanceOwner {
             return
         }
         PhoneLinkSettings.saveSource(this, ProjectionSource.ICCOA)
+        // Keep a file record: a Pad testing against a phone is not on adb, so logcat alone loses it.
+        LinkLog.startCapture(this)
         iccoaStarted = iccoaSdkRuntimeAvailable() && runCatching { IcocaEngine.start(this) }.isSuccess
+        // A phone that was already plugged in never triggers an attach event, so ask for its USB
+        // permission here; without it the SDK's AOA scan skips the device and the link goes wireless.
+        LinkLog.append(this, "ICCOA selected: iccoaStarted=$iccoaStarted")
+        PhoneLinkRouter.requestUsbAccessForAttachedPhones(this)
         val overlay = DiPlayIccoaPairingOverlay(
             context = this,
             night = appNight,
@@ -5151,6 +5159,9 @@ class DiPlayActivity : ComponentActivity(), AppAppearanceOwner {
                         "connectWhenOpened=${DiPlayPreferences.autoConnect(appContext)} " +
                         "connectOnSelectedPhoneBluetooth=${DiPlayPreferences.connectOnPhoneBluetooth(appContext)}")
                     appendLine(PhoneWakeDiagnostics.report(appContext))
+                    appendLine()
+                    appendLine("--- ICCOA wired link (kept on device, newest last) ---")
+                    appendLine(com.shilapi.xcertplay.link.LinkLog.report(appContext))
                     appendLine()
                     appendLine("--- Recent own-app process exits (Android 11+) ---")
                     appendLine(ProcessExitDiagnostics.report(appContext))

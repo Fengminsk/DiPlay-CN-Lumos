@@ -55,6 +55,11 @@ object PhoneLinkRouter {
         val source = PhoneLinkSettings.loadSource(context)
         val action = PhoneLinkPolicy.decide(kind, source)
         Log.i(TAG, "attached vid=0x${device.vendorId.toString(16)} kind=$kind source=$source -> $action")
+        LinkLog.append(
+            context,
+            "attached vid=0x${device.vendorId.toString(16)} pid=0x${device.productId.toString(16)} " +
+                "kind=$kind source=$source action=$action",
+        )
         when (action) {
             LinkAction.START_CARPLAY -> context.startActivity(
                 Intent(context, CarPlayHostActivity::class.java)
@@ -62,6 +67,7 @@ object PhoneLinkRouter {
             )
 
             LinkAction.START_ICCOA -> {
+                LinkLog.startCapture(context)
                 IcocaEngine.start(context)
                 requestUsbAccess(context, device)
             }
@@ -82,7 +88,9 @@ object PhoneLinkRouter {
      * and its own automatic grant needs the signature-level `MANAGE_USB`.
      */
     fun requestUsbAccess(context: Context, device: UsbDevice) {
+        LinkLog.append(context, "requesting USB permission for vid=0x${device.vendorId.toString(16)}")
         UsbPermissionBroker.request(context, device) { granted ->
+            LinkLog.append(context, "USB permission granted=$granted")
             if (granted) {
                 IcocaEngine.refreshUsb(context)
             } else {
