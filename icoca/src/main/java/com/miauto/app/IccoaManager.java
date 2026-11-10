@@ -28,6 +28,9 @@ import com.ucar.vehiclesdk.UCarCommon;
 import com.ucar.vehiclesdk.UCarConfig;
 import com.ucar.vehiclesdk.audio.UCarAudioManager;
 
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.InputStream;
 import java.util.ArrayDeque;
 import java.util.List;
 import java.util.Random;
@@ -2717,7 +2720,7 @@ public class IccoaManager {
                 .setSupportStereoRecord(false)
                 .setSupportLowLatencyDecodingMode(false)
                 .setSupportPOINav(false)
-                .setCcdFilePath("ccd.data")
+                .setCcdFilePath(ensureCcdFile())
                 .setSupportedWorkModes(workMode);
         String apSsid = ApReusePrefs.ssid(appCtx);
         String apPwd = ApReusePrefs.password(appCtx);
@@ -2732,6 +2735,31 @@ public class IccoaManager {
 
     private static int clamp(int v, int lo, int hi) {
         return v < lo ? lo : (v > hi ? hi : v);
+    }
+
+    /**
+     * The SDK's CarVerifier expects a readable file path, not an asset name. MiAuto ships the
+     * CCD as an asset, so materialise it into files/ once and hand the SDK that absolute path.
+     * Without this the log says "ccd file path is invalid" and the verifier falls back to its
+     * built-in default, which breaks the CarWith handshake on phones that validate the car.
+     */
+    private String ensureCcdFile() {
+        try {
+            File out = new File(appCtx.getFilesDir(), "ccd.data");
+            if (!out.exists() || out.length() == 0) {
+                try (InputStream in = appCtx.getAssets().open("ccd.data");
+                     FileOutputStream os = new FileOutputStream(out)) {
+                    byte[] buffer = new byte[8192];
+                    int read;
+                    while ((read = in.read(buffer)) > 0) os.write(buffer, 0, read);
+                }
+            }
+            log("ccd.data → " + out.getAbsolutePath() + " (" + out.length() + " bytes)");
+            return out.getAbsolutePath();
+        } catch (Throwable t) {
+            log("! ccd.data 复制失败，回退相对路径: " + t);
+            return "ccd.data";
+        }
     }
 
     /** 建链方式偏好的存储位置（键 {@code transport}，取值 p2p / ap / both）。 */

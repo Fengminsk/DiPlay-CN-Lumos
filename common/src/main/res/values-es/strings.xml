@@ -728,4 +728,65 @@
     <string name="setup_badge_adb">Requiere ADB por red</string>
     <string name="setup_done_title">Todo listo</string>
     <string name="setup_done_description">Conecta tu iPhone ahora. Podrás abrir esta guía otra vez desde Ajustes.</string>
+    <string name="glass_iccoa_prompt">Introduce este código en tu teléfono</string>
+    <string name="glass_iccoa_waiting">Esperando tu teléfono…</string>
+    <string name="glass_iccoa_connected">Conectado</string>
+    <string name="glass_iccoa_pairing">Emparejando…</string>
+    <string name="glass_iccoa_hotspot">Activa primero el punto de acceso del coche</string>
+    <string name="glass_iccoa_valid">Válido durante 120 segundos</string>
+    <string name="glass_carplay_prompt">Completa CarPlay en tu iPhone</string>
+    <string name="glass_carplay_usb_find">Buscar iPhone por USB</string>
+    <string name="glass_carplay_usb_permission">Permitir acceso USB</string>
+    <string name="glass_carplay_pair">Emparejar con iPhone</string>
+    <string name="glass_carplay_open">Abrir CarPlay</string>
+    <string name="glass_carplay_hotspot">Iniciar Wi-Fi de CarPlay</string>
+    <string name="glass_carplay_paired">Esperar al iPhone emparejado</string>
+    <string name="glass_carplay_bluetooth">Conectar Bluetooth</string>
+    <string name="glass_carplay_hint">Mantén el iPhone desbloqueado y permite CarPlay cuando se solicite.</string>
+    <string name="glass_carplay_connecting">Conectando…</string>
+    <string name="iccoa_permission_needed">Permite Ubicación y Dispositivos cercanos para que el teléfono complete la conexión Wi-Fi de ICCOA.</string>
+    <string name="settings_iccoa_connection">ICCOA CarLink</string>
+    <string name="settings_iccoa_connection_summary">Cómo se conecta el teléfono Android a esta unidad. Reinicia la aplicación después de cambiar el transporte.</string>
+    <string name="settings_iccoa_transport">Modo de conexión</string>
+    <string name="settings_iccoa_transport_p2p">Wi-Fi Direct</string>
+    <string name="settings_iccoa_transport_ap">Punto de acceso del coche</string>
+    <string name="settings_iccoa_hotspot_ssid">Nombre del punto de acceso</string>
+    <string name="settings_iccoa_hotspot_password">Contraseña del punto de acceso</string>
+    <string name="settings_iccoa_not_set">Sin configurar</string>
+    <string name="settings_iccoa_hotspot_hint">El modo de punto de acceso reutiliza el hotspot de la unidad; actívalo e introduce el nombre y la contraseña.</string>
+    <string name="settings_iccoa_5ghz">Usar solo 5 GHz</string>
+    <string name="settings_iccoa_5ghz_hint">Limita Wi-Fi Direct a 5 GHz. Algunos teléfonos lo necesitan; algunas unidades no admiten P2P en 5 GHz.</string>
+    <string name="settings_iccoa_connect">Conectar teléfono Android</string>
+    <string name="settings_iccoa_restart">Reiniciar DiPlay</string>
+    <string name="settings_iccoa_restart_title">Reinicio necesario</string>
+    <string name="settings_iccoa_restart_message">ICCOA lee el modo de conexión al iniciar el motor. Reinicia la aplicación ahora para aplicarlo.</string>
+    <string name="settings_iccoa_restart_now">Reiniciar ahora</string>
+    <string name="settings_iccoa_p2p_hint">Wi-Fi Direct necesita que el hotspot de la unidad esté apagado; el hotspot y Wi-Fi Direct no pueden funcionar a la vez.</string>
+    <string name="settings_iccoa_summary">Conexión, proyección, micrófono y táctil de ICCOA CarLink.</string>
+    <string name="settings_iccoa_projection">Proyección</string>
+    <string name="settings_iccoa_microphone">Micrófono</string>
+    <string name="settings_iccoa_touch">Táctil y cuadro</string>
+    <string name="settings_iccoa_wireless">Proyección inalámbrica</string>
+    <string name="settings_iccoa_usb">Proyección por USB</string>
+    <string name="settings_iccoa_ble">Difusión BLE de reserva</string>
+    <string name="settings_iccoa_auto">Conectar al abrir la aplicación</string>
+    <string name="settings_iccoa_resolution">Resolución</string>
+    <string name="settings_iccoa_codec">Códec de vídeo</string>
+    <string name="settings_iccoa_dpi">Densidad de píxeles</string>
+    <string name="settings_iccoa_stretch">Estirar para llenar</string>
+    <string name="settings_iccoa_mic_rate">Frecuencia de muestreo</string>
+    <string name="settings_iccoa_mic_echo">Cancelación de eco</string>
+    <string name="settings_iccoa_mic_noise">Supresión de ruido</string>
+    <string name="settings_iccoa_touch_toggle">Superficie táctil medida</string>
+    <string name="settings_iccoa_hud">Duplicar en HUD</string>
 </resources>
+
+
+
+
+
+
+
+
+
+

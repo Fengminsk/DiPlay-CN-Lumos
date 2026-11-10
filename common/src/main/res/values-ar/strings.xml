@@ -728,4 +728,65 @@
     <string name="setup_badge_adb">يحتاج ADB عبر الشبكة</string>
     <string name="setup_done_title">أنت جاهز</string>
     <string name="setup_done_description">اتصل بالـ iPhone الآن. يمكنك فتح الدليل مرة أخرى من الإعدادات.</string>
+    <string name="glass_iccoa_prompt">أدخل هذا الرمز على هاتفك</string>
+    <string name="glass_iccoa_waiting">بانتظار هاتفك…</string>
+    <string name="glass_iccoa_connected">متصل</string>
+    <string name="glass_iccoa_pairing">جارٍ الاقتران…</string>
+    <string name="glass_iccoa_hotspot">شغّل نقطة اتصال السيارة أولاً</string>
+    <string name="glass_iccoa_valid">صالح لمدة 120 ثانية</string>
+    <string name="glass_carplay_prompt">أكمل CarPlay على iPhone</string>
+    <string name="glass_carplay_usb_find">العثور على iPhone عبر USB</string>
+    <string name="glass_carplay_usb_permission">السماح بالوصول عبر USB</string>
+    <string name="glass_carplay_pair">الاقتران بـ iPhone</string>
+    <string name="glass_carplay_open">فتح CarPlay</string>
+    <string name="glass_carplay_hotspot">بدء Wi-Fi CarPlay</string>
+    <string name="glass_carplay_paired">انتظار iPhone المقترن</string>
+    <string name="glass_carplay_bluetooth">توصيل Bluetooth</string>
+    <string name="glass_carplay_hint">أبقِ iPhone غير مقفل واسمح بـ CarPlay عند الطلب.</string>
+    <string name="glass_carplay_connecting">جارٍ الاتصال…</string>
+    <string name="iccoa_permission_needed">اسمح بالوصول إلى الموقع والأجهزة القريبة حتى يكمل الهاتف اتصال ICCOA عبر Wi-Fi.</string>
+    <string name="settings_iccoa_connection">ICCOA CarLink</string>
+    <string name="settings_iccoa_connection_summary">كيفية اتصال هاتف Android بهذه الوحدة. أعد تشغيل التطبيق بعد تغيير طريقة الاتصال.</string>
+    <string name="settings_iccoa_transport">طريقة الاتصال</string>
+    <string name="settings_iccoa_transport_p2p">Wi-Fi Direct</string>
+    <string name="settings_iccoa_transport_ap">نقطة اتصال السيارة</string>
+    <string name="settings_iccoa_hotspot_ssid">اسم نقطة الاتصال</string>
+    <string name="settings_iccoa_hotspot_password">كلمة مرور نقطة الاتصال</string>
+    <string name="settings_iccoa_not_set">غير محدد</string>
+    <string name="settings_iccoa_hotspot_hint">تعيد وضع نقطة الاتصال استخدام hotspot الوحدة؛ شغّله وأدخل الاسم وكلمة المرور.</string>
+    <string name="settings_iccoa_5ghz">استخدام 5 GHz فقط</string>
+    <string name="settings_iccoa_5ghz_hint">يقيّد Wi-Fi Direct على 5 GHz. تحتاجه بعض الهواتف؛ وبعض الوحدات لا تدعم P2P على 5 GHz.</string>
+    <string name="settings_iccoa_connect">توصيل هاتف Android</string>
+    <string name="settings_iccoa_restart">إعادة تشغيل DiPlay</string>
+    <string name="settings_iccoa_restart_title">يلزم إعادة التشغيل</string>
+    <string name="settings_iccoa_restart_message">يقرأ ICCOA طريقة الاتصال عند بدء المحرك. أعد تشغيل التطبيق الآن لتطبيقها.</string>
+    <string name="settings_iccoa_restart_now">إعادة التشغيل الآن</string>
+    <string name="settings_iccoa_p2p_hint">يتطلب Wi-Fi Direct إيقاف hotspot الوحدة؛ لا يمكن تشغيل hotspot وWi-Fi Direct معًا.</string>
+    <string name="settings_iccoa_summary">اتصال ICCOA CarLink والعرض والميكروفون واللمس.</string>
+    <string name="settings_iccoa_projection">العرض</string>
+    <string name="settings_iccoa_microphone">الميكروفون</string>
+    <string name="settings_iccoa_touch">اللمس والعدادات</string>
+    <string name="settings_iccoa_wireless">عرض لاسلكي</string>
+    <string name="settings_iccoa_usb">عرض عبر USB</string>
+    <string name="settings_iccoa_ble">بث BLE احتياطي</string>
+    <string name="settings_iccoa_auto">الاتصال عند فتح التطبيق</string>
+    <string name="settings_iccoa_resolution">الدقة</string>
+    <string name="settings_iccoa_codec">ترميز الفيديو</string>
+    <string name="settings_iccoa_dpi">كثافة البكسل</string>
+    <string name="settings_iccoa_stretch">تمديد لملء الشاشة</string>
+    <string name="settings_iccoa_mic_rate">معدل العينات</string>
+    <string name="settings_iccoa_mic_echo">إلغاء الصدى</string>
+    <string name="settings_iccoa_mic_noise">كتم الضوضاء</string>
+    <string name="settings_iccoa_touch_toggle">سطح لمس مقاس</string>
+    <string name="settings_iccoa_hud">نسخ إلى HUD</string>
 </resources>
+
+
+
+
+
+
+
+
+
+

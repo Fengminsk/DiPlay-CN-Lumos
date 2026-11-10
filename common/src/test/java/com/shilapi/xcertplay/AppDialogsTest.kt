@@ -1,8 +1,8 @@
 package com.shilapi.xcertplay
 
 import android.content.ContextWrapper
-import android.graphics.drawable.ColorDrawable
-import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -20,22 +20,22 @@ class AppDialogsTest {
         AppAppearanceRuntime.resetForTest()
     }
 
-    @Test fun dialogThemesUseTheResolvedAppAppearance() {
+    @Test fun customDialogUsesTheResolvedAppAppearance() {
         AirPlayPersistence.saveAppAppearance(context, AppAppearance.DARK)
-        assertDialogColors(context.appDialogContext(), DiPlayPalette.DARK)
+        assertTrue(context.appDialogBuilder().create().nightForTest)
 
         AirPlayPersistence.saveAppAppearance(context, AppAppearance.LIGHT)
-        assertDialogColors(context.appDialogContext(), DiPlayPalette.LIGHT)
+        assertFalse(context.appDialogBuilder().create().nightForTest)
     }
 
-    @Test fun anExistingDialogContextKeepsItsAppearanceAfterThePreferenceChanges() {
+    @Test fun anExistingDialogKeepsItsAppearanceAfterThePreferenceChanges() {
         AirPlayPersistence.saveAppAppearance(context, AppAppearance.LIGHT)
-        val existingContext = context.appDialogBuilder().context
+        val existing = context.appDialogBuilder().create()
 
         AirPlayPersistence.saveAppAppearance(context, AppAppearance.DARK)
 
-        assertDialogColors(existingContext, DiPlayPalette.LIGHT)
-        assertDialogColors(context.appDialogBuilder().context, DiPlayPalette.DARK)
+        assertFalse(existing.nightForTest)
+        assertTrue(context.appDialogBuilder().create().nightForTest)
     }
 
     @Test fun dialogUsesTheOwnersCurrentAppearanceInsteadOfResolvingItAgain() {
@@ -44,18 +44,6 @@ class AppDialogsTest {
             override val currentAppNight = false
         }
 
-        assertDialogColors(lightOwner.appDialogContext(), DiPlayPalette.LIGHT)
-    }
-
-    private fun assertDialogColors(themedContext: android.content.Context, palette: DiPlayPalette) {
-        val attributes = themedContext.theme.obtainStyledAttributes(
-            intArrayOf(android.R.attr.colorAccent, android.R.attr.windowBackground),
-        )
-        try {
-            assertEquals(palette.accent, attributes.getColor(0, 0))
-            assertEquals(palette.surface, (attributes.getDrawable(1) as ColorDrawable).color)
-        } finally {
-            attributes.recycle()
-        }
+        assertFalse(lightOwner.appDialogBuilder().create().nightForTest)
     }
 }

@@ -20,6 +20,7 @@ internal fun Context.appDialogTheme(): Int = if (
 
 internal fun Context.appDialogContext(): Context = ContextThemeWrapper(this, appDialogTheme())
 
-internal fun Context.appDialogBuilder(): AlertDialog.Builder = AlertDialog.Builder(this, appDialogTheme())
+internal fun Context.appDialogBuilder(): DiPlayDialogBuilder = DiPlayDialogBuilder(this)
 
 internal fun Context.appDialog(): Dialog = Dialog(this, appDialogTheme())
+

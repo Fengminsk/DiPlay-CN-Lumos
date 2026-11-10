@@ -168,25 +168,15 @@ class AdaptiveSettingsUiTest {
         AirPlayPersistence.saveAppAppearance(context, AppAppearance.LIGHT)
         val screen = openSettings()
         texts(screen).single { it.text == screen.getString(R.string.settings_search) }.performClick()
-        val dialog = ShadowAlertDialog.getLatestAlertDialog()
-        val input = descendants(dialog.window!!.decorView).filterIsInstance<EditText>().single()
+        // The search is an in-page glass dialog now, not a native AlertDialog window.
+        val input = descendants(screen.window.decorView).filterIsInstance<EditText>().single()
         input.setText("display")
-        val dialogAccent = dialog.context.theme.obtainStyledAttributes(
-            intArrayOf(android.R.attr.colorAccent),
-        ).let { attributes ->
-            try {
-                attributes.getColor(0, 0)
-            } finally {
-                attributes.recycle()
-            }
-        }
 
         AirPlayPersistence.saveAppAppearance(screen, AppAppearance.DARK)
         ReflectionHelpers.callInstanceMethod<Unit>(screen, "checkForAppearanceChange")
 
-        assertTrue(dialog.isShowing)
+        assertTrue(input.isAttachedToWindow)
         assertEquals("display", input.text.toString())
-        assertEquals(DiPlayPalette.LIGHT.accent, dialogAccent)
         assertSame(DiPlayPalette.DARK, ReflectionHelpers.getField<DiPlayPalette>(screen, "palette"))
     }
 
@@ -591,7 +581,7 @@ class AdaptiveSettingsUiTest {
                 destination.contentDescription?.endsWith(" settings") == true &&
                 descendants(destination).filterIsInstance<ImageView>().count() == 1
         }.toList()
-        assertEquals(10, destinations.size)
+        assertEquals(11, destinations.size)
         destinations.forEach { destination ->
             assertEquals(1, descendants(destination).filterIsInstance<ImageView>().count())
         }
@@ -622,7 +612,14 @@ class AdaptiveSettingsUiTest {
 
     private fun verifyLanguageAndAboutDestinations() {
         val screen = openSettings()
-        val categoryScroll = ReflectionHelpers.getField<ScrollView>(screen, "rootScroll")
+        // Expanded settings navigate with the rail; compact settings use the overview cards.
+        val root = ReflectionHelpers.getField<ScrollView>(screen, "rootScroll")
+        val rail = ReflectionHelpers.getField<ScrollView>(screen, "settingsRailScroll")
+        val languageTitle = screen.getString(R.string.language_section_title)
+        val compactCards = descendants(root).any {
+            it.contentDescription == screen.getString(R.string.settings_open_category, languageTitle)
+        }
+        val categoryScroll = if (compactCards) root else rail
         val languageDestination = descendants(categoryScroll).single {
             it.contentDescription == screen.getString(R.string.settings_open_category,
                 screen.getString(R.string.language_section_title))
@@ -776,3 +773,4 @@ class AdaptiveSettingsUiTest {
         if (view is ViewGroup) for (index in 0 until view.childCount) yieldAll(descendants(view.getChildAt(index)))
     }
 }
+

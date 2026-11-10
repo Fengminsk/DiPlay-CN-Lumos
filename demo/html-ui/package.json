@@ -1,0 +1,10 @@
+{
+  "name": "diplay-lumos-ui-lab",
+  "version": "0.1.0",
+  "private": true,
+  "description": "DiPlay home + settings replica and interactive UI lab for the Lumos redesign",
+  "scripts": {
+    "dev": "node scripts/serve.mjs",
+    "start": "node scripts/serve.mjs"
+  }
+}

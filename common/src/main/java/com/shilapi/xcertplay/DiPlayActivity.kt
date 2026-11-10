@@ -18,6 +18,8 @@ import android.graphics.Color
 import android.graphics.Typeface
 import android.graphics.drawable.ColorDrawable
 import android.graphics.drawable.GradientDrawable
+import android.graphics.drawable.LayerDrawable
+import android.graphics.drawable.RippleDrawable
 import android.media.AudioFormat
 import android.media.AudioTrack
 import android.net.Uri
@@ -41,6 +43,8 @@ import androidx.core.view.WindowCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
+import androidx.lifecycle.lifecycleScope
+import com.andrerinas.openheadunit.connection.IcocaBridge
 import com.shilapi.xcertplay.adb.LocalAdb
 import com.shilapi.xcertplay.airplay.CarPlayClusterDisplay
 import com.shilapi.xcertplay.airplay.CarPlayDisplayScale
@@ -55,6 +59,9 @@ import com.shilapi.xcertplay.hud.BydVehicleField
 import com.shilapi.xcertplay.hud.BydVehicleFieldStore
 import com.shilapi.xcertplay.hud.BydVehicleProbeOutcome
 import com.shilapi.xcertplay.host.R
+import com.shilapi.xcertplay.icoca.IcocaEngine
+import com.shilapi.xcertplay.link.PhoneLinkSettings
+import com.shilapi.xcertplay.link.ProjectionSource
 import com.shilapi.xcertplay.network.CarHotspotSettings
 import com.shilapi.xcertplay.network.CarHotspotTethering
 import com.shilapi.xcertplay.network.WifiP2pChannels
@@ -66,17 +73,19 @@ import com.shilapi.xcertplay.setup.SetupGuide
 import com.shilapi.xcertplay.transport.EvChargingConnectors
 import com.shilapi.xcertplay.update.UpdateCatalog
 import com.shilapi.xcertplay.update.UpdateClient
-import com.shilapi.xcertplay.update.UpdateChecksums
 import com.shilapi.xcertplay.update.UpdateVersion
 import java.io.File
 import java.io.IOException
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
 
 internal enum class SettingsCategory {
-    OVERVIEW, CONNECTION, DISPLAY, AUDIO, NAVIGATION, VEHICLE, LANGUAGE, ABOUT, DIAGNOSTICS, ADVANCED,
+    OVERVIEW, CONNECTION, ICCOA, DISPLAY, AUDIO, NAVIGATION, VEHICLE, LANGUAGE, ABOUT, DIAGNOSTICS, ADVANCED,
 }
 
 /** A settings card. Every entry needs one category in [SettingsInformationArchitecture]; see AGENTS.md. */
@@ -84,6 +93,10 @@ internal enum class SettingsSection {
     CARPLAY_CONTROLS,
     WHEEL_KEYS,
     CONNECTION_SETUP,
+    ICCOA_CONNECTION,
+    ICCOA_PROJECTION,
+    ICCOA_MICROPHONE,
+    ICCOA_TOUCH,
     DIAGNOSTICS,
     AUTOMATIC_CONNECTION,
     BYD_ADB,
@@ -109,6 +122,12 @@ internal object SettingsInformationArchitecture {
             SettingsSection.AUTOMATIC_CONNECTION,
             SettingsSection.BYD_ADB,
             SettingsSection.PERMISSIONS_AND_HELP,
+        ),
+        SettingsCategory.ICCOA to setOf(
+            SettingsSection.ICCOA_CONNECTION,
+            SettingsSection.ICCOA_PROJECTION,
+            SettingsSection.ICCOA_MICROPHONE,
+            SettingsSection.ICCOA_TOUCH,
         ),
         SettingsCategory.DISPLAY to setOf(SettingsSection.DISPLAY_AND_PERFORMANCE),
         SettingsCategory.AUDIO to setOf(SettingsSection.AUDIO_ROUTING),
@@ -152,6 +171,10 @@ class DiPlayActivity : ComponentActivity(), AppAppearanceOwner {
     private var hotspotJoinControls: HotspotJoinControls? = null
     private var setupError: String? = null
     private var status: TextView? = null
+    private var glassHome: DiPlayGlassHome? = null
+    private var iccoaOverlay: DiPlayIccoaPairingOverlay? = null
+    private var iccoaStarted = false
+    private var iccoaStateJob: Job? = null
     private var connectButton: Button? = null
     private var disconnectButton: Button? = null
     private var lastRunning: Boolean? = null
@@ -160,7 +183,7 @@ class DiPlayActivity : ComponentActivity(), AppAppearanceOwner {
     private var notificationTransport = true
     private var exportInProgress = false
     private var usbPermissionOperation: UsbPermissionSetup.Operation? = null
-    private var usbPermissionDialog: AlertDialog? = null
+    private var usbPermissionDialog: DiPlayDialog? = null
     internal var usbPermissionOperationFactory: (Context) -> UsbPermissionSetup.Operation = {
         UsbPermissionSetup.Operation(it.applicationContext)
     }
@@ -170,6 +193,7 @@ class DiPlayActivity : ComponentActivity(), AppAppearanceOwner {
     private var exportButton: Button? = null
     private var rootScroll: ScrollView? = null
     private var settingsRailScroll: ScrollView? = null
+    private var railSlideFrom: Int? = null
     private var reconnectBar: View? = null
     private var readinessCard: LinearLayout? = null
     private var searchIndexSink: MutableList<String>? = null
@@ -261,6 +285,13 @@ class DiPlayActivity : ComponentActivity(), AppAppearanceOwner {
             permissionHelp(getString(R.string.location), getString(R.string.allow_precise_location_for_diplay_in_the_head_unit_s_app_p))
         }
     }
+    private val iccoaPermissions = registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) {
+        if (iccoaHasRuntimePermissions()) {
+            openIccoaPairing()
+        } else {
+            permissionHelp(getString(R.string.location), getString(R.string.iccoa_permission_needed))
+        }
+    }
     private val iconPicker = registerForActivityResult(ActivityResultContracts.GetContent(), ::cropIcon)
     private val iconDocumentPicker = registerForActivityResult(ActivityResultContracts.OpenDocument(), ::cropIcon)
     private fun cropIcon(uri: Uri?) {
@@ -306,6 +337,7 @@ class DiPlayActivity : ComponentActivity(), AppAppearanceOwner {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        IcocaProjectionHost.attach(this)
         phoneLinkUsb = runCatching { com.shilapi.xcertplay.link.PhoneLinkUsb.attach(this) }.getOrNull()
         CloudLogArchive.start(applicationContext)
         // Back on the home page finishes this activity while the session runs on, so the icon lands here.
@@ -354,6 +386,7 @@ class DiPlayActivity : ComponentActivity(), AppAppearanceOwner {
         }
         onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
             override fun handleOnBackPressed() {
+                if (iccoaOverlay != null) { iccoaOverlay?.close(); return }
                 if (page != "home") navigateBack()
                 // Back on the home page only hides the app: a car app must return exactly where
                 // it left off instead of reopening from scratch.
@@ -450,13 +483,6 @@ class DiPlayActivity : ComponentActivity(), AppAppearanceOwner {
     override fun onResume() {
         super.onResume()
         applyFullscreenMode()
-        // Returning from the "install unknown apps" page finishes a pending update install.
-        pendingInstallApk?.let { apk ->
-            if (AppUpdate.canInstall(this)) {
-                pendingInstallApk = null
-                if (!AppUpdate.install(this, apk)) toast(getString(R.string.update_install_failed))
-            }
-        }
         // Returning from another activity can bring the head unit's own density back.
         if (enforceInterfaceSize()) render()
         if (Build.VERSION.SDK_INT < 33 && AppLocale.preference(this) != languagePreferenceAtCreate) {
@@ -492,6 +518,16 @@ class DiPlayActivity : ComponentActivity(), AppAppearanceOwner {
     }
 
     override fun onDestroy() {
+        iccoaOverlay?.let { (it.parent as? ViewGroup)?.removeView(it) }
+        iccoaOverlay = null
+        iccoaStateJob?.cancel()
+        iccoaStateJob = null
+        if (iccoaStarted) {
+            iccoaStarted = false
+            val appContext = applicationContext
+            Thread { runCatching { IcocaEngine.stop(appContext) } }.apply { isDaemon = true }.start()
+        }
+        glassHome?.setPairingMode(false)
         phoneLinkUsb?.close()
         phoneLinkUsb = null
         appearanceObserverRemoval?.invoke()
@@ -577,6 +613,7 @@ class DiPlayActivity : ComponentActivity(), AppAppearanceOwner {
     private fun render() = render(appearanceOnly = false)
 
     private fun render(appearanceOnly: Boolean, preferredFocusTag: Any? = null) {
+        if (iccoaOverlay != null) removeIccoaOverlay()
         enforceInterfaceSize()
         refreshAppearance()
         applyWindowAppearance()
@@ -603,6 +640,7 @@ class DiPlayActivity : ComponentActivity(), AppAppearanceOwner {
             (pendingRailFocus || settingsRailScroll?.hasFocus() == true)
         settingsRailScroll = null
         status = null; connectButton = null; disconnectButton = null; lastRunning = null; carButtonCard = null
+        glassHome = null
         reconnectBar = null
         readinessCard = null
         exportButton = null
@@ -613,13 +651,65 @@ class DiPlayActivity : ComponentActivity(), AppAppearanceOwner {
             "settings" -> !SettingsLayoutPreferences.isActive(this)
             else -> true
         }
-        val scroll = ScrollView(this).apply { setBackgroundColor(BG); isFillViewport = true; clipToPadding = false }
+        if (page == "home" && !compact) {
+            val glass = DiPlayGlassHome(
+                context = this,
+                night = appNight,
+                initialWireless = loadHomeWireless(),
+                onCarPlay = {
+                    if (CarPlayBackgroundSession.hasSession()) openProjection()
+                    else if (!carplaySetupDone()) openCarplaySetupFromHome()
+                    else connect(loadHomeWireless())
+                },
+                onIccoa = { openIccoaPairing() },
+                onSettings = {
+                    page = "settings"
+                    render()
+                },
+                onCarHome = {
+                    startActivity(Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_HOME))
+                },
+                onTransport = { wireless -> saveHomeWireless(wireless) },
+            )
+            glassHome = glass
+            status = glass.statusView
+            connectButton = null
+            disconnectButton = null
+            lastRunning = null
+            setContentView(glass)
+        DiPlayDialog.reattach(this)
+            ViewCompat.setOnApplyWindowInsetsListener(glass) { view, insets ->
+                val safe = insets.getInsets(
+                    WindowInsetsCompat.Type.displayCutout() or WindowInsetsCompat.Type.systemBars(),
+                )
+                view.setPadding(safe.left, safe.top, safe.right, safe.bottom)
+                insets
+            }
+            ViewCompat.requestApplyInsets(glass)
+            renderedPage = page
+            renderedSettingsCategory = null
+            refreshStatus()
+            return
+        }
+        val skyChrome = page == "connection" || page == "setup" || page == "about"
+        val scroll = ScrollView(this).apply {
+            if (skyChrome) background = DiPlaySkyDrawable(appNight) else setBackgroundColor(BG)
+            isFillViewport = true
+            clipToPadding = false
+        }
         rootScroll = scroll
         val content = column()
         scroll.addView(content)
-        val header = if (page == "settings") settingsHeader(compact) else standardHeader(compact)
+        val header = when (page) {
+            "settings" -> settingsHeader(compact)
+            "setup" -> setupHeader(compact)
+            else -> standardHeader(compact)
+        }
         val root: View = if (page == "settings" && isExpandedSettingsLayout) {
-            content.setPadding(0, 0, 0, dp(32))
+            content.setPadding(0, dp(SETTINGS_FLOAT_HEADER_DP), 0, dp(32))
+            content.addView(reconnectBar(), LinearLayout.LayoutParams(-1, -2).apply {
+                bottomMargin = dp(SETTINGS_BLOCK_GAP_DP)
+            })
             settingsCategoryContent(content)
             expandedSettingsShell(header, scroll)
         } else {
@@ -659,6 +749,7 @@ class DiPlayActivity : ComponentActivity(), AppAppearanceOwner {
             insets
         }
         setContentView(root)
+        DiPlayDialog.reattach(this)
         ViewCompat.requestApplyInsets(root)
         renderedPage = page
         renderedSettingsCategory = settingsCategory.takeIf { page == "settings" }
@@ -693,9 +784,7 @@ class DiPlayActivity : ComponentActivity(), AppAppearanceOwner {
         rail?.doOnLayout {
             if (settingsRailScroll !== rail) return@doOnLayout
             previousRailScrollY?.let { rail.scrollTo(0, it) }
-            val destinations = rail.getChildAt(0) as ViewGroup
-            val selected = (0 until destinations.childCount)
-                .map(destinations::getChildAt).firstOrNull { it.isSelected }
+            val selected = descendants(rail).firstOrNull { it.isSelected }
             if (selected != null) {
                 if (restoreRailFocus) selected.requestFocus()
                 selected.requestRectangleOnScreen(android.graphics.Rect(0, 0, selected.width, selected.height), true)
@@ -759,6 +848,22 @@ class DiPlayActivity : ComponentActivity(), AppAppearanceOwner {
         render()
     }
 
+    private fun openCarplaySetupFromHome() {
+        // First CarPlay tap: the real setup, not a timed pre-flight card. The setup page owns the
+        // transport, iPhone pairing, hotspot and permission steps; its buttons start the real host.
+        connectionSettingsReturnCategory = null
+        page = "connection"
+        render()
+    }
+
+    private fun carplaySetupDone(): Boolean =
+        getSharedPreferences("diplay", Context.MODE_PRIVATE).getBoolean("carplay_setup_done", false)
+
+    private fun markCarplaySetupDone() {
+        getSharedPreferences("diplay", Context.MODE_PRIVATE).edit()
+            .putBoolean("carplay_setup_done", true).apply()
+    }
+
     private fun settingsHeader(compact: Boolean): LinearLayout = row().apply {
         gravity = Gravity.CENTER_VERTICAL
         addView(headerButton(getString(R.string.back), R.drawable.ic_dp_back, compact, ::navigateBack),
@@ -772,6 +877,17 @@ class DiPlayActivity : ComponentActivity(), AppAppearanceOwner {
         })
         addView(headerButton(getString(R.string.settings_search), R.drawable.ic_dp_search, compact) { showSettingsSearch() },
             LinearLayout.LayoutParams(-2, if (compact) dp(44) else dp(52)))
+    }
+
+    private fun setupHeader(compact: Boolean): LinearLayout = row().apply {
+        gravity = Gravity.CENTER_VERTICAL
+        addView(headerButton(getString(R.string.back), R.drawable.ic_dp_back, compact, ::navigateBack),
+            LinearLayout.LayoutParams(-2, if (compact) dp(44) else dp(52)))
+        addView(label(getString(R.string.setup_guide), if (compact) 20 else 26, TEXT, true,
+            centreGlyphs = resources.configuration.locales[0].language == "zh").apply {
+            setPadding(dp(12), 0, dp(12), 0)
+        }, LinearLayout.LayoutParams(0, if (compact) dp(44) else dp(52), 1f))
+        addView(appearanceButton(), LinearLayout.LayoutParams(dp(48), dp(48)))
     }
 
     private fun appearanceButton(): ImageButton = iconButton(
@@ -892,31 +1008,60 @@ class DiPlayActivity : ComponentActivity(), AppAppearanceOwner {
     }
 
     // Only the category scrolls, so the rail keeps showing where the driver is.
-    private fun expandedSettingsShell(header: View, categoryScroll: ScrollView): LinearLayout = column().apply {
-        setBackgroundColor(BG)
-        setPadding(dp(32), dp(24), dp(32), 0)
-        addView(header)
-        addView(space(24))
-        addView(reconnectBar(), LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = dp(SETTINGS_BLOCK_GAP_DP) })
-        val split = row().apply { gravity = Gravity.TOP }
-        // The rail scrolls on its own only when the window is too short for every destination.
-        split.addView(ScrollView(this@DiPlayActivity).apply {
+    private fun expandedSettingsShell(header: View, categoryScroll: ScrollView): View {
+        val railWidth = dp(SettingsLayoutPolicy.railWidthDp(resources.configuration.fontScale))
+        val headerSpace = dp(SETTINGS_FLOAT_HEADER_DP)
+        categoryScroll.setBackgroundColor(Color.TRANSPARENT)
+        categoryScroll.isVerticalScrollBarEnabled = false
+        val root = FrameLayout(this).apply { background = DiPlaySkyDrawable(appNight) }
+
+        val railScroll = ScrollView(this).apply {
+            isFillViewport = false
+            isVerticalScrollBarEnabled = false
             addView(settingsRail())
             settingsRailScroll = this
-        },
-            LinearLayout.LayoutParams(dp(SettingsLayoutPolicy.railWidthDp(resources.configuration.fontScale)), -2))
-        split.addView(space(24), LinearLayout.LayoutParams(dp(24), 1))
-        split.addView(categoryScroll, LinearLayout.LayoutParams(0, -1, 1f))
-        addView(split, LinearLayout.LayoutParams(-1, 0, 1f))
+        }
+        root.addView(railScroll, FrameLayout.LayoutParams(railWidth, -1).apply {
+            leftMargin = dp(32)
+            topMargin = headerSpace
+            bottomMargin = dp(24)
+        })
+        root.addView(categoryScroll, FrameLayout.LayoutParams(-1, -1).apply {
+            leftMargin = dp(32) + railWidth + dp(24)
+            rightMargin = dp(32)
+        })
+
+        val scrimTop = if (appNight) 0xC80B121C.toInt() else 0xC8E7F1FD.toInt()
+        val scrimClear = if (appNight) 0x000B121C else 0x00E7F1FD
+        root.addView(View(this).apply {
+            background = GradientDrawable(
+                GradientDrawable.Orientation.TOP_BOTTOM,
+                intArrayOf(scrimTop, scrimClear),
+            )
+            importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_NO
+        }, FrameLayout.LayoutParams(-1, headerSpace))
+        root.addView(header, FrameLayout.LayoutParams(-1, dp(56)).apply {
+            leftMargin = dp(32)
+            rightMargin = dp(32)
+            topMargin = dp(16)
+        })
+        return root
     }
 
-    private fun settingsRail(): LinearLayout = column().apply {
-        background = rounded(SURFACE, BORDER)
-        setPadding(dp(12), dp(12), dp(12), dp(12))
+    private fun settingsRail(): View {
+        val items = column().apply {
+            setPadding(dp(12), dp(12), dp(12), dp(12))
+        }
         SettingsCategory.entries.forEach { category ->
-            addView(settingsRailDestination(category), matchButton(0, 52).apply {
+            items.addView(settingsRailDestination(category), LinearLayout.LayoutParams(-1, dp(64)).apply {
                 bottomMargin = dp(8)
             })
+        }
+        val index = SettingsCategory.entries.indexOf(settingsCategory).coerceAtLeast(0)
+        val from = railSlideFrom ?: index
+        railSlideFrom = null
+        return DiPlayRailLayout(this, appNight, from, index).apply {
+            addView(items, FrameLayout.LayoutParams(-1, -2))
         }
     }
 
@@ -928,31 +1073,23 @@ class DiPlayActivity : ComponentActivity(), AppAppearanceOwner {
             isClickable = true
             isFocusable = true
             isSelected = selected
-            foreground = focusRing(12)
+            foreground = focusRing(22)
             contentDescription = getString(R.string.settings_open_category, title)
             background = android.graphics.drawable.RippleDrawable(
                 ColorStateList.valueOf(RIPPLE),
                 GradientDrawable().apply {
-                    setColor(if (selected) RAIL_SELECTED else Color.TRANSPARENT)
-                    cornerRadius = dp(12).toFloat()
-                    if (selected) setStroke(dp(1), RAIL_SELECTED_BORDER)
+                    setColor(Color.TRANSPARENT)
+                    cornerRadius = dp(22).toFloat()
                 },
                 null,
             )
-            setPadding(dp(8), 0, dp(12), 0)
-            addView(View(this@DiPlayActivity).apply {
-                background = GradientDrawable().apply {
-                    setColor(if (selected) ACCENT else Color.TRANSPARENT)
-                    cornerRadius = dp(2).toFloat()
-                }
-                importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_NO
-            }, LinearLayout.LayoutParams(dp(4), dp(34)).apply { marginEnd = dp(10) })
+            setPadding(dp(16), 0, dp(12), 0)
             addView(ImageView(this@DiPlayActivity).apply {
                 setImageResource(settingsCategoryIcon(category))
-                imageTintList = ColorStateList.valueOf(if (selected) ACCENT else TEXT)
+                imageTintList = ColorStateList.valueOf(if (selected) Color.WHITE else TEXT)
                 importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_NO
-            }, LinearLayout.LayoutParams(dp(26), dp(26)).apply { marginEnd = dp(12) })
-            addView(label(title, 16, if (selected) ACCENT else TEXT, true),
+            }, LinearLayout.LayoutParams(dp(24), dp(24)).apply { marginEnd = dp(12) })
+            addView(label(title, 16, if (selected) Color.WHITE else TEXT, true),
                 LinearLayout.LayoutParams(0, -1, 1f))
             setOnClickListener {
                 openSettingsCategory(category)
@@ -963,6 +1100,7 @@ class DiPlayActivity : ComponentActivity(), AppAppearanceOwner {
     private fun settingsCategoryIcon(category: SettingsCategory): Int = when (category) {
         SettingsCategory.OVERVIEW -> R.drawable.ic_dp_overview
         SettingsCategory.CONNECTION -> R.drawable.ic_dp_connection
+        SettingsCategory.ICCOA -> R.drawable.ic_dp_iccoa
         SettingsCategory.DISPLAY -> R.drawable.ic_dp_display
         SettingsCategory.AUDIO -> R.drawable.ic_dp_audio
         SettingsCategory.NAVIGATION -> R.drawable.ic_dp_navigation
@@ -976,6 +1114,7 @@ class DiPlayActivity : ComponentActivity(), AppAppearanceOwner {
     private fun settingsCategoryTitle(category: SettingsCategory): String = getString(when (category) {
         SettingsCategory.OVERVIEW -> R.string.settings_overview
         SettingsCategory.CONNECTION -> R.string.connection
+        SettingsCategory.ICCOA -> R.string.iccoa
         SettingsCategory.DISPLAY -> R.string.settings_display
         SettingsCategory.AUDIO -> R.string.audio
         SettingsCategory.NAVIGATION -> R.string.settings_navigation
@@ -990,6 +1129,7 @@ class DiPlayActivity : ComponentActivity(), AppAppearanceOwner {
         when (settingsCategory) {
             SettingsCategory.OVERVIEW -> settingsOverview(content)
             SettingsCategory.CONNECTION -> connectionSettings(content)
+            SettingsCategory.ICCOA -> iccoaSettings(content)
             SettingsCategory.DISPLAY -> displaySettings(content)
             SettingsCategory.AUDIO -> audioSettings(content)
             SettingsCategory.NAVIGATION -> navigationSettings(content)
@@ -1019,42 +1159,29 @@ class DiPlayActivity : ComponentActivity(), AppAppearanceOwner {
             setPadding(0, 0, 0, dp(20))
         })
 
-        val destinations = listOf(
-            SettingsCategory.CONNECTION to R.string.settings_connection_summary,
-            SettingsCategory.DISPLAY to R.string.settings_display_summary,
-            SettingsCategory.AUDIO to R.string.settings_audio_summary,
-            SettingsCategory.NAVIGATION to R.string.settings_navigation_summary,
-            SettingsCategory.VEHICLE to R.string.settings_vehicle_summary,
-            SettingsCategory.LANGUAGE to R.string.settings_language_summary,
-            SettingsCategory.ABOUT to R.string.about_diplay,
-        )
-        val twoColumns = isExpandedSettingsLayout && resources.configuration.let {
-            SettingsLayoutPolicy.overviewHasTwoColumns(it.screenWidthDp, it.fontScale)
-        }
-        if (twoColumns) {
-            val columns = row().apply { gravity = Gravity.TOP }
-            val setup = column()
-            setup.addView(settingsSectionHeading(R.string.settings_your_setup))
-            destinations.forEach { item ->
-                setup.addView(settingsSummaryCard(item.first, getString(item.second)),
-                    LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = dp(8) })
-            }
-            columns.addView(setup, LinearLayout.LayoutParams(0, -2, 1f))
-            columns.addView(space(14), LinearLayout.LayoutParams(dp(14), 1))
-            val quick = column()
-            quick.addView(settingsSectionHeading(R.string.settings_quick_settings))
-            quick.addView(quickSettingsCard())
-            columns.addView(quick, LinearLayout.LayoutParams(0, -2, 1f))
-            content.addView(columns, LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = dp(16) })
-        } else {
+        if (!isExpandedSettingsLayout) {
+            // Compact screens have no rail; these cards are their only navigation. On a wide
+            // head unit the rail already lists the same categories, so the cards are not repeated.
             content.addView(settingsSectionHeading(R.string.settings_your_setup))
+            val destinations = listOf(
+                SettingsCategory.CONNECTION to R.string.settings_connection_summary,
+                SettingsCategory.ICCOA to R.string.settings_iccoa_summary,
+                SettingsCategory.DISPLAY to R.string.settings_display_summary,
+                SettingsCategory.AUDIO to R.string.settings_audio_summary,
+                SettingsCategory.NAVIGATION to R.string.settings_navigation_summary,
+                SettingsCategory.VEHICLE to R.string.settings_vehicle_summary,
+                SettingsCategory.LANGUAGE to R.string.settings_language_summary,
+                SettingsCategory.ABOUT to R.string.about_diplay,
+            )
             destinations.forEach { item ->
                 content.addView(settingsSummaryCard(item.first, getString(item.second)),
                     LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = dp(8) })
             }
-            content.addView(settingsSectionHeading(R.string.settings_quick_settings).apply { setPadding(0, dp(10), 0, dp(8)) })
-            content.addView(quickSettingsCard(), LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = dp(18) })
         }
+        content.addView(settingsSectionHeading(R.string.settings_quick_settings).apply {
+            setPadding(0, dp(10), 0, dp(8))
+        })
+        content.addView(quickSettingsCard(), LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = dp(18) })
 
         content.addView(settingsUtilitiesCard(), LinearLayout.LayoutParams(-1, -2).apply {
             bottomMargin = dp(SETTINGS_BLOCK_GAP_DP)
@@ -1186,7 +1313,12 @@ class DiPlayActivity : ComponentActivity(), AppAppearanceOwner {
 
     private fun openSettingsCategory(category: SettingsCategory) {
         if (category == SettingsCategory.ABOUT) page = "about"
-        else settingsCategory = category
+        else {
+            if (category != settingsCategory) {
+                railSlideFrom = SettingsCategory.entries.indexOf(settingsCategory)
+            }
+            settingsCategory = category
+        }
         render()
     }
 
@@ -1224,6 +1356,11 @@ class DiPlayActivity : ComponentActivity(), AppAppearanceOwner {
     private fun connectionSettings(content: LinearLayout) {
         settingsPageTitle(content, getString(R.string.connection), getString(R.string.settings_connection_summary))
         renderSections(content, SettingsInformationArchitecture.sectionsByCategory.getValue(SettingsCategory.CONNECTION))
+    }
+
+    private fun iccoaSettings(content: LinearLayout) {
+        settingsPageTitle(content, getString(R.string.iccoa), getString(R.string.settings_iccoa_summary))
+        renderSections(content, SettingsInformationArchitecture.sectionsByCategory.getValue(SettingsCategory.ICCOA))
     }
 
     private fun displaySettings(content: LinearLayout) {
@@ -1409,48 +1546,140 @@ class DiPlayActivity : ComponentActivity(), AppAppearanceOwner {
 
     private fun showSettingsSearch() {
         val index = buildSettingsSearchIndex()
-        val dialogContext = appDialogContext()
-        val input = EditText(dialogContext).apply {
+        val input = EditText(this).apply {
             setSingleLine()
             hint = getString(R.string.settings_search_hint)
-            // Landscape head units would otherwise cover the results with a full-screen editor.
+            setTextColor(TEXT)
+            setHintTextColor(MUTED)
+            textSize = 17f
+            setPadding(dp(16), 0, dp(16), 0)
+            background = GradientDrawable().apply {
+                cornerRadius = dp(16).toFloat()
+                setColor(if (appNight) 0x1FFFFFFF else 0xCCFFFFFF.toInt())
+                setStroke(dp(1), if (appNight) 0x33FFFFFF else 0x99FFFFFF.toInt())
+            }
             imeOptions = android.view.inputmethod.EditorInfo.IME_FLAG_NO_EXTRACT_UI or
                 android.view.inputmethod.EditorInfo.IME_ACTION_SEARCH
         }
         val results = mutableListOf<SettingsSearchResult>()
-        val adapter = android.widget.ArrayAdapter<String>(dialogContext, android.R.layout.simple_list_item_1)
-        val list = android.widget.ListView(dialogContext).apply { this.adapter = adapter }
+        val adapter = object : ArrayAdapter<String>(this, 0) {
+            override fun getView(position: Int, convertView: View?, parent: ViewGroup): View {
+                val row = convertView as? TextView ?: TextView(this@DiPlayActivity).apply {
+                    setPadding(dp(14), dp(14), dp(14), dp(14))
+                    textSize = 16f
+                    setTextColor(TEXT)
+                }
+                row.text = getItem(position)
+                return row
+            }
+        }
+        val list = ListView(this).apply {
+            this.adapter = adapter
+            divider = null
+            dividerHeight = 0
+            setBackgroundColor(Color.TRANSPARENT)
+            isVerticalScrollBarEnabled = false
+        }
         val empty = label(getString(R.string.settings_search_empty), 15, MUTED).apply {
-            setPadding(dp(8), dp(12), dp(8), dp(12)); visibility = View.GONE
+            setPadding(dp(8), dp(12), dp(8), dp(12))
+            visibility = View.GONE
+        }
+        val suggestions = SettingsCategory.entries.map {
+            SettingsSearchResult(settingsCategoryTitle(it), it)
         }
         fun update() {
-            results.clear(); results += searchSettings(index, input.text.toString())
+            val query = input.text.toString()
+            results.clear()
+            if (query.isBlank()) results += suggestions else results += searchSettings(index, query)
             adapter.clear()
-            adapter.addAll(results.map { "${it.title} — ${settingsCategoryTitle(it.category)}" })
-            empty.visibility = if (results.isEmpty() && input.text.isNotBlank()) View.VISIBLE else View.GONE
+            adapter.addAll(results.map {
+                if (query.isBlank()) it.title
+                else "${it.title} — ${settingsCategoryTitle(it.category)}"
+            })
+            empty.visibility = if (results.isEmpty() && query.isNotBlank()) View.VISIBLE else View.GONE
         }
+        update()
         input.addTextChangedListener(object : android.text.TextWatcher {
             override fun afterTextChanged(s: android.text.Editable?) = update()
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) = Unit
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) = Unit
         })
-        val body = column().apply {
-            setPadding(dp(20), dp(8), dp(20), 0)
-            addView(input)
-            addView(empty)
-            // Short screens keep the results above the keyboard.
-            addView(list, LinearLayout.LayoutParams(-1, dp(if (resources.configuration.screenHeightDp < 600) 160 else 320)))
+
+        var dialog: DiPlayDialog? = null
+        val panel = column().apply {
+            isClickable = true
+            setPadding(dp(24), dp(22), dp(24), dp(20))
+            val solid = GradientDrawable().apply {
+                cornerRadius = dp(28).toFloat()
+                setColor(if (appNight) 0xFF0E1622.toInt() else 0xFFF8FBFF.toInt())
+            }
+            background = LayerDrawable(arrayOf(solid, DiPlayLiquidGlassDrawable(dp(28).toFloat(), dark = appNight)))
         }
-        val dialog = appDialogBuilder()
-            .setTitle(getString(R.string.settings_search))
-            .setView(body)
-            .setNegativeButton(getString(R.string.cancel), null)
-            .show()
+        val header = row().apply {
+            gravity = Gravity.CENTER_VERTICAL
+            addView(label(getString(R.string.settings_search), 26, TEXT, true),
+                LinearLayout.LayoutParams(0, -2, 1f))
+            addView(ImageButton(this@DiPlayActivity).apply {
+                setImageResource(R.drawable.ic_dp_close)
+                imageTintList = ColorStateList.valueOf(TEXT)
+                scaleType = ImageView.ScaleType.CENTER
+                contentDescription = getString(R.string.cancel)
+                setPadding(dp(12), dp(12), dp(12), dp(12))
+                background = RippleDrawable(
+                    ColorStateList.valueOf(RIPPLE),
+                    GradientDrawable().apply {
+                        shape = GradientDrawable.OVAL
+                        setColor(if (appNight) 0x26FFFFFF else 0x33FFFFFF)
+                        setStroke(dp(1), if (appNight) 0x3DFFFFFF else 0x99FFFFFF.toInt())
+                    },
+                    null,
+                )
+                setOnClickListener { dialog?.dismiss() }
+            }, LinearLayout.LayoutParams(dp(46), dp(46)))
+        }
+        panel.addView(header, LinearLayout.LayoutParams(-1, dp(46)))
+        panel.addView(input, LinearLayout.LayoutParams(-1, dp(56)).apply { topMargin = dp(16) })
+        panel.addView(empty, LinearLayout.LayoutParams(-1, -2))
+        panel.addView(list, LinearLayout.LayoutParams(-1, dp(if (resources.configuration.screenHeightDp < 600) 180 else 320)).apply {
+            topMargin = dp(8)
+        })
+
+        val overlay = FrameLayout(this).apply {
+            setBackgroundColor(if (appNight) 0x99060C14.toInt() else 0x660B1A2E.toInt())
+        }
+        overlay.addView(panel, FrameLayout.LayoutParams(
+            minOf(dp(720), resources.displayMetrics.widthPixels - dp(48)),
+            -2,
+            Gravity.CENTER,
+        ))
+        dialog = appDialogBuilder().setView(overlay).create()
+        dialog?.apply {
+            window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+            window?.setLayout(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
+            window?.setDimAmount(0f)
+            window?.addFlags(android.view.WindowManager.LayoutParams.FLAG_FULLSCREEN)
+            window?.setSoftInputMode(
+                android.view.WindowManager.LayoutParams.SOFT_INPUT_STATE_HIDDEN or
+                    android.view.WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE,
+            )
+        }
+        overlay.setOnClickListener { dialog?.dismiss() }
         list.setOnItemClickListener { _, _, position, _ ->
-            dialog.dismiss()
-            openSearchResult(results[position])
+            dialog?.dismiss()
+            val result = results[position]
+            if (input.text.isBlank()) openSettingsCategory(result.category) else openSearchResult(result)
         }
-        input.requestFocus()
+        dialog?.show()
+        dialog?.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+        dialog?.window?.decorView?.setBackgroundColor(Color.TRANSPARENT)
+        dialog?.window?.decorView?.systemUiVisibility = (
+            View.SYSTEM_UI_FLAG_FULLSCREEN or
+                View.SYSTEM_UI_FLAG_HIDE_NAVIGATION or
+                View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY or
+                View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN or
+                View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION or
+                View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+            )
     }
 
     private fun advancedSettings(content: LinearLayout) {
@@ -1544,6 +1773,88 @@ class DiPlayActivity : ComponentActivity(), AppAppearanceOwner {
                 CarPlayNameSettings.useHotspotName(this)) {
                 CarPlayNameSettings.setUseHotspotName(this, it)
                 markReconnectNeeded()
+            }
+        }
+        filteredSection(content, SettingsSection.ICCOA_CONNECTION,
+            getString(R.string.connection), R.drawable.ic_dp_iccoa) { card ->
+            card.addView(label(getString(R.string.settings_iccoa_connection_summary), 15, MUTED))
+            toggle(card, getString(R.string.settings_iccoa_wireless), "", IcocaSettings.wireless(this)) {
+                IcocaSettings.setWireless(this, it)
+            }
+            toggle(card, getString(R.string.settings_iccoa_usb), "", IcocaSettings.usb(this)) {
+                IcocaSettings.setUsb(this, it)
+            }
+            toggle(card, getString(R.string.settings_iccoa_ble), "", IcocaSettings.ble(this)) {
+                IcocaSettings.setBle(this, it)
+            }
+            toggle(card, getString(R.string.settings_iccoa_auto), "", IcocaSettings.autoConnect(this)) {
+                IcocaSettings.setAutoConnect(this, it)
+            }
+            val transports = listOf(
+                getString(R.string.settings_iccoa_transport_p2p),
+                getString(R.string.settings_iccoa_transport_ap),
+            )
+            val transportIndex = if (com.miauto.app.ApReusePrefs.transport(this) == "ap") 1 else 0
+            choice(card, getString(R.string.settings_iccoa_transport), transports, transportIndex, reconnects = false) { index ->
+                com.miauto.app.ApReusePrefs.setTransport(this, if (index == 1) "ap" else "p2p")
+                showIccoaRestartDialog()
+            }
+            card.addView(label(getString(R.string.settings_iccoa_p2p_hint), 14, MUTED).apply {
+                setPadding(0, dp(8), 0, 0)
+            })
+            val ssid = com.miauto.app.ApReusePrefs.ssid(this)
+            card.addView(button(
+                "${getString(R.string.settings_iccoa_hotspot_ssid)} · ${ssid ?: getString(R.string.settings_iccoa_not_set)}",
+                false,
+            ) { showIccoaCredentialDialog(ssid = true) }, matchButton(0, 60))
+            val hasPassword = !com.miauto.app.ApReusePrefs.password(this).isNullOrEmpty()
+            card.addView(button(
+                "${getString(R.string.settings_iccoa_hotspot_password)} · ${if (hasPassword) "••••" else getString(R.string.settings_iccoa_not_set)}",
+                false,
+            ) { showIccoaCredentialDialog(ssid = false) }, matchButton(0, 60))
+            card.addView(label(getString(R.string.settings_iccoa_hotspot_hint), 14, MUTED).apply {
+                setPadding(0, dp(10), 0, 0)
+            })
+            val fiveGhz = com.andrerinas.openheadunit.utils.Settings(this).askFiveGhz
+            toggle(card, getString(R.string.settings_iccoa_5ghz), getString(R.string.settings_iccoa_5ghz_hint), fiveGhz) { enabled ->
+                com.andrerinas.openheadunit.utils.Settings(this).askFiveGhz = enabled
+                showIccoaRestartDialog()
+            }
+        }
+        filteredSection(content, SettingsSection.ICCOA_PROJECTION,
+            getString(R.string.settings_iccoa_projection), R.drawable.ic_dp_display) { card ->
+            val resolutions = listOf("480p", "720p", "1080p", "1440p (2K)", "2160p (4K)")
+            choice(card, getString(R.string.settings_iccoa_resolution), resolutions,
+                IcocaSettings.resolution(this), reconnects = false) { IcocaSettings.setResolution(this, it) }
+            val codecs = listOf("Auto", "H.264", "H.265")
+            choice(card, getString(R.string.settings_iccoa_codec), codecs,
+                IcocaSettings.codec(this), reconnects = false) { IcocaSettings.setCodec(this, it) }
+            val dpi = listOf("Auto", "160 dpi", "240 dpi", "320 dpi", "480 dpi")
+            choice(card, getString(R.string.settings_iccoa_dpi), dpi,
+                IcocaSettings.dpi(this), reconnects = false) { IcocaSettings.setDpi(this, it) }
+            toggle(card, getString(R.string.settings_iccoa_stretch), "", IcocaSettings.stretch(this)) {
+                IcocaSettings.setStretch(this, it)
+            }
+        }
+        filteredSection(content, SettingsSection.ICCOA_MICROPHONE,
+            getString(R.string.settings_iccoa_microphone), R.drawable.ic_dp_audio) { card ->
+            val rates = listOf("8 kHz", "16 kHz", "24 kHz", "32 kHz", "44.1 kHz", "48 kHz")
+            choice(card, getString(R.string.settings_iccoa_mic_rate), rates,
+                IcocaSettings.micRate(this), reconnects = false) { IcocaSettings.setMicRate(this, it) }
+            toggle(card, getString(R.string.settings_iccoa_mic_echo), "", IcocaSettings.micEcho(this)) {
+                IcocaSettings.setMicEcho(this, it)
+            }
+            toggle(card, getString(R.string.settings_iccoa_mic_noise), "", IcocaSettings.micNoise(this)) {
+                IcocaSettings.setMicNoise(this, it)
+            }
+        }
+        filteredSection(content, SettingsSection.ICCOA_TOUCH,
+            getString(R.string.settings_iccoa_touch), R.drawable.ic_dp_controls) { card ->
+            toggle(card, getString(R.string.settings_iccoa_touch_toggle), "", IcocaSettings.touch(this)) {
+                IcocaSettings.setTouch(this, it)
+            }
+            toggle(card, getString(R.string.settings_iccoa_hud), "", IcocaSettings.hud(this)) {
+                IcocaSettings.setHud(this, it)
             }
         }
         filteredSection(content, SettingsSection.DIAGNOSTICS,
@@ -2147,123 +2458,11 @@ class DiPlayActivity : ComponentActivity(), AppAppearanceOwner {
         languageSettings(content)
     }
 
-    /** The last release a dialog was offered for, so auto and manual checks never double-pop. */
-    private var offeredUpdateTag: String? = null
-
-    private fun offerUpdate(release: AppUpdate.Release) {
-        val tag = AppUpdate.normalizeTag(release.tag)
-        if (offeredUpdateTag == tag) return
-        offeredUpdateTag = tag
-        val notes = AppUpdate.plainNotes(release.notes).ifBlank { getString(R.string.update_notes_missing) }
-        // Channels like Gitee often omit the asset size; then the brackets are dropped entirely.
-        val headline = if (release.apkBytes > 0) {
-            getString(R.string.update_available, release.tag, "${release.apkBytes / 1024 / 1024} MB")
-        } else {
-            getString(R.string.update_available_no_size, release.tag)
-        }
-        val message = headline + "\n\n" + notes
-        val view = ScrollView(this).apply {
-            addView(label(message, 16, TEXT).apply { setPadding(dp(24), dp(8), dp(24), dp(8)) })
-            isFillViewport = true
-        }
-        AlertDialog.Builder(this)
-            .setTitle(getString(R.string.update_details_title, release.tag))
-            .setView(view)
-            .setPositiveButton(getString(R.string.download_and_install)) { _, _ -> downloadUpdate(release) }
-            .setNegativeButton(getString(R.string.common_cancel), null)
-            .show()
-    }
-
-    /** A downloaded APK waiting for the "install unknown apps" grant; installed on resume. */
-    private var pendingInstallApk: File? = null
-
-    private fun downloadUpdate(release: AppUpdate.Release) {
-        val progress = android.app.ProgressDialog(this).apply {
-            setMessage(getString(R.string.update_downloading))
-            isIndeterminate = false
-            max = 100
-            setProgressStyle(android.app.ProgressDialog.STYLE_HORIZONTAL)
-            setCancelable(true)
-            show()
-        }
-        AppUpdate.download(
-            this,
-            release,
-            onProgress = { percent -> runOnUiThread { if (percent >= 0) progress.progress = percent else progress.isIndeterminate = true } },
-            onDone = { file ->
-                runOnUiThread {
-                    progress.dismiss()
-                    installOrUpdate(file)
-                }
-            },
-            onError = { message ->
-                runOnUiThread {
-                    progress.dismiss()
-                    toast(getString(R.string.update_download_failed, message))
-                }
-            },
-        )
-    }
-
-    /** The car silently drops the installer intent without the per-app unknown-sources grant. */
-    private fun installOrUpdate(file: File) {
-        if (!AppUpdate.canInstall(this)) {
-            pendingInstallApk = file
-            toast(getString(R.string.update_allow_unknown))
-            AppUpdate.openInstallPermission(this)
-            return
-        }
-        if (!AppUpdate.install(this, file)) {
-            toast(getString(R.string.update_install_failed))
-        }
-    }
-
     private fun about(content: LinearLayout) {
         content.addView(label(getString(R.string.diplay), 40, TEXT, true))
         content.addView(label(getString(R.string.carplay_at_home_in_your_car), 20, MUTED).apply { setPadding(0, dp(8), 0, dp(24)) })
         section(content, getString(R.string.about_public_preview_prefix, version())) { card ->
             card.addView(label(getString(R.string.an_independent_carplay_receiver_for_android_head_units_wir), 17, TEXT))
-            val updateStatus = label(AppUpdate.currentVersion(this), 15, MUTED).apply {
-                setPadding(0, dp(10), 0, 0)
-            }
-            card.addView(updateStatus)
-            // A silent background check opens the update dialog as soon as a newer build is found.
-            AppUpdate.autoCheck(this) { release ->
-                runOnUiThread {
-                    if (release == null || isFinishing || isDestroyed) return@runOnUiThread
-                    if (AppUpdate.isAvailable(release, this)) {
-                        updateStatus.text = getString(R.string.update_auto_found, release.tag)
-                        offerUpdate(release)
-                    }
-                }
-            }
-            val channels = listOf(
-                getString(R.string.update_channel_github),
-                getString(R.string.update_channel_gitee),
-                getString(R.string.update_channel_mirror1),
-                getString(R.string.update_channel_mirror2),
-            )
-            choice(card, getString(R.string.update_channel), channels,
-                AirPlayPersistence.loadUpdateChannel(this).coerceIn(0, 3), reconnects = false) {
-                AirPlayPersistence.saveUpdateChannel(this, it)
-                AppUpdate.setChannel(it)
-            }
-            card.addView(button(getString(R.string.check_for_updates), false) {
-                updateStatus.text = "…"
-                AppUpdate.setChannel(AirPlayPersistence.loadUpdateChannel(this))
-                AppUpdate.check { release, failure ->
-                    when {
-                        release == null ->
-                            updateStatus.text = getString(R.string.update_check_failed, failure ?: "?")
-                        !AppUpdate.isAvailable(release, this) ->
-                            updateStatus.text = getString(R.string.up_to_date)
-                        else -> {
-                            updateStatus.text = release.tag
-                            offerUpdate(release)
-                        }
-                    }
-                }
-            }, matchButton(10, 56))
         }
         section(content, getString(R.string.cn_features_title)) { card ->
             card.addView(label(getString(R.string.cn_features_body), 16, TEXT).apply {
@@ -2282,7 +2481,11 @@ class DiPlayActivity : ComponentActivity(), AppAppearanceOwner {
         val raw = runCatching {
             assets.open("CN_OPTIMIZATIONS.md").bufferedReader().use { it.readText() }
         }.getOrNull().orEmpty()
-        return AppUpdate.plainNotes(raw, limit = 8000).ifBlank { getString(R.string.cn_changelog_missing) }
+        return raw.lineSequence()
+            .map { it.trim().removePrefix("#").trim().replace("**", "").replace("`", "") }
+            .filter { it.isNotBlank() }
+            .joinToString("\n")
+            .ifBlank { getString(R.string.cn_changelog_missing) }
     }
 
     // An opted-in connection prepares the hotspot in the controller instead of stopping at this reminder.
@@ -2537,9 +2740,10 @@ class DiPlayActivity : ComponentActivity(), AppAppearanceOwner {
 
     private fun setupGuide(content: LinearLayout) {
         val step = setupStep.coerceIn(SetupGuide.STEP_CAR, SetupGuide.STEP_DONE)
-        content.addView(label(getString(R.string.setup_step_of, step + 1, SetupGuide.STEP_COUNT), 13, ACCENT, true)
+        val progressCard = card()
+        progressCard.addView(label(getString(R.string.setup_step_of, step + 1, SetupGuide.STEP_COUNT), 13, ACCENT, true)
             .apply { letterSpacing = .12f })
-        val progress = row().apply { setPadding(0, dp(10), 0, dp(20)) }
+        val progress = row().apply { setPadding(0, dp(12), 0, 0) }
         repeat(SetupGuide.STEP_COUNT) { index ->
             progress.addView(View(this).apply {
                 background = GradientDrawable().apply {
@@ -2547,7 +2751,8 @@ class DiPlayActivity : ComponentActivity(), AppAppearanceOwner {
                 }
             }, LinearLayout.LayoutParams(0, dp(6), 1f).apply { if (index > 0) marginStart = dp(8) })
         }
-        content.addView(progress)
+        progressCard.addView(progress)
+        content.addView(progressCard, LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = dp(18) })
         when (step) {
             SetupGuide.STEP_CAR -> setupCarStep(content)
             SetupGuide.STEP_CONNECTION -> setupConnectionStep(content)
@@ -4325,7 +4530,7 @@ class DiPlayActivity : ComponentActivity(), AppAppearanceOwner {
         parent.addView(space(12))
     }
 
-    private fun showResolutionSettingsDialog(dialog: AlertDialog, fields: LinearLayout) {
+    private fun showResolutionSettingsDialog(dialog: DiPlayDialog, fields: LinearLayout) {
         dialog.show()
         // AlertDialog replaces the custom view's parameters with MATCH_PARENT. Keep numeric
         // content at its natural height, including on vendor dialog layouts with weighted panels.
@@ -4452,7 +4657,7 @@ class DiPlayActivity : ComponentActivity(), AppAppearanceOwner {
         parent.addView(space(12))
     }
 
-    private fun showNightModeSettingsDialog(dialog: AlertDialog, fields: LinearLayout) {
+    private fun showNightModeSettingsDialog(dialog: DiPlayDialog, fields: LinearLayout) {
         dialog.show()
         // AlertDialog replaces the custom view's parameters with MATCH_PARENT. Keep numeric
         // content at its natural height, including on vendor dialog layouts with weighted panels.
@@ -4588,7 +4793,115 @@ class DiPlayActivity : ComponentActivity(), AppAppearanceOwner {
         parent.addView(space(12))
     }
 
+    private fun loadHomeWireless(): Boolean =
+        getSharedPreferences("diplay", MODE_PRIVATE).getBoolean("home_wireless", false)
+
+    private fun saveHomeWireless(wireless: Boolean) {
+        getSharedPreferences("diplay", MODE_PRIVATE).edit().putBoolean("home_wireless", wireless).apply()
+    }
+
+    private fun iccoaRuntimePermissions(): List<String> = buildList {
+        add(Manifest.permission.ACCESS_FINE_LOCATION)
+        add(Manifest.permission.ACCESS_COARSE_LOCATION)
+        if (Build.VERSION.SDK_INT >= 31) {
+            add(Manifest.permission.BLUETOOTH_SCAN)
+            add(Manifest.permission.BLUETOOTH_CONNECT)
+        }
+        if (Build.VERSION.SDK_INT >= 33) add(Manifest.permission.NEARBY_WIFI_DEVICES)
+    }
+
+    private fun iccoaHasRuntimePermissions(): Boolean =
+        iccoaRuntimePermissions().all { checkSelfPermission(it) == PackageManager.PERMISSION_GRANTED }
+
+    private fun iccoaMissingRuntimePermissions(): List<String> =
+        iccoaRuntimePermissions().filter { checkSelfPermission(it) != PackageManager.PERMISSION_GRANTED }
+
+    private fun iccoaSdkRuntimeAvailable(): Boolean = runCatching {        Class.forName("com.ucar.vehiclesdk.IAppSurfaceStateListener")
+        val extracted = java.io.File(applicationInfo.nativeLibraryDir, "libusbio.so")
+        if (extracted.isFile) return@runCatching true
+        val apk = applicationInfo.sourceDir ?: return@runCatching false
+        java.util.zip.ZipFile(apk).use { zip -> zip.getEntry("lib/arm64-v8a/libusbio.so") != null }
+    }.getOrDefault(false)
+
+    private fun openCarplayPairing() {
+        // Kept as an alias for older call sites. There is deliberately no timed checklist now:
+        // CarPlay starts by showing the real connection setup, then the real host handshake.
+        openCarplaySetupFromHome()
+    }
+
+    private fun openIccoaPairing() {
+        if (iccoaOverlay != null) return
+        if (!iccoaHasRuntimePermissions()) {
+            // Android 10 needs precise location for Wi-Fi P2P/AP; without it the phone can see the
+            // car over BLE but the Wi-Fi handshake never completes.
+            iccoaPermissions.launch(iccoaMissingRuntimePermissions().toTypedArray())
+            return
+        }
+        PhoneLinkSettings.saveSource(this, ProjectionSource.ICCOA)
+        iccoaStarted = iccoaSdkRuntimeAvailable() && runCatching { IcocaEngine.start(this) }.isSuccess
+        val overlay = DiPlayIccoaPairingOverlay(
+            context = this,
+            night = appNight,
+            onClose = { removeIccoaOverlay() },
+            onProjection = { handoffIccoaProjection() },
+        )
+        if (!iccoaStarted) overlay.render(IcocaBridge.State())
+        iccoaOverlay = overlay
+        glassHome?.setPairingMode(true)
+        if (iccoaStarted) {
+            iccoaStateJob = lifecycleScope.launch {
+                IcocaEngine.bridge(this@DiPlayActivity).state.collect { state -> overlay.render(state) }
+            }
+        }
+        addContentView(overlay, ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT))
+        var backdropFrame = 0
+        val backdropTick = object : Runnable {
+            override fun run() {
+                if (overlay.parent == null || backdropFrame > 23) return
+                glassHome?.snapshotBlurred()?.let(overlay::setBackdrop)
+                backdropFrame++
+                overlay.postDelayed(this, 33)
+            }
+        }
+        overlay.post(backdropTick)
+    }
+
+    private fun removeIccoaOverlay() {
+        val overlay = iccoaOverlay ?: return
+        iccoaOverlay = null
+        glassHome?.setPairingMode(false)
+        iccoaStateJob?.cancel()
+        iccoaStateJob = null
+        (overlay.parent as? ViewGroup)?.removeView(overlay)
+        if (iccoaStarted) {
+            iccoaStarted = false
+            val appContext = applicationContext
+            Thread { runCatching { IcocaEngine.stop(appContext) } }.apply { isDaemon = true }.start()
+        }
+    }
+
+    /**
+     * The pairing card expanded to full screen and faded to black: keep the engine alive and hand
+     * the surface to the projection page. The projection page stops the engine when it closes.
+     */
+    private fun handoffIccoaProjection() {
+        val overlay = iccoaOverlay ?: return
+        iccoaOverlay = null
+        iccoaStateJob?.cancel()
+        iccoaStateJob = null
+        glassHome?.setPairingMode(false)
+        val preview = !iccoaStarted
+        iccoaStarted = false
+        startActivity(
+            Intent(this, IcocaProjectionActivity::class.java)
+                .putExtra("iccoa_preview", preview)
+                .addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT),
+        )
+        overlay.postDelayed({ (overlay.parent as? ViewGroup)?.removeView(overlay) }, 300)
+    }
+
     private fun connect(wireless: Boolean) {
+        markCarplaySetupDone()
         startupHotspotCancelled = true
         if (wireless && pendingCarHotspotSetup) { toast(getString(R.string.save_your_hotspot_details_in_connection_setup_first)); page = "connection"; render(); return }
         if (setupError != null) { toast(setupError!!); return }
@@ -4613,13 +4926,29 @@ class DiPlayActivity : ComponentActivity(), AppAppearanceOwner {
         }
         val open = {
             AirPlayPersistence.saveWirelessEnabled(this, wireless)
-            openProjection()
+            // The setup page closes first: the driver sees the home, then the CarPlay connection
+            // popup on top of a home snapshot while the real host connects. Only a live session
+            // takes over the screen with the full-bleed playback surface.
+            page = "home"
+            render()
+            // Mirror the ICCOA pairing: the two home cards give way first, then the CarPlay
+            // connection popup appears in the middle.
+            glassHome?.setPairingMode(true)
+            handler.postDelayed({
+                openProjection(glassHome?.snapshotForHost())
+                glassHome?.setPairingMode(false)
+            }, 800)
         }
         if (CarPlayBackgroundSession.hasSession()) CarPlayBackgroundSession.stop { runOnUiThread { open() } }
         else open()
     }
-    private fun openProjection() {
-        startActivity(Intent(this, CarPlayHostActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT))
+    private fun openProjection(homeSnapshot: android.graphics.Bitmap? = null) {
+        CarPlayHomeSnapshot.bitmap = homeSnapshot
+        val intent = Intent(this, CarPlayHostActivity::class.java)
+            .addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT or Intent.FLAG_ACTIVITY_NO_ANIMATION)
+        startActivity(intent, android.app.ActivityOptions.makeCustomAnimation(this, 0, 0).toBundle())
+        @Suppress("DEPRECATION")
+        overridePendingTransition(0, 0)
     }
     private fun choosePhone() {
         if (Build.VERSION.SDK_INT >= 31 && checkSelfPermission(Manifest.permission.BLUETOOTH_CONNECT) != PackageManager.PERMISSION_GRANTED) {
@@ -4893,6 +5222,65 @@ class DiPlayActivity : ComponentActivity(), AppAppearanceOwner {
     private fun openSystem(intent: Intent) { runCatching { startActivity(intent) }.onFailure { toast(getString(R.string.open_this_setting_from_your_car_s_settings_app)) } }
     private fun toast(message: String) { Toast.makeText(this, message, Toast.LENGTH_LONG).show() }
 
+    private fun showIccoaCredentialDialog(ssid: Boolean) {
+        val input = android.widget.EditText(this).apply {
+            setSingleLine(true)
+            setPadding(dp(16), dp(10), dp(16), dp(10))
+            setText(
+                if (ssid) com.miauto.app.ApReusePrefs.ssid(this@DiPlayActivity)
+                else com.miauto.app.ApReusePrefs.password(this@DiPlayActivity),
+            )
+            hint = getString(if (ssid) R.string.settings_iccoa_hotspot_ssid else R.string.settings_iccoa_hotspot_password)
+            if (!ssid) {
+                inputType = android.text.InputType.TYPE_CLASS_TEXT or
+                    android.text.InputType.TYPE_TEXT_VARIATION_PASSWORD
+            }
+        }
+        appDialogBuilder()
+            .setTitle(if (ssid) R.string.settings_iccoa_hotspot_ssid else R.string.settings_iccoa_hotspot_password)
+            .setView(input)
+            .setPositiveButton(R.string.save) { _, _ ->
+                com.miauto.app.ApReusePrefs.setCredentials(
+                    this,
+                    if (ssid) input.text.toString() else com.miauto.app.ApReusePrefs.ssid(this),
+                    if (ssid) com.miauto.app.ApReusePrefs.password(this) else input.text.toString(),
+                )
+                render()
+                showIccoaRestartDialog()
+            }
+            .setNegativeButton(R.string.cancel, null)
+            .show()
+    }
+
+    private fun showIccoaRestartDialog() {
+        appDialogBuilder()
+            .setTitle(R.string.settings_iccoa_restart_title)
+            .setMessage(R.string.settings_iccoa_restart_message)
+            .setPositiveButton(R.string.settings_iccoa_restart_now) { _, _ -> restartForIccoa() }
+            .setNegativeButton(R.string.cancel, null)
+            .show()
+    }
+
+    private fun restartForIccoa() {
+        // The ICCOA SDK reads the transport and 5 GHz preference only when it initialises once per
+        // process. A real process restart is the only way to apply them, same as MiAuto's setup.
+        val intent = Intent(this, DiPlayActivity::class.java)
+            .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP)
+        val pending = android.app.PendingIntent.getActivity(
+            this,
+            0,
+            intent,
+            android.app.PendingIntent.FLAG_UPDATE_CURRENT or android.app.PendingIntent.FLAG_IMMUTABLE,
+        )
+        (getSystemService(ALARM_SERVICE) as android.app.AlarmManager).set(
+            android.app.AlarmManager.ELAPSED_REALTIME,
+            android.os.SystemClock.elapsedRealtime() + 300,
+            pending,
+        )
+        finishAffinity()
+        android.os.Process.killProcess(android.os.Process.myPid())
+    }
+
     private fun playTestTone(streamType: Int) {
         toneStop?.let { handler.removeCallbacks(it) }
         toneStop = null
@@ -5086,7 +5474,19 @@ class DiPlayActivity : ComponentActivity(), AppAppearanceOwner {
         }
         parent.addView(button, matchButton(0, 60)); parent.addView(space(12))
     }
-    private fun card() = column().apply { background = rounded(SURFACE, BORDER); setPadding(dp(24), dp(24), dp(24), dp(24)) }
+    private val glassChrome: Boolean
+        get() = (page == "settings" && isExpandedSettingsLayout) ||
+            page == "connection" || page == "setup" || page == "about"
+
+    private fun card() = column().apply {
+        background = if (glassChrome) {
+            DiPlayLiquidGlassDrawable(dp(24).toFloat(), dark = appNight)
+        } else {
+            rounded(SURFACE, BORDER)
+        }
+        if (glassChrome) elevation = dp(4).toFloat()
+        setPadding(dp(24), dp(24), dp(24), dp(24))
+    }
     private fun column() = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL; layoutParams = LinearLayout.LayoutParams(-1, -2) }
     private fun row() = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL; layoutParams = LinearLayout.LayoutParams(-1, -2) }
     private class HeaderTitleView(context: android.content.Context) : TextView(context) {
@@ -5139,6 +5539,7 @@ class DiPlayActivity : ComponentActivity(), AppAppearanceOwner {
                 invalidate()
             }
         }
+        DiPlayGlassTouch.install(this)
     }
 
     private fun button(title: String, primary: Boolean, click: () -> Unit) = SettingButton(this, MUTED, ACCENT).apply {
@@ -5178,6 +5579,7 @@ class DiPlayActivity : ComponentActivity(), AppAppearanceOwner {
         )
         foreground = focusRing(radiusDp = 20)
         setOnClickListener { click() }
+        DiPlayGlassTouch.install(this)
     }
 
     // For an action whose label happens to contain the separator, such as "Turn on … · ADB".
@@ -5410,5 +5812,40 @@ class DiPlayActivity : ComponentActivity(), AppAppearanceOwner {
         private const val NOTE_LINE_GAP_DP = 4
         private const val NOTE_ATTACH_GAP_DP = 6
         private const val SETTINGS_BLOCK_GAP_DP = 18
+    private const val SETTINGS_FLOAT_HEADER_DP = 88
     }
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

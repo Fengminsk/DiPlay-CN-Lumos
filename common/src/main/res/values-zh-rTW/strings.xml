@@ -788,4 +788,65 @@
     <string name="setup_badge_adb">需要網路 ADB</string>
     <string name="setup_done_title">一切就緒</string>
     <string name="setup_done_description">現在連線你的 iPhone。之後可隨時從設定再次開啟精靈。</string>
+    <string name="glass_iccoa_prompt">在手機上輸入此配對碼</string>
+    <string name="glass_iccoa_waiting">等待手機連線…</string>
+    <string name="glass_iccoa_connected">已連線</string>
+    <string name="glass_iccoa_pairing">正在配對…</string>
+    <string name="glass_iccoa_hotspot">請先開啟車載熱點</string>
+    <string name="glass_iccoa_valid">有效期 120 秒</string>
+    <string name="glass_carplay_prompt">在 iPhone 上完成 CarPlay 連線</string>
+    <string name="glass_carplay_usb_find">透過 USB 發現 iPhone</string>
+    <string name="glass_carplay_usb_permission">允許 USB 存取</string>
+    <string name="glass_carplay_pair">與 iPhone 配對</string>
+    <string name="glass_carplay_open">開啟 CarPlay</string>
+    <string name="glass_carplay_hotspot">啟動 CarPlay Wi-Fi</string>
+    <string name="glass_carplay_paired">等待已配對的 iPhone</string>
+    <string name="glass_carplay_bluetooth">連接藍牙</string>
+    <string name="glass_carplay_hint">保持 iPhone 解鎖，並在提示時允許 CarPlay。</string>
+    <string name="glass_carplay_connecting">正在連線…</string>
+    <string name="iccoa_permission_needed">允許位置與附近裝置權限，手機才能完成 ICCOA Wi-Fi 連線。</string>
+    <string name="settings_iccoa_connection">ICCOA CarLink</string>
+    <string name="settings_iccoa_connection_summary">Android 手機如何加入本車機。修改連線方式後需要重新啟動應用程式。</string>
+    <string name="settings_iccoa_transport">連線方式</string>
+    <string name="settings_iccoa_transport_p2p">Wi-Fi Direct</string>
+    <string name="settings_iccoa_transport_ap">車機熱點</string>
+    <string name="settings_iccoa_hotspot_ssid">熱點名稱</string>
+    <string name="settings_iccoa_hotspot_password">熱點密碼</string>
+    <string name="settings_iccoa_not_set">未設定</string>
+    <string name="settings_iccoa_hotspot_hint">車機熱點模式會複用車機熱點；請先開啟熱點並填寫名稱和密碼。</string>
+    <string name="settings_iccoa_5ghz">僅使用 5 GHz</string>
+    <string name="settings_iccoa_5ghz_hint">將 Wi-Fi Direct 限制在 5 GHz。部分手機需要；部分車機不支援 5 GHz P2P。</string>
+    <string name="settings_iccoa_connect">連接 Android 手機</string>
+    <string name="settings_iccoa_restart">重新啟動 DiPlay</string>
+    <string name="settings_iccoa_restart_title">需要重新啟動</string>
+    <string name="settings_iccoa_restart_message">ICCOA 在引擎啟動時讀取連線方式。立即重新啟動應用程式以套用。</string>
+    <string name="settings_iccoa_restart_now">立即重新啟動</string>
+    <string name="settings_iccoa_p2p_hint">Wi-Fi Direct 需要關閉車機熱點；車機熱點與 Wi-Fi Direct 互斥，不能同時開啟。</string>
+    <string name="settings_iccoa_summary">ICCOA CarLink 的連線、投屏、麥克風與觸控。</string>
+    <string name="settings_iccoa_projection">投屏</string>
+    <string name="settings_iccoa_microphone">麥克風</string>
+    <string name="settings_iccoa_touch">觸控與儀表</string>
+    <string name="settings_iccoa_wireless">無線投屏</string>
+    <string name="settings_iccoa_usb">USB 投屏</string>
+    <string name="settings_iccoa_ble">BLE 備援廣播</string>
+    <string name="settings_iccoa_auto">開啟應用程式時連線</string>
+    <string name="settings_iccoa_resolution">解析度</string>
+    <string name="settings_iccoa_codec">視訊編碼</string>
+    <string name="settings_iccoa_dpi">像素密度</string>
+    <string name="settings_iccoa_stretch">拉伸填滿</string>
+    <string name="settings_iccoa_mic_rate">取樣率</string>
+    <string name="settings_iccoa_mic_echo">回音消除</string>
+    <string name="settings_iccoa_mic_noise">降噪</string>
+    <string name="settings_iccoa_touch_toggle">實測觸控區域</string>
+    <string name="settings_iccoa_hud">HUD 鏡像</string>
 </resources>
+
+
+
+
+
+
+
+
+
+

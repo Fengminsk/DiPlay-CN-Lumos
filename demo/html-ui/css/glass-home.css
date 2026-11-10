@@ -1,0 +1,1373 @@
+/* ============================================================
+   Glass home — sky, two large frosted tiles, draggable USB / Wi-Fi pill.
+   All sizes are dp on the 1280 × 720 stage. Glass is a Gaussian-blur
+   approximation of the Pocket Harness liquid glass, not refraction.
+   ============================================================ */
+
+.glass-home {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  isolation: isolate;
+  color: #f8fbff;
+  font-family: var(--font-ui);
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* ---------- Sky ---------- */
+
+.gh-sky {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  background:
+    radial-gradient(42% 40% at 1% -14%, rgba(255, 255, 255, 0.3), rgba(255, 255, 255, 0) 62%),
+    radial-gradient(40% 36% at 58% 60%, rgba(255, 200, 152, 0.28), rgba(255, 200, 152, 0) 66%),
+    radial-gradient(78% 72% at 56% 32%, rgba(96, 140, 198, 0.26), rgba(96, 140, 198, 0) 68%),
+    linear-gradient(136deg, #bcc9e1 0%, #a9bcdb 45%, #a1b6d7 100%);
+}
+
+.gh-sky__wash,
+.gh-sky__streak {
+  position: absolute;
+  display: block;
+  pointer-events: none;
+}
+
+.gh-sky__wash--cool {
+  left: -8%;
+  top: -24%;
+  width: 780px;
+  height: 580px;
+  background: radial-gradient(closest-side, rgba(255, 255, 255, 0.62), rgba(255, 255, 255, 0) 100%);
+  filter: blur(30px);
+}
+
+.gh-sky__wash--warm {
+  left: 57%;
+  top: 55%;
+  width: 600px;
+  height: 440px;
+  background: radial-gradient(closest-side, rgba(255, 190, 142, 0.3), rgba(255, 190, 142, 0) 100%);
+  filter: blur(38px);
+}
+
+.gh-sky__streak--top {
+  left: -180px;
+  top: 22px;
+  width: 1180px;
+  height: 150px;
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, 0.8) 42%,
+    rgba(255, 255, 255, 0) 82%
+  );
+  filter: blur(18px);
+  transform: rotate(-13deg);
+  opacity: 0.22;
+}
+
+.gh-sky__streak--bottom {
+  left: 26%;
+  top: 66%;
+  width: 760px;
+  height: 150px;
+  background: linear-gradient(
+    90deg,
+    rgba(255, 244, 226, 0) 0%,
+    rgba(255, 244, 226, 0.8) 46%,
+    rgba(255, 244, 226, 0) 84%
+  );
+  filter: blur(24px);
+  transform: rotate(-17deg);
+  opacity: 0.18;
+}
+
+.gh-sky__grain {
+  position: absolute;
+  inset: 0;
+  opacity: 0.05;
+  mix-blend-mode: soft-light;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/* ---------- Top controls ---------- */
+
+.gh-top {
+  position: absolute;
+  top: 39px;
+  right: 49px;
+  z-index: 7;
+  display: flex;
+  gap: 14px;
+}
+
+.gh-topbtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 50px;
+  height: 50px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: linear-gradient(160deg, rgba(255, 255, 255, 0.46), rgba(255, 255, 255, 0.12));
+  -webkit-backdrop-filter: blur(14px) saturate(1.25);
+  backdrop-filter: blur(14px) saturate(1.25);
+  color: #1b2433;
+  cursor: pointer;
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.6),
+    0 0 22px rgba(255, 255, 255, 0.25),
+    0 10px 26px rgba(50, 70, 110, 0.16),
+    inset 0 1px 1px rgba(255, 255, 255, 0.85);
+  transition: transform 0.18s ease, box-shadow 0.2s ease;
+}
+
+.gh-topbtn:hover {
+  transform: scale(1.045);
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.75),
+    0 0 26px rgba(255, 255, 255, 0.35),
+    0 12px 28px rgba(50, 70, 110, 0.18),
+    inset 0 1px 1px rgba(255, 255, 255, 0.9);
+}
+
+.gh-topbtn:active {
+  transform: scale(0.955);
+}
+
+.gh-topbtn__icon {
+  width: 24px;
+  height: 24px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* ---------- Cards ---------- */
+
+.gh-cards {
+  position: absolute;
+  top: 177px;
+  left: 50%;
+  z-index: 2;
+  display: flex;
+  gap: 38px;
+  transform: translateX(-50%);
+}
+
+.gh-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  width: 297px;
+  height: 297px;
+  padding: 32px 0 0;
+  border: 0;
+  border-radius: 72px;
+  background:
+    radial-gradient(110% 85% at 16% -6%, rgba(255, 255, 255, 0.36), rgba(255, 255, 255, 0) 60%),
+    radial-gradient(95% 85% at 86% 104%, rgba(255, 196, 150, 0.22), rgba(255, 196, 150, 0) 60%),
+    linear-gradient(158deg, rgba(156, 194, 242, 0.24) 0%, rgba(126, 166, 226, 0.2) 48%, rgba(176, 204, 244, 0.18) 100%);
+  -webkit-backdrop-filter: blur(26px) saturate(1.25);
+  backdrop-filter: blur(26px) saturate(1.25);
+  box-shadow:
+    0 0 0 1.8px rgba(255, 255, 255, 0.62),
+    0 0 22px rgba(255, 255, 255, 0.42),
+    0 0 64px rgba(255, 255, 255, 0.18),
+    0 26px 64px rgba(55, 76, 118, 0.18),
+    inset 0 1px 2px rgba(255, 255, 255, 0.78),
+    inset 0 -26px 48px rgba(255, 192, 148, 0.12);
+  color: inherit;
+  font-family: inherit;
+  cursor: pointer;
+  transition: transform 0.18s cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 0.22s ease;
+}
+
+/* One bright, slightly warm rim instead of a flat 1px border. */
+.gh-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  border-radius: inherit;
+  padding: 2px;
+  background: linear-gradient(
+    150deg,
+    rgba(255, 255, 255, 0.98) 0%,
+    rgba(255, 255, 255, 0.55) 18%,
+    rgba(255, 255, 255, 0.14) 46%,
+    rgba(255, 238, 215, 0.48) 78%,
+    rgba(255, 255, 255, 0.95) 100%
+  );
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  mask-composite: exclude;
+  pointer-events: none;
+}
+
+/* Warm bloom rising from the bottom-right, as in the reference. */
+.gh-card::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  border-radius: inherit;
+  background: radial-gradient(72% 52% at 84% 102%, rgba(255, 198, 150, 0.28), rgba(255, 198, 150, 0) 62%);
+  mix-blend-mode: screen;
+  pointer-events: none;
+}
+
+.gh-card__sheen {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  border-radius: inherit;
+  background: linear-gradient(
+    118deg,
+    rgba(255, 255, 255, 0.24) 0%,
+    rgba(255, 255, 255, 0.06) 26%,
+    rgba(255, 255, 255, 0) 44%
+  );
+  pointer-events: none;
+}
+
+.gh-card:hover {
+  transform: translateY(-2px) scale(1.012);
+  box-shadow:
+    0 0 0 1.5px rgba(255, 255, 255, 0.64),
+    0 0 36px rgba(255, 255, 255, 0.34),
+    0 32px 74px rgba(55, 76, 118, 0.22),
+    inset 0 1px 2px rgba(255, 255, 255, 0.82),
+    inset 0 -26px 48px rgba(255, 192, 148, 0.14);
+}
+
+.gh-card:active {
+  transform: scale(0.982);
+  transition-duration: 0.09s;
+}
+
+.gh-card__icon {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 112px;
+  height: 112px;
+  border-radius: 26px;
+}
+
+.gh-card__icon--carplay img {
+  display: block;
+  width: 124px;
+  height: 124px;
+  filter: drop-shadow(0 8px 18px rgba(30, 120, 60, 0.2));
+}
+
+.gh-card__icon--iccoa {
+  background: linear-gradient(180deg, #4b9dff 0%, #1e6cf2 100%);
+  box-shadow:
+    0 8px 22px rgba(30, 90, 200, 0.28),
+    inset 0 1px 1px rgba(255, 255, 255, 0.55);
+}
+
+.gh-card__link {
+  width: 60px;
+  height: 60px;
+  fill: none;
+  stroke: #ffffff;
+  stroke-width: 2.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  filter: drop-shadow(0 1px 1px rgba(10, 50, 130, 0.2));
+}
+
+.gh-card__label {
+  position: relative;
+  z-index: 1;
+  color: #fbfdff;
+  font-size: 32px;
+  line-height: 36px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  text-shadow: 0 2px 12px rgba(50, 80, 130, 0.22);
+  white-space: nowrap;
+}
+
+.gh-card__dot {
+  position: absolute;
+  top: 22px;
+  right: 22px;
+  z-index: 2;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #55d68b;
+  box-shadow: 0 0 0 4px rgba(85, 214, 139, 0.2);
+}
+
+.gh-card__dot.is-connecting {
+  background: #9ecbff;
+  box-shadow: 0 0 0 4px rgba(158, 203, 255, 0.24);
+  animation: gh-pulse 1.3s ease-in-out infinite;
+}
+
+.gh-card__dot.is-error {
+  background: #ffb27a;
+  box-shadow: 0 0 0 4px rgba(255, 178, 122, 0.24);
+}
+
+@keyframes gh-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.22;
+  }
+}
+
+/* ---------- Transport pill ---------- */
+
+.gh-transport {
+  position: absolute;
+  top: 541px;
+  left: 50%;
+  z-index: 3;
+  display: flex;
+  width: 274px;
+  height: 60px;
+  padding: 2px;
+  overflow: hidden;
+  border-radius: 30px;
+  background: rgba(255, 255, 255, 0.09);
+  -webkit-backdrop-filter: blur(20px) saturate(1.2);
+  backdrop-filter: blur(20px) saturate(1.2);
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.45),
+    inset 0 1px 1px rgba(255, 255, 255, 0.55),
+    0 12px 32px rgba(50, 70, 110, 0.16);
+  transform: translateX(-50%);
+  cursor: grab;
+  touch-action: none;
+}
+
+.gh-transport:active {
+  cursor: grabbing;
+}
+
+.gh-transport__thumb {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  z-index: 1;
+  width: 135px;
+  height: 56px;
+  border-radius: 28px;
+  background: linear-gradient(180deg, #f4f8ff 0%, #e4ecf8 100%);
+  box-shadow:
+    0 6px 16px rgba(40, 60, 100, 0.18),
+    0 1px 3px rgba(40, 60, 100, 0.12),
+    inset 0 1px 0 #ffffff;
+  transition: transform 0.34s cubic-bezier(0.22, 0.8, 0.2, 1);
+  pointer-events: none;
+}
+
+.gh-transport__thumb.is-dragging {
+  transition: none;
+}
+
+.gh-transport__opt {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex: 1;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: 0;
+  border-radius: 28px;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.92);
+  cursor: pointer;
+  transition: color 0.18s ease;
+}
+
+.gh-transport__opt.is-on {
+  color: #18202d;
+}
+
+.gh-transport__icon {
+  width: 30px;
+  height: 30px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2.15;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* ---------- Gesture bar on the sky ---------- */
+
+.car-screen.is-glass-home .gesture-bar {
+  width: 205px;
+  height: 6px;
+  bottom: 18px;
+  border-radius: 3px;
+  background: rgba(255, 255, 255, 0.92);
+  box-shadow: 0 1px 6px rgba(40, 60, 100, 0.18);
+}
+
+.car-screen[data-appearance="dark"].is-glass-home .gesture-bar {
+  background: rgba(255, 255, 255, 0.8);
+}
+
+/* ---------- Focus ---------- */
+
+.gh-topbtn:focus-visible,
+.gh-card:focus-visible,
+.gh-transport__opt:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 3px;
+}
+
+/* ---------- Night glass ---------- */
+
+.car-screen[data-appearance="dark"] .gh-sky {
+  background:
+    radial-gradient(90% 70% at 10% -12%, rgba(120, 152, 205, 0.32), rgba(120, 152, 205, 0) 55%),
+    radial-gradient(70% 62% at 104% 108%, rgba(255, 170, 110, 0.16), rgba(255, 170, 110, 0) 60%),
+    linear-gradient(136deg, #101a2c 0%, #14233c 46%, #0c1626 100%);
+}
+
+.car-screen[data-appearance="dark"] .gh-sky__wash--cool {
+  background: radial-gradient(closest-side, rgba(70, 110, 175, 0.4), rgba(70, 110, 175, 0) 100%);
+}
+
+.car-screen[data-appearance="dark"] .gh-sky__wash--warm {
+  background: radial-gradient(closest-side, rgba(255, 170, 110, 0.18), rgba(255, 170, 110, 0) 100%);
+}
+
+.car-screen[data-appearance="dark"] .gh-sky__streak--top {
+  opacity: 0.18;
+}
+
+.car-screen[data-appearance="dark"] .gh-sky__streak--bottom {
+  opacity: 0.2;
+}
+
+.car-screen[data-appearance="dark"] .gh-card {
+  background:
+    radial-gradient(120% 95% at 16% -4%, rgba(255, 255, 255, 0.16), rgba(255, 255, 255, 0) 58%),
+    radial-gradient(110% 100% at 88% 104%, rgba(255, 176, 118, 0.16), rgba(255, 176, 118, 0) 58%),
+    linear-gradient(158deg, rgba(255, 255, 255, 0.1) 0%, rgba(120, 150, 205, 0.06) 48%, rgba(255, 255, 255, 0.08) 100%);
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.16),
+    0 0 26px rgba(130, 170, 230, 0.12),
+    0 26px 64px rgba(0, 0, 0, 0.4),
+    inset 0 1px 1px rgba(255, 255, 255, 0.24),
+    inset 0 -26px 48px rgba(255, 160, 100, 0.06);
+}
+
+.car-screen[data-appearance="dark"] .gh-card::before {
+  background: linear-gradient(
+    150deg,
+    rgba(255, 255, 255, 0.55) 0%,
+    rgba(255, 255, 255, 0.24) 20%,
+    rgba(255, 255, 255, 0.06) 48%,
+    rgba(255, 220, 190, 0.16) 78%,
+    rgba(255, 255, 255, 0.42) 100%
+  );
+}
+
+.car-screen[data-appearance="dark"] .gh-card::after {
+  opacity: 0.55;
+}
+
+.car-screen[data-appearance="dark"] .gh-topbtn {
+  color: #eaf2ff;
+  background: linear-gradient(160deg, rgba(255, 255, 255, 0.16), rgba(255, 255, 255, 0.05));
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.24),
+    0 10px 26px rgba(0, 0, 0, 0.35),
+    inset 0 1px 1px rgba(255, 255, 255, 0.28);
+}
+
+.car-screen[data-appearance="dark"] .gh-transport {
+  background: rgba(255, 255, 255, 0.08);
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.2),
+    inset 0 1px 1px rgba(255, 255, 255, 0.2),
+    0 12px 32px rgba(0, 0, 0, 0.35);
+}
+
+.car-screen[data-appearance="dark"] .gh-transport__thumb {
+  background: linear-gradient(180deg, #f2f6fc 0%, #dfe7f2 100%);
+}
+
+.car-screen[data-appearance="dark"] .gh-transport__opt.is-on {
+  color: #0c111b;
+}
+
+/* ---------- Entrance ---------- */
+
+.car-screen.motion .gh-card {
+  animation: gh-rise 0.72s cubic-bezier(0.16, 0.84, 0.28, 1) backwards;
+}
+
+.car-screen.motion .gh-card--carplay {
+  animation-delay: 0.02s;
+}
+
+.car-screen.motion .gh-card--iccoa {
+  animation-delay: 0.08s;
+}
+
+.car-screen.motion .gh-gear {
+  animation: gh-rise 0.6s cubic-bezier(0.16, 0.84, 0.28, 1) 0.14s backwards;
+}
+
+.car-screen.motion .gh-transport {
+  animation: gh-rise 0.66s cubic-bezier(0.16, 0.84, 0.28, 1) 0.18s backwards;
+}
+
+@keyframes gh-rise {
+  from {
+    opacity: 0;
+    transform: translateY(16px) scale(0.975);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .car-screen.motion .gh-card,
+  .car-screen.motion .gh-gear,
+  .car-screen.motion .gh-transport {
+    animation: none;
+  }
+}
+
+
+
+
+
+
+
+
+
+/* ============================================================
+   ICCOA pairing choreography
+   ============================================================ */
+
+.glass-home.is-pairing .gh-sky {
+  transform: scale(1.02);
+  filter: brightness(0.97);
+  transition: transform 1s ease, filter 1s ease;
+}
+
+.glass-home.is-pairing .gh-card {
+  opacity: 0.96;
+  transition:
+    transform 0.75s cubic-bezier(0.2, 0.8, 0.2, 1),
+    filter 0.55s ease,
+    opacity 0.5s ease;
+}
+
+.glass-home.is-pairing .gh-card--carplay {
+  transform: translate(-184px, 18px) scale(0.8) rotateY(9deg);
+  filter: brightness(0.95) saturate(0.95);
+}
+
+.glass-home.is-pairing .gh-card--iccoa {
+  transform: translate(188px, 18px) scale(0.8) rotateY(-9deg);
+  filter: brightness(0.95) saturate(0.95);
+}
+
+.glass-home.is-pairing .gh-transport {
+  opacity: 0;
+  transform: translate(-50%, 16px);
+  transition: opacity 0.4s ease, transform 0.5s cubic-bezier(0.2, 0.8, 0.2, 1);
+  pointer-events: none;
+}
+
+/* ---------- Scrim ---------- */
+
+.pair-scrim {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  perspective: 1400px;
+  background: radial-gradient(
+    58% 58% at 50% 46%,
+    rgba(20, 40, 70, 0.06),
+    rgba(10, 22, 42, 0.26)
+  );
+  -webkit-backdrop-filter: blur(1.5px);
+  backdrop-filter: blur(1.5px);
+  transition: background-color 0.45s ease;
+}
+
+.pair-scrim.is-expanding {
+  background: rgba(8, 16, 28, 0);
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+
+/* ---------- Pairing card ---------- */
+
+.pair-card {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  overflow: hidden;
+  width: 465px;
+  height: 378px;
+  padding: 30px;
+  border-radius: 40px;
+  background:
+    radial-gradient(120% 90% at 18% 0%, rgba(255, 255, 255, 0.5), rgba(255, 255, 255, 0) 58%),
+    radial-gradient(90% 80% at 90% 100%, rgba(255, 196, 150, 0.26), rgba(255, 196, 150, 0) 60%),
+    linear-gradient(160deg, rgba(170, 205, 245, 0.42) 0%, rgba(130, 170, 230, 0.26) 100%);
+  -webkit-backdrop-filter: blur(30px) saturate(1.25);
+  backdrop-filter: blur(30px) saturate(1.25);
+  box-shadow:
+    0 0 0 2px rgba(255, 255, 255, 0.55),
+    0 0 46px rgba(255, 255, 255, 0.32),
+    0 46px 100px rgba(25, 45, 85, 0.36),
+    inset 0 1px 2px rgba(255, 255, 255, 0.8),
+    inset 0 -30px 60px rgba(255, 180, 130, 0.12);
+  transform-style: preserve-3d;
+  transition:
+    width 0.9s cubic-bezier(0.65, 0, 0.25, 1),
+    height 0.9s cubic-bezier(0.65, 0, 0.25, 1),
+    border-radius 0.9s cubic-bezier(0.65, 0, 0.25, 1),
+    box-shadow 0.5s ease;
+}
+
+.pair-card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 2;
+  border-radius: inherit;
+  padding: 2px;
+  background: linear-gradient(
+    150deg,
+    rgba(255, 255, 255, 1) 0%,
+    rgba(255, 255, 255, 0.6) 18%,
+    rgba(255, 255, 255, 0.16) 46%,
+    rgba(255, 238, 215, 0.55) 78%,
+    rgba(255, 255, 255, 0.96) 100%
+  );
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  mask-composite: exclude;
+  pointer-events: none;
+}
+
+.pair-head {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  width: 100%;
+  height: 54px;
+  gap: 14px;
+}
+
+.pair-head__icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  width: 54px;
+  height: 54px;
+  border-radius: 16px;
+  background: linear-gradient(180deg, #4b9dff 0%, #1e6cf2 100%);
+  box-shadow:
+    0 8px 22px rgba(30, 90, 200, 0.28),
+    inset 0 1px 1px rgba(255, 255, 255, 0.55);
+}
+
+.pair-head__icon svg {
+  width: 28px;
+  height: 28px;
+  fill: none;
+  stroke: #ffffff;
+  stroke-width: 2.2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.pair-head__title {
+  margin: 0;
+  color: #ffffff;
+  font-size: 30px;
+  line-height: 36px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+}
+
+.pair-close {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  width: 46px;
+  height: 46px;
+  margin-left: auto;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: rgba(32, 50, 82, 0.32);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+  color: #ffffff;
+  cursor: pointer;
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.55),
+    0 4px 14px rgba(30, 50, 90, 0.14);
+  transition: background-color 0.16s ease, transform 0.16s ease;
+}
+
+.pair-close:hover {
+  background: rgba(38, 58, 92, 0.3);
+}
+
+.pair-close:active {
+  transform: scale(0.94);
+}
+
+.pair-close svg {
+  width: 18px;
+  height: 18px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+}
+
+.pair-prompt {
+  position: relative;
+  z-index: 1;
+  margin: 28px 0 0;
+  color: rgba(255, 255, 255, 0.92);
+  font-size: 23px;
+  line-height: 30px;
+  text-shadow: 0 2px 12px rgba(40, 70, 120, 0.18);
+}
+
+.pair-code {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  gap: 12px;
+  margin-top: 12px;
+  color: #ffffff;
+  font-size: 60px;
+  line-height: 68px;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+  text-shadow: 0 4px 18px rgba(30, 60, 110, 0.26);
+}
+
+.pair-code span {
+  display: block;
+  min-width: 36px;
+  text-align: center;
+  opacity: 0;
+  animation: digit-in 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+}
+
+@keyframes digit-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.94);
+    filter: blur(4px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+    filter: none;
+  }
+}
+
+.pair-line {
+  position: relative;
+  z-index: 1;
+  width: 260px;
+  height: 3px;
+  margin-top: 10px;
+  border-radius: 2px;
+  background: linear-gradient(
+    90deg,
+    rgba(120, 190, 255, 0) 0%,
+    #6fb6ff 22%,
+    #b6dcff 50%,
+    #6fb6ff 78%,
+    rgba(120, 190, 255, 0) 100%
+  );
+  box-shadow: 0 0 16px rgba(110, 180, 255, 0.7);
+}
+
+.pair-valid {
+  position: relative;
+  z-index: 1;
+  margin: 10px 0 0;
+  color: rgba(255, 255, 255, 0.62);
+  font-size: 15px;
+  line-height: 20px;
+  letter-spacing: 0.02em;
+}
+
+.pair-status {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: auto;
+  padding-bottom: 2px;
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 18px;
+  line-height: 24px;
+}
+
+.pair-spinner {
+  width: 26px;
+  height: 26px;
+  flex: none;
+  border: 2.5px solid rgba(190, 220, 255, 0.25);
+  border-top-color: #9fd0ff;
+  border-radius: 50%;
+  animation: spin 0.9s linear infinite;
+}
+
+.pair-check {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  flex: none;
+  border-radius: 50%;
+  background: #55d68b;
+  box-shadow: 0 0 0 5px rgba(85, 214, 139, 0.18);
+}
+
+.pair-check svg {
+  width: 15px;
+  height: 15px;
+  fill: none;
+  stroke: #083018;
+  stroke-width: 2.6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.pair-card.is-connected {
+  box-shadow:
+    0 0 0 2px rgba(160, 255, 205, 0.55),
+    0 0 46px rgba(120, 230, 175, 0.22),
+    0 40px 90px rgba(30, 50, 90, 0.3),
+    inset 0 1px 2px rgba(255, 255, 255, 0.8);
+}
+
+/* Full-screen handoff */
+.pair-veil {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 3;
+  border-radius: inherit;
+  background: #000000;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.6s ease;
+}
+
+.pair-card.is-expanding {
+  width: 1280px;
+  height: 720px;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+.pair-card.is-expanding > :not(.pair-veil) {
+  opacity: 0;
+  transition: opacity 0.22s ease;
+  pointer-events: none;
+}
+
+.pair-card.is-expanding::before {
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.pair-card.is-expanding .pair-veil {
+  opacity: 1;
+  transition: opacity 0.5s ease 0.3s;
+}
+
+/* ---------- Card enter / leave ---------- */
+
+.pair-enter-active {
+  animation: scrim-in 0.35s ease both;
+}
+
+.pair-enter-active .pair-card {
+  animation: card-in 0.85s cubic-bezier(0.18, 1.18, 0.3, 1) both;
+}
+
+.pair-leave-active {
+  animation: scrim-out 0.42s ease both;
+}
+
+.pair-leave-active .pair-card {
+  animation: card-out 0.45s cubic-bezier(0.5, 0, 0.75, 0.35) both;
+}
+
+@keyframes scrim-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes scrim-out {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes card-in {
+  from {
+    opacity: 0;
+    transform: translateY(56px) rotateX(11deg) scale(0.86);
+    filter: blur(9px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+    filter: none;
+  }
+}
+
+@keyframes card-out {
+  to {
+    opacity: 0;
+    transform: translateY(30px) rotateX(6deg) scale(0.93);
+    filter: blur(7px);
+  }
+}
+
+/* ---------- Blackout ---------- */
+
+.gh-blackout {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 9;
+  background: #000000;
+  pointer-events: none;
+}
+
+.blackout-enter-active,
+.blackout-leave-active {
+  transition: opacity 0.55s ease;
+}
+
+.blackout-enter-from,
+.blackout-leave-to {
+  opacity: 0;
+}
+
+/* ---------- ICCOA projection ---------- */
+
+.iccoa-projection {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 8;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  background: radial-gradient(75% 70% at 50% 36%, #152946 0%, #0a1524 46%, #030509 100%);
+  color: #eaf3ff;
+}
+
+.proj-enter-active,
+.proj-leave-active {
+  transition: opacity 0.5s ease;
+}
+
+.proj-enter-from,
+.proj-leave-to {
+  opacity: 0;
+}
+
+.proj-glow {
+  position: absolute;
+  width: 820px;
+  height: 560px;
+  border-radius: 50%;
+  background: radial-gradient(closest-side, rgba(70, 130, 220, 0.42), rgba(70, 130, 220, 0) 100%);
+  filter: blur(46px);
+  animation: proj-breathe 6.5s ease-in-out infinite alternate;
+}
+
+.proj-body {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  animation: proj-in 1.9s cubic-bezier(0.2, 0.75, 0.3, 1) 0.12s both;
+}
+
+.proj-mark {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 96px;
+  height: 96px;
+  border-radius: 26px;
+  background: linear-gradient(180deg, #4b9dff 0%, #1e6cf2 100%);
+  box-shadow:
+    0 18px 50px rgba(30, 90, 200, 0.45),
+    0 0 60px rgba(70, 140, 255, 0.32),
+    inset 0 1px 1px rgba(255, 255, 255, 0.55);
+}
+
+.proj-mark svg {
+  width: 52px;
+  height: 52px;
+  fill: none;
+  stroke: #ffffff;
+  stroke-width: 2.2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.proj-title {
+  margin: 22px 0 0;
+  color: #f4f9ff;
+  font-size: 34px;
+  line-height: 42px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+}
+
+.proj-state {
+  margin: 6px 0 0;
+  color: rgba(200, 220, 255, 0.7);
+  font-size: 15px;
+  line-height: 21px;
+}
+
+.proj-hint {
+  position: absolute;
+  right: 0;
+  bottom: 64px;
+  left: 0;
+  margin: 0;
+  text-align: center;
+  color: rgba(200, 220, 255, 0.34);
+  font-size: 12px;
+  letter-spacing: 0.04em;
+}
+
+.proj-back {
+  position: absolute;
+  top: 36px;
+  right: 44px;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 44px;
+  padding: 0 16px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 22px;
+  background: rgba(255, 255, 255, 0.07);
+  color: #eaf3ff;
+  font-family: inherit;
+  font-size: 14px;
+  cursor: pointer;
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+  transition: background-color 0.16s ease;
+}
+
+.proj-back:hover {
+  background: rgba(255, 255, 255, 0.14);
+}
+
+.proj-back svg {
+  width: 16px;
+  height: 16px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+@keyframes proj-in {
+  from {
+    opacity: 0;
+    filter: brightness(0.15) blur(9px);
+    transform: scale(1.035);
+  }
+  to {
+    opacity: 1;
+    filter: none;
+    transform: none;
+  }
+}
+
+@keyframes proj-breathe {
+  from {
+    opacity: 0.72;
+    transform: scale(0.94);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1.07);
+  }
+}
+
+.pair-close:focus-visible,
+.proj-back:focus-visible {
+  outline: 3px solid rgba(255, 255, 255, 0.9);
+  outline-offset: 3px;
+}
+
+/* Gesture bar inside the sky, so the pairing takeover can cover it. */
+.gh-gesture {
+  position: absolute;
+  left: 50%;
+  bottom: 18px;
+  z-index: 1;
+  width: 205px;
+  height: 6px;
+  border-radius: 3px;
+  background: rgba(255, 255, 255, 0.92);
+  box-shadow: 0 1px 6px rgba(40, 60, 100, 0.18);
+  transform: translateX(-50%);
+  pointer-events: none;
+}
+
+.glass-home.is-expanding .gh-top {
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+}
+
+
+/* ============================================================
+   CarPlay pairing (same glass card, real-stage list)
+   ============================================================ */
+
+.pair-head__icon.is-carplay {
+  background: transparent;
+  box-shadow: none;
+}
+
+.pair-head__icon.is-carplay img {
+  display: block;
+  width: 54px;
+  height: 54px;
+  border-radius: 16px;
+}
+
+.pair-card.is-carplay .pair-prompt {
+  margin-top: 16px;
+  font-size: 21px;
+  line-height: 26px;
+}
+
+.pair-meta {
+  position: relative;
+  z-index: 1;
+  margin: 3px 0 0;
+  color: rgba(255, 255, 255, 0.72);
+  font-size: 12px;
+  line-height: 16px;
+  letter-spacing: 0.02em;
+}
+
+.pair-steps {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  width: 100%;
+  margin: 8px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.pair-step {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 26px;
+  padding: 0 8px;
+  color: rgba(255, 255, 255, 0.44);
+  font-size: 14.5px;
+  line-height: 20px;
+  transition: color 0.2s ease;
+}
+
+.pair-step.is-done {
+  color: rgba(255, 255, 255, 0.78);
+}
+
+.pair-step.is-active {
+  color: #ffffff;
+}
+
+.pair-step__dot {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  width: 18px;
+  height: 18px;
+}
+
+.pair-step__dot svg {
+  width: 14px;
+  height: 14px;
+  fill: none;
+  stroke: #79e0a6;
+  stroke-width: 2.4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.pair-step:not(.is-done):not(.is-active) .pair-step__dot::after {
+  content: "";
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.28);
+}
+
+.pair-step__spin {
+  width: 13px;
+  height: 13px;
+  border: 2px solid rgba(190, 255, 215, 0.2);
+  border-top-color: #79e0a6;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+.pair-step__label {
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.pair-card.is-carplay .pair-line {
+  margin-top: 8px;
+  background: linear-gradient(
+    90deg,
+    rgba(120, 255, 180, 0) 0%,
+    #5ee89a 22%,
+    #b7ffd6 50%,
+    #5ee89a 78%,
+    rgba(120, 255, 180, 0) 100%
+  );
+  box-shadow: 0 0 16px rgba(80, 230, 150, 0.55);
+}
+
+.pair-hint {
+  position: relative;
+  z-index: 1;
+  margin: 6px 0 0;
+  color: rgba(255, 255, 255, 0.58);
+  font-size: 12px;
+  line-height: 16px;
+  text-align: center;
+}
+
+.pair-card.is-carplay .pair-check {
+  background: #55d68b;
+}
+
+.proj-mark--carplay {
+  background: transparent;
+  box-shadow:
+    0 18px 50px rgba(20, 170, 80, 0.4),
+    0 0 60px rgba(60, 220, 120, 0.28);
+}
+
+.proj-mark__img {
+  display: block;
+  width: 96px;
+  height: 96px;
+  border-radius: 26px;
+}
+
+.iccoa-projection.is-carplay {
+  background: radial-gradient(75% 70% at 50% 36%, #10281a 0%, #0a1410 46%, #030605 100%);
+}
+
+.iccoa-projection.is-carplay .proj-glow {
+  background: radial-gradient(closest-side, rgba(60, 200, 110, 0.4), rgba(60, 200, 110, 0) 100%);
+}

@@ -46,3 +46,7 @@ __pycache__/
 *.key
 *.apk
 *.aab
+
+# Local CarPlay accessory identity; never commit
+.local-mfi/
+

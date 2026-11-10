@@ -1,0 +1,62 @@
+/* ============================================================
+   DiPlay · Lumos UI Lab
+   App palette mirrors common/src/main/java/com/shilapi/xcertplay/DiPlayPalette.kt
+   Screen units are dp: the 1280×720 stage is scaled by transform, so 1px here
+   equals 1dp on the head unit (1280×720 dp = 1920×1080 px at density 1.5).
+   ============================================================ */
+
+:root {
+  /* --- DiPlay dark palette (default) --- */
+  --bg: #0c111b;
+  --surface: #151e2c;
+  --button: #1f2b3d;
+  --outline: #2a384b;
+  --rail: #18365c;
+  --rail-outline: #2a5282;
+  --text: #f1f5fc;
+  --muted: #a8b6ca;
+  --accent: #a6c8ff;
+  --on-accent: #0c111b;
+  --warning: #ffc480;
+  --success: #7fcd9a;
+  --danger: #be2d2d;
+  --ripple: rgba(111, 159, 217, 0.22);
+  --focus: #a6c8ff;
+
+  /* --- Shape --- */
+  --corner: 20px;
+
+  /* --- Lab chrome (always dark, independent of the app theme) --- */
+  --lab-bg: #06080c;
+  --lab-raised: #0b0f16;
+  --lab-line: rgba(255, 255, 255, 0.08);
+  --lab-line-soft: rgba(255, 255, 255, 0.05);
+  --lab-text: #e9eef6;
+  --lab-dim: #76839a;
+  --lab-dim-2: #4e5a6c;
+  --lab-accent: #a6c8ff;
+
+  --font-ui: Roboto, "Noto Sans SC", "Microsoft YaHei UI", "Microsoft YaHei",
+    "Segoe UI", sans-serif;
+  --font-mono: "Cascadia Mono", "Cascadia Code", ui-monospace, "SF Mono",
+    "Consolas", monospace;
+}
+
+/* --- DiPlay light palette (the app ships both) --- */
+.car-screen[data-appearance="light"] {
+  --bg: #e9eef6;
+  --surface: #f8fafd;
+  --button: #dce5f1;
+  --outline: #a7b5c7;
+  --rail: #d7e5f7;
+  --rail-outline: #91add0;
+  --text: #1c1c1e;
+  --muted: #5a6474;
+  --accent: #245a9c;
+  --on-accent: #ffffff;
+  --warning: #7a4500;
+  --success: #286b3f;
+  --danger: #9b3030;
+  --ripple: rgba(36, 90, 156, 0.18);
+  --focus: #245a9c;
+}

@@ -728,4 +728,65 @@
     <string name="setup_badge_adb">Нужен ADB по сети</string>
     <string name="setup_done_title">Всё готово</string>
     <string name="setup_done_description">Подключите iPhone. Мастер можно снова открыть из настроек.</string>
+    <string name="glass_iccoa_prompt">Введите этот код на телефоне</string>
+    <string name="glass_iccoa_waiting">Ожидание телефона…</string>
+    <string name="glass_iccoa_connected">Подключено</string>
+    <string name="glass_iccoa_pairing">Сопряжение…</string>
+    <string name="glass_iccoa_hotspot">Сначала включите точку доступа автомобиля</string>
+    <string name="glass_iccoa_valid">Действует 120 секунд</string>
+    <string name="glass_carplay_prompt">Завершите подключение CarPlay на iPhone</string>
+    <string name="glass_carplay_usb_find">Найти iPhone по USB</string>
+    <string name="glass_carplay_usb_permission">Разрешить доступ по USB</string>
+    <string name="glass_carplay_pair">Сопрячь с iPhone</string>
+    <string name="glass_carplay_open">Открыть CarPlay</string>
+    <string name="glass_carplay_hotspot">Запустить Wi-Fi CarPlay</string>
+    <string name="glass_carplay_paired">Дождаться сопряжённого iPhone</string>
+    <string name="glass_carplay_bluetooth">Подключить Bluetooth</string>
+    <string name="glass_carplay_hint">Держите iPhone разблокированным и разрешите CarPlay по запросу.</string>
+    <string name="glass_carplay_connecting">Подключение…</string>
+    <string name="iccoa_permission_needed">Разрешите геолокацию и ближайшие устройства, чтобы телефон завершил Wi-Fi-подключение ICCOA.</string>
+    <string name="settings_iccoa_connection">ICCOA CarLink</string>
+    <string name="settings_iccoa_connection_summary">Как Android-телефон подключается к этому ГУ. После смены способа подключения перезапустите приложение.</string>
+    <string name="settings_iccoa_transport">Способ подключения</string>
+    <string name="settings_iccoa_transport_p2p">Wi-Fi Direct</string>
+    <string name="settings_iccoa_transport_ap">Точка доступа автомобиля</string>
+    <string name="settings_iccoa_hotspot_ssid">Имя точки доступа</string>
+    <string name="settings_iccoa_hotspot_password">Пароль точки доступа</string>
+    <string name="settings_iccoa_not_set">Не задано</string>
+    <string name="settings_iccoa_hotspot_hint">Режим точки доступа использует hotspot ГУ; включите его и введите имя и пароль.</string>
+    <string name="settings_iccoa_5ghz">Только 5 ГГц</string>
+    <string name="settings_iccoa_5ghz_hint">Ограничивает Wi-Fi Direct диапазоном 5 ГГц. Некоторым телефонам это нужно; некоторые ГУ не поддерживают P2P на 5 ГГц.</string>
+    <string name="settings_iccoa_connect">Подключить Android-телефон</string>
+    <string name="settings_iccoa_restart">Перезапустить DiPlay</string>
+    <string name="settings_iccoa_restart_title">Требуется перезапуск</string>
+    <string name="settings_iccoa_restart_message">ICCOA читает способ подключения при запуске движка. Перезапустите приложение, чтобы применить.</string>
+    <string name="settings_iccoa_restart_now">Перезапустить сейчас</string>
+    <string name="settings_iccoa_p2p_hint">Для Wi-Fi Direct hotspot ГУ должен быть выключен; hotspot и Wi-Fi Direct не работают одновременно.</string>
+    <string name="settings_iccoa_summary">Подключение, проекция, микрофон и сенсор ICCOA CarLink.</string>
+    <string name="settings_iccoa_projection">Проекция</string>
+    <string name="settings_iccoa_microphone">Микрофон</string>
+    <string name="settings_iccoa_touch">Сенсор и приборы</string>
+    <string name="settings_iccoa_wireless">Беспроводная проекция</string>
+    <string name="settings_iccoa_usb">Проекция по USB</string>
+    <string name="settings_iccoa_ble">Резервная BLE-реклама</string>
+    <string name="settings_iccoa_auto">Подключать при запуске приложения</string>
+    <string name="settings_iccoa_resolution">Разрешение</string>
+    <string name="settings_iccoa_codec">Видеокодек</string>
+    <string name="settings_iccoa_dpi">Плотность пикселей</string>
+    <string name="settings_iccoa_stretch">Растянуть на весь экран</string>
+    <string name="settings_iccoa_mic_rate">Частота дискретизации</string>
+    <string name="settings_iccoa_mic_echo">Эхоподавление</string>
+    <string name="settings_iccoa_mic_noise">Шумоподавление</string>
+    <string name="settings_iccoa_touch_toggle">Измеренная сенсорная область</string>
+    <string name="settings_iccoa_hud">Зеркало на HUD</string>
 </resources>
+
+
+
+
+
+
+
+
+
+

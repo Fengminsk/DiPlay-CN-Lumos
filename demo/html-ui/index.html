@@ -1,0 +1,196 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="dark">
+    <meta name="description" content="DiPlay Lumos UI Lab — a pixel-matched, interactive rebuild of the DiPlay home and settings screens for a 1280×720 dp head unit.">
+    <title>DiPlay · Lumos UI Lab</title>
+    <link rel="icon" href="./assets/carplay.png" type="image/png">
+    <link rel="stylesheet" href="./vendor/fonts.css">
+    <link rel="stylesheet" href="./css/tokens.css">
+    <link rel="stylesheet" href="./css/shell.css">
+    <link rel="stylesheet" href="./css/screen.css">
+    <link rel="stylesheet" href="./css/settings.css">
+    <link rel="stylesheet" href="./css/glass-home.css">
+  </head>
+  <body>
+    <svg class="sprite" width="0" height="0" aria-hidden="true" focusable="false">
+      <defs>
+        <symbol id="i-general" viewBox="0 0 24 24">
+          <path d="M6 3.6v5.2M6 13.4v7M12 3.6v8.8M12 17v3.4M18 3.6v2.2M18 10.4v10"/>
+          <circle cx="6" cy="11.1" r="2.1"/>
+          <circle cx="12" cy="15" r="2.1"/>
+          <circle cx="18" cy="8.2" r="2.1"/>
+        </symbol>
+        <symbol id="i-carplay" viewBox="0 0 24 24">
+          <rect x="2.8" y="4.2" width="18.4" height="13" rx="3"/>
+          <path d="M9.9 8.3l4.7 2.8-4.7 2.8V8.3Z"/>
+          <path d="M9 20.6h6"/>
+        </symbol>
+        <symbol id="i-iccoa" viewBox="0 0 24 24">
+          <rect x="6.2" y="2.6" width="11.6" height="18.8" rx="3"/>
+          <path d="M10.6 8.9l4.6 2.8-4.6 2.8V8.9Z"/>
+          <path d="M10.4 18.3h3.2"/>
+        </symbol>
+        <symbol id="i-flask" viewBox="0 0 24 24">
+          <path d="M9.2 3h5.6M10.2 3v5.7l-5 8.2A2 2 0 0 0 6.9 20h10.2a2 2 0 0 0 1.7-3.1l-5-8.2V3"/>
+          <path d="M7.7 15.1h8.6"/>
+        </symbol>
+        <symbol id="i-mic" viewBox="0 0 24 24">
+          <rect x="9" y="2.8" width="6" height="11" rx="3"/>
+          <path d="M5.6 11.4a6.4 6.4 0 0 0 12.8 0M12 17.8v3.4M9 21.2h6"/>
+        </symbol>
+        <symbol id="i-touch" viewBox="0 0 24 24">
+          <circle cx="12" cy="12" r="6.2"/>
+          <circle cx="12" cy="12" r="1.5"/>
+          <path d="M12 2.4v3.4M12 18.2v3.4M2.4 12h3.4M18.2 12h3.4"/>
+        </symbol>
+        <symbol id="i-overview" viewBox="0 0 24 24">
+          <rect x="3.5" y="3.5" width="7" height="7" rx="2"/>
+          <rect x="13.5" y="3.5" width="7" height="7" rx="2"/>
+          <rect x="3.5" y="13.5" width="7" height="7" rx="2"/>
+          <rect x="13.5" y="13.5" width="7" height="7" rx="2"/>
+        </symbol>
+        <symbol id="i-connection" viewBox="0 0 24 24">
+          <path d="M10.2 13.8a4 4 0 0 1 0-5.66l2.2-2.2a4 4 0 0 1 5.66 5.66l-2.2 2.2"/>
+          <path d="M13.8 10.2a4 4 0 0 1 0 5.66l-2.2 2.2a4 4 0 0 1-5.66-5.66l2.2-2.2"/>
+        </symbol>
+        <symbol id="i-automation" viewBox="0 0 24 24">
+          <path d="M20 12a8 8 0 1 1-2.34-5.66"/>
+          <path d="M20 4.5V9h-4.5"/>
+        </symbol>
+        <symbol id="i-permissions" viewBox="0 0 24 24">
+          <path d="M12 3l7 2.8V11c0 4.4-3 8.2-7 10-4-1.8-7-5.6-7-10V5.8L12 3Z"/>
+          <path d="M9 11.8l2.1 2.1L15 10"/>
+        </symbol>
+        <symbol id="i-display" viewBox="0 0 24 24">
+          <rect x="2.8" y="4" width="18.4" height="12.6" rx="2.4"/>
+          <path d="M9 20.5h6M12 16.8v3.7"/>
+        </symbol>
+        <symbol id="i-picture" viewBox="0 0 24 24">
+          <rect x="3" y="4.5" width="18" height="15" rx="2.4"/>
+          <circle cx="9" cy="9.8" r="1.5"/>
+          <path d="M4.2 17.6l4.4-4.3 3.6 3.5 3.8-3.8 3.8 3.8"/>
+        </symbol>
+        <symbol id="i-audio" viewBox="0 0 24 24">
+          <path d="M4 10v4h3l4 3.8V6.2L7 10H4Z"/>
+          <path d="M15 9.2a4 4 0 0 1 0 5.6M17.4 6.8a7.4 7.4 0 0 1 0 10.4"/>
+        </symbol>
+        <symbol id="i-navigation" viewBox="0 0 24 24">
+          <circle cx="12" cy="12" r="8.8"/>
+          <path d="M15.4 8.6l-2 5.2-5.2 2 2-5.2 5.2-2Z"/>
+        </symbol>
+        <symbol id="i-dashboard" viewBox="0 0 24 24">
+          <path d="M3.8 18.2a9 9 0 1 1 16.4 0"/>
+          <path d="M12 14.4l4-4.3"/>
+          <circle cx="12" cy="15.5" r="1.8"/>
+        </symbol>
+        <symbol id="i-vehicle" viewBox="0 0 24 24">
+          <path d="M4.2 15.6V12l2-5h11.6l2 5v3.6"/>
+          <path d="M4.2 15.6h15.6v3.2h-3v-1.6H7.2v1.6h-3v-3.2Z"/>
+          <circle cx="7.6" cy="13.4" r=".9"/>
+          <circle cx="16.4" cy="13.4" r=".9"/>
+        </symbol>
+        <symbol id="i-controls" viewBox="0 0 24 24">
+          <path d="M3.5 7h9.2M18.2 7h2.3M3.5 17h3.2M12.2 17h8.3"/>
+          <circle cx="15.5" cy="7" r="2.2"/>
+          <circle cx="9.6" cy="17" r="2.2"/>
+        </symbol>
+        <symbol id="i-wheel" viewBox="0 0 24 24">
+          <circle cx="12" cy="12" r="8.8"/>
+          <circle cx="12" cy="12" r="2.4"/>
+          <path d="M12 14.4v6.4M9.7 10.7L3.6 8.6M14.3 10.7l6.1-2.1"/>
+        </symbol>
+        <symbol id="i-car" viewBox="0 0 24 24">
+          <path d="M5 15V9.4a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2V15"/>
+          <path d="M4.2 15h15.6v4.2h-3.2v-2H7.4v2H4.2V15Z"/>
+          <path d="M7.6 11h2M14.4 11h2"/>
+        </symbol>
+        <symbol id="i-diagnostics" viewBox="0 0 24 24">
+          <path d="M2.8 12.4h4l2.1-5.2 4 10.4 2-5.2h6.3"/>
+        </symbol>
+        <symbol id="i-cloud" viewBox="0 0 24 24">
+          <path d="M7 18.2a4 4 0 0 1 .8-7.9A5.5 5.5 0 0 1 18.6 11a3.5 3.5 0 0 1-.6 7.2H7Z"/>
+          <path d="M12 16.2v-5.8M9.7 12.7L12 10.4l2.3 2.3"/>
+        </symbol>
+        <symbol id="i-advanced" viewBox="0 0 24 24">
+          <path d="M3.6 7h16.8M3.6 12h16.8M3.6 17h16.8"/>
+          <circle cx="9.2" cy="7" r="2.2"/>
+          <circle cx="15" cy="12" r="2.2"/>
+          <circle cx="7" cy="17" r="2.2"/>
+        </symbol>
+        <symbol id="i-media" viewBox="0 0 24 24">
+          <rect x="3" y="4.2" width="18" height="15.6" rx="2.8"/>
+          <path d="M10.2 9.1l5.6 2.9-5.6 2.9V9.1Z"/>
+        </symbol>
+        <symbol id="i-language" viewBox="0 0 24 24">
+          <circle cx="12" cy="12" r="8.8"/>
+          <path d="M3.2 12h17.6"/>
+          <path d="M12 3.2c2.4 2.4 3.9 5.5 3.9 8.8s-1.5 6.4-3.9 8.8c-2.4-2.4-3.9-5.5-3.9-8.8S9.6 5.6 12 3.2Z"/>
+        </symbol>
+        <symbol id="i-about" viewBox="0 0 24 24">
+          <circle cx="12" cy="12" r="8.8"/>
+          <path d="M12 11.2v5.4M12 7.6v.2"/>
+        </symbol>
+        <symbol id="i-back" viewBox="0 0 24 24">
+          <path d="M14.5 5.5L8 12l6.5 6.5"/>
+        </symbol>
+        <symbol id="i-chevron" viewBox="0 0 24 24">
+          <path d="M9.5 5.5L16 12l-6.5 6.5"/>
+        </symbol>
+        <symbol id="i-search" viewBox="0 0 24 24">
+          <circle cx="10.8" cy="10.8" r="6.4"/>
+          <path d="M15.6 15.6l4.4 4.4"/>
+        </symbol>
+        <symbol id="i-sun" viewBox="0 0 24 24">
+          <circle cx="12" cy="12" r="4"/>
+          <path d="M12 2.5v2.2M12 19.3v2.2M2.5 12h2.2M19.3 12h2.2M5.2 5.2l1.6 1.6M17.2 17.2l1.6 1.6M18.8 5.2l-1.6 1.6M6.8 17.2l-1.6 1.6"/>
+        </symbol>
+        <symbol id="i-moon" viewBox="0 0 24 24">
+          <path d="M20.2 14.6A8.6 8.6 0 0 1 9.4 3.8a8.6 8.6 0 1 0 10.8 10.8Z"/>
+        </symbol>
+        <symbol id="i-check" viewBox="0 0 24 24">
+          <path d="M4.5 12.5l4.8 4.8L19.5 7"/>
+        </symbol>
+        <symbol id="i-close" viewBox="0 0 24 24">
+          <path d="M5.5 5.5l13 13M18.5 5.5l-13 13"/>
+        </symbol>
+        <symbol id="i-gear" viewBox="0 0 24 24">
+          <circle cx="12" cy="12" r="3.1"/>
+          <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-1.08-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09a1.65 1.65 0 0 0 1.51-1.08 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1Z"/>
+        </symbol>
+        <symbol id="i-usb" viewBox="0 0 24 24">
+          <path d="M12 3.2v15.6"/>
+          <path d="M12 3.2L10.2 6M12 3.2L13.8 6"/>
+          <path d="M12 12.6l-4-3.1V7.2M12 14.6l4-3.1V9.2"/>
+          <circle cx="8" cy="6.6" r="1.35" fill="currentColor" stroke="none"/>
+          <rect x="14.5" y="8.1" width="3" height="3" rx=".7" fill="currentColor" stroke="none"/>
+          <circle cx="12" cy="19.4" r="1.55" fill="currentColor" stroke="none"/>
+        </symbol>
+        <symbol id="i-wifi" viewBox="0 0 24 24">
+          <path d="M4.6 9.3a10.7 10.7 0 0 1 14.8 0M7.5 12.7a6.5 6.5 0 0 1 9 0M10.3 16a2.7 2.7 0 0 1 3.4 0"/>
+          <circle cx="12" cy="18.9" r="1.15" fill="currentColor" stroke="none"/>
+        </symbol>
+        <symbol id="i-link" viewBox="0 0 24 24">
+          <path d="M10.4 13.6a4.3 4.3 0 0 0 6.1 0l2.2-2.2a4.3 4.3 0 0 0-6.1-6.1l-1.2 1.2"/>
+          <path d="M13.6 10.4a4.3 4.3 0 0 0-6.1 0l-2.2 2.2a4.3 4.3 0 0 0 6.1 6.1l1.2-1.2"/>
+        </symbol>
+      </defs>
+    </svg>
+
+    <div id="app"></div>
+    <noscript>This lab needs JavaScript enabled.</noscript>
+
+    <script src="./vendor/vue.global.prod.js"></script>
+    <script src="./js/settings-data.js"></script>
+    <script src="./js/store.js"></script>
+    <script src="./js/components/screen.js"></script>
+    <script src="./js/components/glass-home.js"></script>
+    <script src="./js/components/settings-section.js"></script>
+    <script src="./js/components/settings-view.js"></script>
+    <script src="./js/components/phone-picker.js"></script>
+    <script src="./js/components/tweaks.js"></script>
+    <script src="./js/app.js"></script>
+  </body>
+</html>

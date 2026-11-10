@@ -825,4 +825,68 @@
     <string name="setup_badge_adb">Needs ADB over network</string>
     <string name="setup_done_title">You’re ready</string>
     <string name="setup_done_description">Connect your iPhone now. You can open this guide again from Settings.</string>
+    <string name="iccoa" translatable="false">ICCOA</string>
+    <string name="glass_home_usb" translatable="false">USB</string>
+    <string name="glass_home_wifi" translatable="false">Wi-Fi</string>
+    <string name="glass_iccoa_prompt">Enter this code on your phone</string>
+    <string name="glass_iccoa_waiting">Waiting for your phone…</string>
+    <string name="glass_iccoa_connected">Connected</string>
+    <string name="glass_iccoa_pairing">Pairing…</string>
+    <string name="glass_iccoa_hotspot">Turn on the car hotspot first</string>
+    <string name="glass_iccoa_valid">Valid for 120 seconds</string>
+    <string name="glass_carplay_prompt">Complete CarPlay on your iPhone</string>
+    <string name="glass_carplay_usb_find">Find iPhone over USB</string>
+    <string name="glass_carplay_usb_permission">Allow USB access</string>
+    <string name="glass_carplay_pair">Pair with iPhone</string>
+    <string name="glass_carplay_open">Open CarPlay</string>
+    <string name="glass_carplay_hotspot">Start CarPlay Wi-Fi</string>
+    <string name="glass_carplay_paired">Wait for the paired iPhone</string>
+    <string name="glass_carplay_bluetooth">Connect Bluetooth</string>
+    <string name="glass_carplay_hint">Keep your iPhone unlocked and allow CarPlay when asked.</string>
+    <string name="glass_carplay_connecting">Connecting…</string>
+    <string name="iccoa_permission_needed">Allow Location and Nearby devices so the phone can finish the ICCOA Wi-Fi connection.</string>
+    <string name="settings_iccoa_connection">ICCOA CarLink</string>
+    <string name="settings_iccoa_connection_summary">How the Android phone joins this head unit. Restart the app after changing the transport.</string>
+    <string name="settings_iccoa_transport">Connection mode</string>
+    <string name="settings_iccoa_transport_p2p">Wi-Fi Direct</string>
+    <string name="settings_iccoa_transport_ap">Car hotspot</string>
+    <string name="settings_iccoa_hotspot_ssid">Hotspot name</string>
+    <string name="settings_iccoa_hotspot_password">Hotspot password</string>
+    <string name="settings_iccoa_not_set">Not set</string>
+    <string name="settings_iccoa_hotspot_hint">Car hotspot mode reuses the head unit hotspot; turn it on and enter its name and password.</string>
+    <string name="settings_iccoa_5ghz">Use 5 GHz only</string>
+    <string name="settings_iccoa_5ghz_hint">Restrict Wi-Fi Direct to 5 GHz. Some phones need it; some head units cannot do P2P on 5 GHz.</string>
+    <string name="settings_iccoa_connect">Connect Android phone</string>
+    <string name="settings_iccoa_restart">Restart DiPlay</string>
+    <string name="settings_iccoa_restart_title">Restart required</string>
+    <string name="settings_iccoa_restart_message">ICCOA reads the connection mode when its engine starts. Restart the app now to apply it.</string>
+    <string name="settings_iccoa_restart_now">Restart now</string>
+    <string name="settings_iccoa_p2p_hint">Wi-Fi Direct needs the head-unit hotspot off; hotspot and Wi-Fi Direct cannot run at the same time.</string>
+    <string name="settings_iccoa_summary">ICCOA CarLink connection, projection, microphone and touch.</string>
+    <string name="settings_iccoa_projection">Projection</string>
+    <string name="settings_iccoa_microphone">Microphone</string>
+    <string name="settings_iccoa_touch">Touch and cluster</string>
+    <string name="settings_iccoa_wireless">Wireless projection</string>
+    <string name="settings_iccoa_usb">USB projection</string>
+    <string name="settings_iccoa_ble">BLE fallback advertising</string>
+    <string name="settings_iccoa_auto">Connect when the app opens</string>
+    <string name="settings_iccoa_resolution">Resolution</string>
+    <string name="settings_iccoa_codec">Video codec</string>
+    <string name="settings_iccoa_dpi">Pixel density</string>
+    <string name="settings_iccoa_stretch">Stretch to fill</string>
+    <string name="settings_iccoa_mic_rate">Sample rate</string>
+    <string name="settings_iccoa_mic_echo">Echo cancellation</string>
+    <string name="settings_iccoa_mic_noise">Noise suppression</string>
+    <string name="settings_iccoa_touch_toggle">Measured touch surface</string>
+    <string name="settings_iccoa_hud">HUD mirroring</string>
 </resources>
+
+
+
+
+
+
+
+
+
+
