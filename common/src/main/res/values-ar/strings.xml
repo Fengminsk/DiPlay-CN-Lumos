@@ -875,7 +875,7 @@
     <string name="settings_ambient_album">اتباع غلاف الألبوم</string>
     <string name="settings_ambient_album_description">يُطابق لون الغلاف تقريبياً مع ألوان السيارة المتاحة. تستخدم الأغلفة الرمادية أو السوداء أو المفقودة جميع الألوان الـ31؛ وقد تستخدم الأغلفة البيضاء غالباً الأبيض أو الأبيض البارد.</string>
     <string name="settings_ambient_day_brightness">سطوع النهار</string>
-    <string name="settings_about_description">يوصل DiPlay ‏CarPlay وICCOA بوحدات السيارة التي تعمل بنظام Android. تعتمد الميزات المتاحة على السيارة والهاتف.</string>
+    <string name="settings_about_description">يوصل DiPlay Lumos ‏CarPlay وICCOA بوحدات السيارة التي تعمل بنظام Android. تعتمد الميزات المتاحة على السيارة والهاتف.</string>
     <string name="settings_release_history">سجل الإصدارات</string>
 </resources>
 

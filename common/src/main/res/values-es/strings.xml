@@ -875,7 +875,7 @@
     <string name="settings_ambient_album">Seguir la portada del álbum</string>
     <string name="settings_ambient_album_description">Usa el color de la portada o colores cercanos disponibles del vehículo. Las portadas grises, negras o ausentes usan los 31 colores; las mayormente blancas pueden usar blanco o blanco frío.</string>
     <string name="settings_ambient_day_brightness">Brillo diurno</string>
-    <string name="settings_about_description">DiPlay conecta CarPlay e ICCOA en unidades Android para automóvil. Las funciones disponibles dependen del vehículo y del teléfono.</string>
+    <string name="settings_about_description">DiPlay Lumos conecta CarPlay e ICCOA en unidades Android para automóvil. Las funciones disponibles dependen del vehículo y del teléfono.</string>
     <string name="settings_release_history">Historial de versiones</string>
 </resources>
 

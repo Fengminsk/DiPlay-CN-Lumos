@@ -887,7 +887,7 @@
     <string name="settings_ambient_album">Колір обкладинки альбому</string>
     <string name="settings_ambient_album_description">Колір обкладинки приблизно зіставляється з доступними кольорами автомобіля. Для сірої, чорної або відсутньої обкладинки використовуються всі 31 колір; для переважно білої — білий або холодний білий.</string>
     <string name="settings_ambient_day_brightness">Денна яскравість</string>
-    <string name="settings_about_description">DiPlay підключає CarPlay та ICCOA на автомобільних пристроях Android. Доступні функції залежать від автомобіля й телефона.</string>
+    <string name="settings_about_description">DiPlay Lumos підключає CarPlay та ICCOA на автомобільних пристроях Android. Доступні функції залежать від автомобіля й телефона.</string>
     <string name="settings_release_history">Історія версій</string>
 </resources>
 

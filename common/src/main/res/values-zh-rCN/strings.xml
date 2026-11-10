@@ -988,7 +988,7 @@
     <string name="settings_ambient_album">跟随专辑封面</string>
     <string name="settings_ambient_album_description">按封面取色并近似匹配原车可用色号。灰黑或无封面时使用全部31色；大面积白色封面可使用白色或冷白。</string>
     <string name="settings_ambient_day_brightness">日间亮度</string>
-    <string name="settings_about_description">DiPlay 在 Android 车机上连接 CarPlay 和 ICCOA。可用功能取决于车机和手机。</string>
+    <string name="settings_about_description">DiPlay Lumos 在 Android 车机上连接 CarPlay 和 ICCOA。可用功能取决于车机和手机。</string>
     <string name="settings_release_history">版本更新</string>
 </resources>
 

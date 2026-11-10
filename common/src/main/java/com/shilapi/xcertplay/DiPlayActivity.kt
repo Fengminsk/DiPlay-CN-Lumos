@@ -3376,10 +3376,10 @@ class DiPlayActivity : ComponentActivity(), AppAppearanceOwner {
         fields.addView(error)
         val dialog = appDialogBuilder().setTitle(getString(if (existingWifi) R.string.existing_wifi_details else R.string.car_hotspot_details))
             .setView(ScrollView(dialogContext).apply { addView(fields) })
+            .setFitIme(true)
             .setPositiveButton(getString(R.string.save_details), null).setNegativeButton(getString(R.string.cancel)) { _, _ -> hideKeyboard() }
             .setNeutralButton(getString(R.string.hide_keyboard), null).create()
         dialog.setOnShowListener {
-            dialog.window?.setSoftInputMode(android.view.WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE)
             dialog.getButton(android.app.AlertDialog.BUTTON_NEUTRAL).setOnClickListener { hideKeyboard() }
             dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener {
                 val name = if (existingWifi) ssid.text.toString() else ssid.text.toString().trim()
