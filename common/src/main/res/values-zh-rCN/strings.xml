@@ -841,6 +841,22 @@
     <string name="settings_iccoa_mic_noise">降噪</string>
     <string name="settings_iccoa_touch_toggle">实测触摸区域</string>
     <string name="settings_iccoa_hud">HUD 镜像</string>
+    <string name="permission_center_title">权限</string>
+    <string name="permission_center_summary_text">DiPlay 连接手机需要这些权限。逐项开启，开一项这里就少一项。</string>
+    <string name="permission_center_location">精确位置</string>
+    <string name="permission_center_location_summary">Android 要求开启才能发现 Wi-Fi Direct 设备。</string>
+    <string name="permission_center_bluetooth">蓝牙</string>
+    <string name="permission_center_bluetooth_summary">用于发现并配对手机。</string>
+    <string name="permission_center_nearby_wifi">附近的 Wi-Fi 设备</string>
+    <string name="permission_center_nearby_wifi_summary">Android 13 及以上使用 Wi-Fi Direct 所需。</string>
+    <string name="permission_center_notifications">通知</string>
+    <string name="permission_center_notifications_summary">显示会话运行提示。</string>
+    <string name="permission_center_accessibility_summary">自动确认 USB 授权弹窗，插上手机不用再点允许。</string>
+    <string name="permission_center_overlay">在其他应用上层显示</string>
+    <string name="permission_center_overlay_summary">用于投屏时的悬浮控件。</string>
+    <string name="permission_center_granted">已开启</string>
+    <string name="permission_center_missing">未开启</string>
+    <string name="permission_center_action">去开启</string>
 </resources>
 
 

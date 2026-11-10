@@ -881,6 +881,22 @@
     <string name="settings_iccoa_mic_noise">Noise suppression</string>
     <string name="settings_iccoa_touch_toggle">Measured touch surface</string>
     <string name="settings_iccoa_hud">HUD mirroring</string>
+    <string name="permission_center_title">Permissions</string>
+    <string name="permission_center_summary_text">DiPlay needs these to connect a phone. Grant them one by one; each row disappears once it is on.</string>
+    <string name="permission_center_location">Precise location</string>
+    <string name="permission_center_location_summary">Required by Android for Wi-Fi Direct discovery.</string>
+    <string name="permission_center_bluetooth">Bluetooth</string>
+    <string name="permission_center_bluetooth_summary">Used to find and pair the phone.</string>
+    <string name="permission_center_nearby_wifi">Nearby Wi-Fi devices</string>
+    <string name="permission_center_nearby_wifi_summary">Required on Android 13+ for Wi-Fi Direct.</string>
+    <string name="permission_center_notifications">Notifications</string>
+    <string name="permission_center_notifications_summary">Shows the running-session notice.</string>
+    <string name="permission_center_accessibility_summary">Automatically confirms the USB permission dialog so a plugged phone never needs a tap.</string>
+    <string name="permission_center_overlay">Display over other apps</string>
+    <string name="permission_center_overlay_summary">Used for the floating projection controls.</string>
+    <string name="permission_center_granted">On</string>
+    <string name="permission_center_missing">Off</string>
+    <string name="permission_center_action">Turn on</string>
 </resources>
 
 

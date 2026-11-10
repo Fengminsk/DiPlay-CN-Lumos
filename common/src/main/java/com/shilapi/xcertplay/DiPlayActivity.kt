@@ -511,6 +511,7 @@ class DiPlayActivity : ComponentActivity(), AppAppearanceOwner {
     }
 
     override fun onResume() {
+        permissionDialogRefresh?.invoke()
         super.onResume()
         applyFullscreenMode()
         // Returning from another activity can bring the head unit's own density back.
@@ -1389,8 +1390,82 @@ class DiPlayActivity : ComponentActivity(), AppAppearanceOwner {
     }
 
     private fun settingsPageTitle(content: LinearLayout, title: String, subtitle: String) {
-        content.addView(label(title, if (isExpandedSettingsLayout) 34 else 26, TEXT, true))
+        val missing = PermissionCenter.missing(this).size
+        val titleSize = if (isExpandedSettingsLayout) 34 else 26
+        if (missing > 0) {
+            // The badge only exists while something is missing; tapping it lists what is off.
+            val row = LinearLayout(this).apply {
+                orientation = LinearLayout.HORIZONTAL
+                gravity = Gravity.CENTER_VERTICAL
+            }
+            row.addView(permissionBadge(missing), LinearLayout.LayoutParams(dp(38), dp(38)))
+            row.addView(
+                label(title, titleSize, TEXT, true).apply { setPadding(dp(12), 0, 0, 0) },
+            )
+            content.addView(row)
+        } else {
+            content.addView(label(title, titleSize, TEXT, true))
+        }
         content.addView(label(subtitle, 16, MUTED).apply { setPadding(0, dp(6), 0, dp(20)) })
+    }
+
+    private fun permissionBadge(count: Int): View = TextView(this).apply {
+        text = if (count > 9) "9+" else count.toString()
+        setTextColor(0xFF1B2433.toInt())
+        textSize = 13f
+        gravity = Gravity.CENTER
+        background = android.graphics.drawable.GradientDrawable().apply {
+            cornerRadius = dp(20).toFloat()
+            setColor(0xFFFFC880.toInt())
+        }
+        isClickable = true
+        contentDescription = getString(R.string.permission_center_title)
+        setOnClickListener { showPermissionCenter() }
+    }
+
+    /** One row per missing permission; rows vanish as each one is granted and the screen resumes. */
+    private fun showPermissionCenter() {
+        val dialogContext = appDialogContext()
+        val container = column().apply { setPadding(dp(20), dp(8), dp(20), dp(4)) }
+
+        fun fill() {
+            container.removeAllViews()
+            container.addView(label(getString(R.string.permission_center_summary_text), 14, MUTED))
+            val missing = PermissionCenter.missing(this)
+            if (missing.isEmpty()) {
+                container.addView(
+                    label(getString(R.string.permission_center_granted), 15, READY)
+                        .apply { setPadding(0, dp(14), 0, 0) },
+                )
+                return
+            }
+            for (item in missing) {
+                container.addView(
+                    label(item.title, 16, TEXT, true).apply { setPadding(0, dp(14), 0, 0) },
+                )
+                container.addView(label(item.summary, 13, MUTED))
+                container.addView(
+                    button(getString(R.string.permission_center_action), false) {
+                        item.request()
+                        container.postDelayed({ fill() }, 900)
+                    },
+                    LinearLayout.LayoutParams(-1, dp(46)),
+                )
+            }
+        }
+        fill()
+
+        val dialog = appDialogBuilder()
+            .setTitle(R.string.permission_center_title)
+            .setView(ScrollView(dialogContext).apply { addView(container) })
+            .setPositiveButton(android.R.string.ok, null)
+            .create()
+        permissionDialogRefresh = { if (dialog.isShowing) fill() }
+        dialog.setOnDismissListener {
+            permissionDialogRefresh = null
+            render()
+        }
+        dialog.show()
     }
 
     private fun connectionSettings(content: LinearLayout) {
@@ -5885,3 +5960,5 @@ class DiPlayActivity : ComponentActivity(), AppAppearanceOwner {
 private var startupPermissionReviewDone = false
 private var usbAutoConfirmOffered = false
 private const val STARTUP_PERMISSION_REVIEW_DELAY_MS = 1200L
+
+private var permissionDialogRefresh: (() -> Unit)? = null
