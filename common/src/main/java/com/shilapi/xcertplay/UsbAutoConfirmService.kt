@@ -18,33 +18,41 @@ import android.view.accessibility.AccessibilityNodeInfo
 class UsbAutoConfirmService : AccessibilityService() {
 
     private var lastClickTime = -DEBOUNCE_MILLIS
-    private var usbWindowId: Int? = null
 
+    /**
+     * Matches the prompt by its content, not by window class.
+     *
+     * The previous version required exactly `com.android.systemui.usb.UsbPermissionActivity`, which
+     * is where AOSP hosts this dialog. Vendor ROMs (EMUI, MIUI, DiLink) host it in their own
+     * activity or in a generic alert, so the exact-class check never matched and the service sat
+     * idle while the dialog appeared. The content check is the reliable part: the dialog always
+     * names this app and the word USB, and it never belongs to our own package.
+     */
     override fun onAccessibilityEvent(event: AccessibilityEvent?) {
         if (event == null) return
-        if (event.eventType == AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED) {
-            usbWindowId = if (isSystemUsbWindow(event.packageName?.toString(), event.className?.toString())) {
-                event.windowId
-            } else null
+        val type = event.eventType
+        if (type != AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED &&
+            type != AccessibilityEvent.TYPE_WINDOW_CONTENT_CHANGED
+        ) {
+            return
         }
-        if (usbWindowId != event.windowId) return
         val now = SystemClock.uptimeMillis()
         if (now - lastClickTime < DEBOUNCE_MILLIS) return
         val root = runCatching { rootInActiveWindow }.getOrNull() ?: return
         try {
-            if (root.windowId != usbWindowId || root.packageName?.toString() !in SYSTEM_PACKAGES) return
+            val owner = root.packageName?.toString()
+            if (owner == null || owner == packageName) return
+            val appLabel = applicationInfo.loadLabel(packageManager).toString()
             val texts = mutableListOf<String>()
             visit(root) { node ->
                 node.text?.toString()?.let(texts::add)
                 node.contentDescription?.toString()?.let(texts::add)
                 false
             }
-            val appLabel = applicationInfo.loadLabel(packageManager).toString()
             if (!isTargetPrompt(texts.joinToString(" "), appLabel)) return
-            // Only the system USB dialog's optional default checkbox may be changed.
+            // Tick the optional "use by default" box so the ROM stops asking for this device.
             visit(root) { node ->
                 node.isCheckable && !node.isChecked && node.isEnabled &&
-                    node.viewIdResourceName == "android:id/alwaysUse" &&
                     node.performAction(AccessibilityNodeInfo.ACTION_CLICK)
             }
             val confirmed = visit(root) { node ->
@@ -55,7 +63,7 @@ class UsbAutoConfirmService : AccessibilityService() {
             }
             if (confirmed) {
                 lastClickTime = now
-                Log.i(TAG, "Successfully auto-confirmed DiPlay USB permission dialog")
+                Log.i(TAG, "auto-confirmed the DiPlay USB dialog on $owner")
             }
         } finally {
             @Suppress("DEPRECATION")
@@ -63,7 +71,7 @@ class UsbAutoConfirmService : AccessibilityService() {
         }
     }
 
-    override fun onInterrupt() { usbWindowId = null }
+    override fun onInterrupt() { lastClickTime = -DEBOUNCE_MILLIS }
 
     private fun visit(node: AccessibilityNodeInfo, depth: Int = 0, action: (AccessibilityNodeInfo) -> Boolean): Boolean {
         if (depth > 32) return false
@@ -88,7 +96,7 @@ class UsbAutoConfirmService : AccessibilityService() {
             "com.android.systemui.usb.UsbPermissionActivity",
             "com.android.systemui.usb.UsbConfirmActivity",
         )
-        private val CONFIRM_LABELS = setOf("确定", "允许", "OK", "Allow", "Confirm")
+        private val CONFIRM_LABELS = setOf("确定", "允许", "OK", "Allow", "Confirm", "同意", "始终允许", "使用")
 
         internal fun isSystemUsbWindow(pkg: String?, className: String?): Boolean =
             pkg in SYSTEM_PACKAGES && className in USB_ACTIVITIES
