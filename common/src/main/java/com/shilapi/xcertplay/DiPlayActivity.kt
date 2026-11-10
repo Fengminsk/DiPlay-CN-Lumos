@@ -1798,7 +1798,13 @@ class DiPlayActivity : ComponentActivity(), AppAppearanceOwner {
             }
             toggle(card, getString(R.string.settings_iccoa_usb), "", IcocaSettings.usb(this)) {
                 IcocaSettings.setUsb(this, it)
-                if (it) IcocaSettings.setWireless(this, false)
+                if (it) {
+                    IcocaSettings.setWireless(this, false)
+                    // Wired needs a system USB grant, and Android asks once per device unless the
+                    // "use by default" box is ticked. The accessibility service ticks it and taps
+                    // Allow, so the driver never handles the dialog again.
+                    if (!UsbAutoConfirmService.isEnabled(this)) promptEnableUsbAutoConfirm()
+                }
             }
             toggle(card, getString(R.string.settings_iccoa_ble), "", IcocaSettings.ble(this)) {
                 IcocaSettings.setBle(this, it)

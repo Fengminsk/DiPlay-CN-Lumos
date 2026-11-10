@@ -35,7 +35,7 @@ object UsbPermissionBroker {
     private const val MAX_PROMPTS_PER_DEVICE = 3
 
     /** Absolute cap per process: a phone that keeps re-enumerating must not trap the driver. */
-    private const val MAX_PROMPTS_TOTAL = 4
+    private const val MAX_PROMPTS_TOTAL = 2
 
     private val waiting = ConcurrentHashMap<String, MutableList<(Boolean) -> Unit>>()
     private val prompts = ConcurrentHashMap<String, Int>()
