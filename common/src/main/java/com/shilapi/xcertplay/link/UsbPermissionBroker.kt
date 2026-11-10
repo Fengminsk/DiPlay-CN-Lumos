@@ -25,11 +25,18 @@ object UsbPermissionBroker {
     private const val TAG = "DiPlay/UsbPermission"
     private const val ACTION = "com.shilapi.xcertplay.USB_DEVICE_PERMISSION"
     private const val EXTRA_DEVICE_ID = "device_id"
+    private const val MAX_ASKS_PER_PROCESS = 3
 
     private val pending = ConcurrentHashMap<Int, (Boolean) -> Unit>()
 
-    /** Device ids this process already asked about, so a poll loop cannot stack up dialogs. */
-    private val asked = ConcurrentHashMap.newKeySet<Int>()
+    /** Device keys this process already asked about, so a poll loop cannot stack up dialogs. */
+    private val asked = ConcurrentHashMap.newKeySet<String>()
+
+    /**
+     * A phone re-enumerates when it switches to AOA, and the ROM may bounce it more than once. Cap
+     * the prompts per process so a failing attempt cannot trap the driver in a dialog loop.
+     */
+    private var askCount = 0
 
     @Volatile
     private var receiver: BroadcastReceiver? = null
@@ -51,7 +58,11 @@ object UsbPermissionBroker {
             onResult(true)
             return
         }
-        if (!asked.add(device.deviceId)) return
+        synchronized(this) {
+            if (askCount >= MAX_ASKS_PER_PROCESS) return
+            if (!asked.add("${device.vendorId}:${device.productId}")) return
+            askCount++
+        }
         ensureReceiver(app)
         pending[device.deviceId] = onResult
         val base = Intent(ACTION)

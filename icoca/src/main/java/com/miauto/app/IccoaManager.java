@@ -1581,7 +1581,31 @@ public class IccoaManager {
 
     public void setUsbOnly(boolean value) {
         usbOnly = value;
+        if (value) stopWirelessAdvertising();
         log(value ? "有线模式：只走 USB(AOA)，不广播" : "无线模式：BLE + Wi-Fi 广播可用");
+    }
+
+    /**
+     * 切到有线时把已经在跑的 BLE 广播停掉。
+     *
+     * <p>只跳过「下一次广播」不够：如果引擎先以无线模式起过，广播已经在发；手机照样会先被
+     * BLE 抢走，插着线的手机就变成「有线模式却走了无线」。这里连同兜底广播和两个延时任务一起撤。
+     */
+    private void stopWirelessAdvertising() {
+        if (adapter != null) {
+            try {
+                adapter.stopAdvertise();
+                log("有线模式：已停止 BLE 广播");
+            } catch (Throwable t) {
+                log("有线模式：停止 BLE 广播异常 " + t);
+            }
+        }
+        try {
+            fallback.stop();
+        } catch (Throwable ignored) {
+        }
+        main.removeCallbacks(fallbackStartRunnable);
+        main.removeCallbacks(earlyFallbackRunnable);
     }
 
     public boolean isUsbOnly() {
