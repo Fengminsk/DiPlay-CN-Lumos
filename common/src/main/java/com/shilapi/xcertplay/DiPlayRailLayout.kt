@@ -4,35 +4,34 @@ package com.shilapi.xcertplay
 import android.animation.ValueAnimator
 import android.content.Context
 import android.graphics.Canvas
-import android.graphics.drawable.GradientDrawable
+import android.graphics.Color
 import android.widget.FrameLayout
+import android.widget.ImageView
+import android.widget.LinearLayout
+import android.widget.TextView
+import androidx.core.graphics.ColorUtils
+import kotlin.math.abs
 import kotlin.math.roundToInt
 
 /**
- * Glass rail whose blue selection pill is painted behind the item column. Painting it in
- * [dispatchDraw] keeps the item labels above the pill, so the pill can slide without covering
- * the selected row.
+ * The selection is one glass piece sliding on the rail surface. Item rows stay transparent,
+ * while their icon and text colours follow the moving piece.
  */
 internal class DiPlayRailLayout(
     context: Context,
     night: Boolean,
     startIndex: Int,
     endIndex: Int,
+    private val unselectedText: Int,
 ) : FrameLayout(context) {
 
-    private val pill = GradientDrawable(
-        GradientDrawable.Orientation.TL_BR,
-        intArrayOf(0xFF4B9DFF.toInt(), 0xFF1F6CF2.toInt()),
-    ).apply { cornerRadius = dp(22).toFloat() }
+    private val pill = DiPlayLiquidGlassDrawable(dp(22).toFloat(), night, control = true, tinted = true)
 
     private var position = startIndex.toFloat()
+    private var rowColors = IntArray(0)
 
     init {
-        background = GradientDrawable().apply {
-            cornerRadius = dp(30).toFloat()
-            setColor(if (night) 0xC816202E.toInt() else 0xC8F8FBFF.toInt())
-            setStroke(dp(1), if (night) 0x33FFFFFF else 0xA6FFFFFF.toInt())
-        }
+        background = DiPlayLiquidGlassDrawable(dp(30).toFloat(), night)
         post {
             if (startIndex == endIndex) {
                 position = endIndex.toFloat()
@@ -40,7 +39,8 @@ internal class DiPlayRailLayout(
                 return@post
             }
             ValueAnimator.ofFloat(startIndex.toFloat(), endIndex.toFloat()).apply {
-                duration = 320
+                duration = 420
+                interpolator = android.view.animation.PathInterpolator(0.22f, 1f, 0.36f, 1f)
                 addUpdateListener {
                     position = it.animatedValue as Float
                     invalidate()
@@ -54,6 +54,20 @@ internal class DiPlayRailLayout(
         val top = dp(12) + (position * dp(72)).roundToInt()
         pill.setBounds(dp(12), top, width - dp(12), top + dp(64))
         pill.draw(canvas)
+        val items = getChildAt(0) as? LinearLayout
+        if (items != null) {
+            if (rowColors.size != items.childCount) rowColors = IntArray(items.childCount) { Int.MIN_VALUE }
+            for (index in 0 until items.childCount) {
+                val row = items.getChildAt(index) as? LinearLayout ?: continue
+                val proximity = (1f - abs(index - position)).coerceIn(0f, 1f)
+                val color = ColorUtils.blendARGB(unselectedText, Color.WHITE, proximity)
+                if (rowColors[index] != color) {
+                    rowColors[index] = color
+                    (row.getChildAt(0) as? ImageView)?.imageTintList = android.content.res.ColorStateList.valueOf(color)
+                    (row.getChildAt(1) as? TextView)?.setTextColor(color)
+                }
+            }
+        }
         super.dispatchDraw(canvas)
     }
 

@@ -8,6 +8,9 @@ import android.hardware.usb.UsbDevice
 import android.hardware.usb.UsbManager
 import android.os.Build
 import java.io.Closeable
+import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.atomic.AtomicBoolean
+import java.util.concurrent.atomic.AtomicInteger
 
 /**
  * Watches for phone attachments while the DiPlay screen is in front and hands them to
@@ -22,13 +25,23 @@ import java.io.Closeable
 object PhoneLinkUsb {
 
     private const val POLL_INTERVAL_MS = 1500L
+    private val watchers = AtomicInteger()
+
+    fun isWatching(): Boolean = watchers.get() > 0
 
     fun attach(context: Context): Closeable {
         val app = context.applicationContext
+        // The broadcast and poller can report the same enumeration. Claim it once before routing,
+        // so one grant cannot start the SDK and immediately re-arm its scan from a second callback.
+        val seen = ConcurrentHashMap.newKeySet<String>()
         val receiver = object : BroadcastReceiver() {
             override fun onReceive(context: Context, intent: Intent) {
                 LinkLog.append(app, "usb broadcast ${intent.action}")
-                PhoneLinkRouter.onUsbIntent(context, intent)
+                PhoneLinkRouter.attachedDevice(intent)?.let { device ->
+                    if (synchronized(seen) { seen.add(keyOf(device)) }) {
+                        PhoneLinkRouter.onUsbAttached(context, device)
+                    }
+                }
             }
         }
         val filter = IntentFilter(UsbManager.ACTION_USB_DEVICE_ATTACHED)
@@ -38,28 +51,34 @@ object PhoneLinkUsb {
             @Suppress("UnspecifiedRegisterReceiverFlag")
             app.registerReceiver(receiver, filter)
         }
+        watchers.incrementAndGet()
 
-        var running = true
+        val running = AtomicBoolean(true)
         val poller = Thread({
             val usb = app.getSystemService(Context.USB_SERVICE) as UsbManager
-            var seen = emptySet<String>()
-            while (running) {
-                val devices = runCatching { usb.deviceList.values.toList() }.getOrDefault(emptyList())
-                val keys = devices.associateBy { keyOf(it) }
-                if (keys.keys != seen) {
+            while (running.get()) {
+                val (devices, changes) = synchronized(seen) {
+                    val devices = runCatching { usb.deviceList.values.toList() }.getOrDefault(emptyList())
+                    val keys = devices.associateBy { keyOf(it) }
+                    val changed = keys.keys != seen
+                    val unplugged = devices.isEmpty() && seen.isNotEmpty()
+                    seen.retainAll(keys.keys)
+                    devices to Triple(changed, unplugged, devices.filter { seen.add(keyOf(it)) })
+                }
+                val (changed, unplugged, newDevices) = changes
+                if (changed) {
                     LinkLog.append(
                         app,
                         "usb scan: " + devices.joinToString { "${it.vendorId.toString(16)}:${it.productId.toString(16)}" },
                     )
                 }
-                if (devices.isEmpty() && seen.isNotEmpty()) {
+                if (unplugged) {
                     // Back to a bare bus: the next plug is a new permission cycle.
                     UsbPermissionBroker.resetForUnplug()
                 }
-                devices.filter { keyOf(it) !in seen }.forEach {
+                newDevices.forEach {
                     runCatching { PhoneLinkRouter.onUsbAttached(app, it) }
                 }
-                seen = keys.keys
                 Thread.sleep(POLL_INTERVAL_MS)
             }
         }, "PhoneLinkUsb").apply {
@@ -68,10 +87,13 @@ object PhoneLinkUsb {
             start()
         }
 
+        val closed = AtomicBoolean()
         return Closeable {
-            running = false
+            if (!closed.compareAndSet(false, true)) return@Closeable
+            running.set(false)
             poller.interrupt()
             runCatching { app.unregisterReceiver(receiver) }
+            watchers.decrementAndGet()
         }
     }
 

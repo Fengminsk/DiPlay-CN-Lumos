@@ -1,10 +1,12 @@
 package com.shilapi.xcertplay
 
 import android.content.ComponentName
+import android.app.Activity
 import android.content.pm.PackageManager
 import android.hardware.usb.UsbDevice
 import android.hardware.usb.UsbManager
 import com.shilapi.xcertplay.transport.IphoneUsbMatcher
+import com.shilapi.xcertplay.link.IccoaUsbAttachActivity
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -40,10 +42,23 @@ class UsbDeviceFilterTest {
         assertFalse(matchesAttachFilter(0x1234, 0x5512))
     }
 
-    private fun matchesAttachFilter(vendorId: Int, productId: Int): Boolean {
+    @Test
+    fun iccoaFilterMatchesThePhoneBeforeAndAfterAoaReenumeration() {
+        assertTrue(matchesAttachFilter(0x22d9, 0x2769, IccoaUsbAttachActivity::class.java))
+        for (productId in 0x2d00..0x2d05) {
+            assertTrue(matchesAttachFilter(0x18d1, productId, IccoaUsbAttachActivity::class.java))
+        }
+        assertFalse(matchesAttachFilter(0x05ac, 0x12a8, IccoaUsbAttachActivity::class.java))
+    }
+
+    private fun matchesAttachFilter(
+        vendorId: Int,
+        productId: Int,
+        activityClass: Class<out Activity> = CarPlayHostActivity::class.java,
+    ): Boolean {
         val context = RuntimeEnvironment.getApplication()
         val activity = context.packageManager.getActivityInfo(
-            ComponentName(context, CarPlayHostActivity::class.java),
+            ComponentName(context, activityClass),
             PackageManager.GET_META_DATA,
         )
         val device = Mockito.mock(UsbDevice::class.java)

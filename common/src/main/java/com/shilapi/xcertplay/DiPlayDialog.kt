@@ -7,6 +7,7 @@ import android.content.ContextWrapper
 import android.content.DialogInterface
 import android.content.res.ColorStateList
 import android.graphics.Color
+import android.graphics.Rect
 import android.graphics.Typeface
 import android.graphics.drawable.GradientDrawable
 import android.graphics.drawable.RippleDrawable
@@ -35,6 +36,9 @@ internal class DiPlayDialogBuilder(internal val source: Context) {
     internal var title: CharSequence? = null
     internal var message: CharSequence? = null
     internal var customView: View? = null
+    internal var opaqueGlass = false
+    internal var maxWidthDp = 760
+    internal var fitIme = false
     internal var items: Array<out CharSequence>? = null
     internal var itemListener: DialogInterface.OnClickListener? = null
     internal var singleItems: Array<out CharSequence>? = null
@@ -56,6 +60,9 @@ internal class DiPlayDialogBuilder(internal val source: Context) {
     fun setMessage(text: CharSequence) = apply { message = text }
     fun setMessage(id: Int) = apply { message = source.getString(id) }
     fun setView(view: View) = apply { customView = view }
+    fun setOpaqueGlass(value: Boolean) = apply { opaqueGlass = value }
+    fun setMaxWidthDp(value: Int) = apply { maxWidthDp = value }
+    fun setFitIme(value: Boolean) = apply { fitIme = value }
     fun setItems(items: Array<out CharSequence>, listener: DialogInterface.OnClickListener?) =
         apply { this.items = items; itemListener = listener }
     fun setSingleChoiceItems(items: Array<out CharSequence>, checked: Int,
@@ -95,6 +102,7 @@ internal class DiPlayDialog internal constructor(
     private val buttons = mutableMapOf<Int, Button>()
     private var overlay: FrameLayout? = null
     private var backCallback: OnBackPressedCallback? = null
+    private var imeLayoutListener: android.view.ViewTreeObserver.OnGlobalLayoutListener? = null
     private var showing = false
     val isShowing: Boolean get() = showing
 
@@ -173,13 +181,14 @@ internal class DiPlayDialog internal constructor(
         val card = LinearLayout(host).apply {
             orientation = LinearLayout.VERTICAL
             setPadding(dp(26), dp(24), dp(26), dp(20))
-            background = DiPlayLiquidGlassDrawable(dp(28).toFloat(), dark = night)
+            background = DiPlayLiquidGlassDrawable(dp(28).toFloat(), dark = night,
+                opaque = builder.opaqueGlass)
             elevation = dp(18).toFloat()
             isClickable = true
         }
         val screenW = host.resources.displayMetrics.widthPixels
         val screenH = host.resources.displayMetrics.heightPixels
-        val cardWidth = min((screenW * 0.74f).roundToInt(), dp(760))
+        val cardWidth = min((screenW * 0.74f).roundToInt(), dp(builder.maxWidthDp))
 
         val scroll = ScrollView(host).apply {
             overScrollMode = View.OVER_SCROLL_NEVER
@@ -283,6 +292,39 @@ internal class DiPlayDialog internal constructor(
         card.scaleY = 0.94f
         host.addContentView(root, ViewGroup.LayoutParams(-1, -1))
         overlay = root
+        if (builder.fitIme) {
+            val normalHeight = card.layoutParams.height
+            var expandedHeight = card.measuredHeight
+            var fullWindowHeight = 0
+            imeLayoutListener = android.view.ViewTreeObserver.OnGlobalLayoutListener {
+                val visible = Rect()
+                root.getWindowVisibleDisplayFrame(visible)
+                val location = IntArray(2)
+                root.getLocationOnScreen(location)
+                val availableHeight = (visible.bottom - location[1]).coerceIn(0, root.height)
+                if (availableHeight == 0) return@OnGlobalLayoutListener
+                // Some windows resize for the IME; others retain their size and clip the visible frame.
+                fullWindowHeight = maxOf(fullWindowHeight, root.height)
+                val keyboardVisible = fullWindowHeight - availableHeight > dp(120)
+                val params = card.layoutParams as FrameLayout.LayoutParams
+                if (!keyboardVisible && params.height == normalHeight && card.height > 0) {
+                    expandedHeight = card.height
+                }
+                val desiredHeight = if (!keyboardVisible) normalHeight
+                    else min(expandedHeight, (availableHeight - dp(24)).coerceAtLeast(1))
+                val desiredGravity = if (keyboardVisible) Gravity.TOP or Gravity.CENTER_HORIZONTAL else Gravity.CENTER
+                val desiredTop = if (keyboardVisible) ((availableHeight - desiredHeight) / 2).coerceAtLeast(0) else 0
+                if (params.topMargin != desiredTop || params.bottomMargin != 0 ||
+                    params.height != desiredHeight || params.gravity != desiredGravity) {
+                    params.topMargin = desiredTop
+                    params.bottomMargin = 0
+                    params.height = desiredHeight
+                    params.gravity = desiredGravity
+                    card.layoutParams = params
+                }
+            }
+            root.viewTreeObserver.addOnGlobalLayoutListener(imeLayoutListener)
+        }
         active.getOrPut(host) { mutableListOf() }.add(this)
         root.animate().alpha(1f).setDuration(180).start()
         card.animate().scaleX(1f).scaleY(1f).setDuration(220).start()
@@ -312,6 +354,8 @@ internal class DiPlayDialog internal constructor(
         backCallback = null
         val current = overlay ?: return
         overlay = null
+        imeLayoutListener?.let { current.viewTreeObserver.removeOnGlobalLayoutListener(it) }
+        imeLayoutListener = null
         activity?.let { active[it]?.remove(this) }
         current.animate().alpha(0f).setDuration(160).withEndAction {
             (current.parent as? ViewGroup)?.removeView(current)

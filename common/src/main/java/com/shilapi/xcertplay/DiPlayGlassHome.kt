@@ -194,11 +194,7 @@ internal class DiPlayGlassHome(
         contentDescription = context.getString(description)
         background = RippleDrawable(
             ColorStateList.valueOf(0x33FFFFFF),
-            GradientDrawable().apply {
-                shape = GradientDrawable.OVAL
-                setColor(if (night) 0x26FFFFFF else 0x66FFFFFF)
-                setStroke(dp(1f).roundToInt(), if (night) 0x3DFFFFFF else 0xB3FFFFFF.toInt())
-            },
+            DiPlayLiquidGlassDrawable(dp(64f), night, control = true),
             null,
         )
         outlineProvider = roundedOutline(0.5f)

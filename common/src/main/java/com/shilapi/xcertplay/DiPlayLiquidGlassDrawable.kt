@@ -6,10 +6,12 @@ import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.LinearGradient
 import android.graphics.Paint
+import android.graphics.Path
 import android.graphics.RadialGradient
 import android.graphics.RectF
 import android.graphics.Shader
 import android.graphics.drawable.Drawable
+import android.graphics.drawable.RippleDrawable
 import android.view.MotionEvent
 import android.view.View
 import kotlin.math.min
@@ -23,6 +25,9 @@ import kotlin.math.min
 internal class DiPlayLiquidGlassDrawable(
     cornerRadius: Float,
     private val dark: Boolean,
+    private val control: Boolean = false,
+    private val tinted: Boolean = false,
+    private val opaque: Boolean = false,
 ) : Drawable() {
 
     var cornerRadius: Float = cornerRadius
@@ -45,8 +50,37 @@ internal class DiPlayLiquidGlassDrawable(
         val b = RectF(bounds)
         if (b.isEmpty) return
         val radius = min(cornerRadius, min(b.width(), b.height()) / 2f)
+        val shape = continuousCornerPath(b, radius)
+        paint.color = Color.WHITE
 
-        paint.shader = if (dark) {
+        paint.shader = if (opaque && dark) {
+            LinearGradient(b.left, b.top, b.right, b.bottom,
+                intArrayOf(0xFA24344B.toInt(), 0xFA101D30.toInt()), null, Shader.TileMode.CLAMP)
+        } else if (opaque) {
+            LinearGradient(b.left, b.top, b.right, b.bottom,
+                intArrayOf(0xFFFFFFFF.toInt(), 0xFFF4F8FF.toInt()), null, Shader.TileMode.CLAMP)
+        } else if (control && tinted) {
+            LinearGradient(
+                b.left, b.top, b.right, b.bottom,
+                intArrayOf(0xEC58A9FF.toInt(), 0xE63C8CFA.toInt(), 0xE41C67EF.toInt()),
+                floatArrayOf(0f, 0.48f, 1f),
+                Shader.TileMode.CLAMP,
+            )
+        } else if (control && dark) {
+            LinearGradient(
+                b.left, b.top, b.right, b.bottom,
+                intArrayOf(0xB86B84A7.toInt(), 0xA8426089.toInt(), 0x98213D66.toInt()),
+                floatArrayOf(0f, 0.52f, 1f),
+                Shader.TileMode.CLAMP,
+            )
+        } else if (control) {
+            LinearGradient(
+                b.left, b.top, b.right, b.bottom,
+                intArrayOf(0xD9FFFFFF.toInt(), 0xC7F4F9FF.toInt(), 0xB8DDEBFA.toInt()),
+                floatArrayOf(0f, 0.54f, 1f),
+                Shader.TileMode.CLAMP,
+            )
+        } else if (dark) {
             LinearGradient(
                 b.left, b.top, b.right, b.bottom,
                 intArrayOf(0xC8AACDF5.toInt(), 0xB89CC2F0.toInt(), 0xA882AAE6.toInt()),
@@ -61,42 +95,42 @@ internal class DiPlayLiquidGlassDrawable(
                 Shader.TileMode.CLAMP,
             )
         }
-        canvas.drawRoundRect(b, radius, radius, paint)
+        canvas.drawPath(shape, paint)
 
         paint.shader = RadialGradient(
             b.left + b.width() * 0.18f + dragOffsetX * 0.18f,
             b.top,
             b.width() * 0.66f,
-            if (dark) 0x80FFFFFF.toInt() else 0x66FFFFFF,
+            if (control) 0xA6FFFFFF.toInt() else if (dark) 0x80FFFFFF.toInt() else 0x66FFFFFF,
             Color.TRANSPARENT,
             Shader.TileMode.CLAMP,
         )
-        canvas.drawRoundRect(b, radius, radius, paint)
+        canvas.drawPath(shape, paint)
 
         paint.shader = RadialGradient(
             b.right - b.width() * 0.10f,
             b.bottom,
             b.width() * 0.52f,
-            if (dark) 0x42FFC496 else 0x1FFFC496,
+            if (control) 0x36FFC496 else if (dark) 0x42FFC496 else 0x1FFFC496,
             Color.TRANSPARENT,
             Shader.TileMode.CLAMP,
         )
-        canvas.drawRoundRect(b, radius, radius, paint)
+        canvas.drawPath(shape, paint)
 
         if (press > 0f) {
             paint.shader = null
-            paint.color = Color.argb((press * 0x14).toInt(), 255, 255, 255)
-            canvas.drawRoundRect(b, radius, radius, paint)
+            paint.color = Color.argb((press * if (control) 0x30 else 0x14).toInt(), 255, 255, 255)
+            canvas.drawPath(shape, paint)
         }
 
         paint.shader = null
         paint.style = Paint.Style.STROKE
-        paint.color = 0x1CFFFFFF
-        paint.strokeWidth = 10f
-        canvas.drawRoundRect(b, radius, radius, paint)
-        paint.color = if (dark) 0x8CFFFFFF.toInt() else 0xCCFFFFFF.toInt()
-        paint.strokeWidth = 3.0f
-        canvas.drawRoundRect(b, radius, radius, paint)
+        paint.color = if (control) 0x30FFFFFF else 0x1CFFFFFF
+        paint.strokeWidth = if (control) 5f else 10f
+        canvas.drawPath(shape, paint)
+        paint.color = if (control && dark) 0xA6FFFFFF.toInt() else if (dark) 0x8CFFFFFF.toInt() else 0xCCFFFFFF.toInt()
+        paint.strokeWidth = if (control) 2f else 3.0f
+        canvas.drawPath(shape, paint)
         paint.color = 0x66FFFFFF
         paint.strokeWidth = 1.2f
         canvas.drawLine(
@@ -107,6 +141,22 @@ internal class DiPlayLiquidGlassDrawable(
             paint,
         )
         paint.style = Paint.Style.FILL
+    }
+
+    private fun continuousCornerPath(b: RectF, radius: Float): Path {
+        val shoulder = radius * 0.28f
+        return Path().apply {
+            moveTo(b.left + radius, b.top)
+            lineTo(b.right - radius, b.top)
+            cubicTo(b.right - shoulder, b.top, b.right, b.top + shoulder, b.right, b.top + radius)
+            lineTo(b.right, b.bottom - radius)
+            cubicTo(b.right, b.bottom - shoulder, b.right - shoulder, b.bottom, b.right - radius, b.bottom)
+            lineTo(b.left + radius, b.bottom)
+            cubicTo(b.left + shoulder, b.bottom, b.left, b.bottom - shoulder, b.left, b.bottom - radius)
+            lineTo(b.left, b.top + radius)
+            cubicTo(b.left, b.top + shoulder, b.left + shoulder, b.top, b.left + radius, b.top)
+            close()
+        }
     }
 
     override fun isStateful(): Boolean = true
@@ -162,11 +212,17 @@ internal class DiPlayPairScrimDrawable : Drawable() {
 internal object DiPlayGlassTouch {
     fun install(view: View) {
         view.setOnTouchListener { v, event ->
+            val glass = (v.background as? RippleDrawable)?.getDrawable(0) as? DiPlayLiquidGlassDrawable
             when (event.actionMasked) {
-                MotionEvent.ACTION_DOWN -> v.animate()
-                    .scaleX(0.97f).scaleY(0.97f).setDuration(90).start()
-                MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> v.animate()
-                    .scaleX(1f).scaleY(1f).setDuration(180).start()
+                MotionEvent.ACTION_DOWN -> {
+                    glass?.dragOffsetX = event.x - v.width / 2f
+                    v.animate().scaleX(0.97f).scaleY(0.97f).setDuration(90).start()
+                }
+                MotionEvent.ACTION_MOVE -> glass?.dragOffsetX = event.x - v.width / 2f
+                MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
+                    glass?.dragOffsetX = 0f
+                    v.animate().scaleX(1f).scaleY(1f).setDuration(180).start()
+                }
             }
             false
         }

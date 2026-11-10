@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- This Pad's OPPO Find N6 before the AOA switch. Other Android phones use the
+         explicit permission path until their device identity is known. -->
+    <usb-device vendor-id="8921" product-id="10089" />
+    <!-- Android Open Accessory personalities. AOA re-enumerates as a different USB device,
+         so it needs its own saved default and grant. -->
+    <usb-device vendor-id="6353" product-id="11520" />
+    <usb-device vendor-id="6353" product-id="11521" />
+    <usb-device vendor-id="6353" product-id="11522" />
+    <usb-device vendor-id="6353" product-id="11523" />
+    <usb-device vendor-id="6353" product-id="11524" />
+    <usb-device vendor-id="6353" product-id="11525" />
+</resources>

@@ -1737,6 +1737,10 @@ public class IccoaManager {
                     sdkInitialized = true;   // ★ init-once 守门
                     enableUsbTransport();
                     if (usbOnly) {
+                        // On recent target SDKs the SDK's receiver registration can fail before
+                        // its AOA polling thread starts. The permission is already granted before
+                        // this init callback; start the fallback once here, not on a timer.
+                        startAoaScanFallback();
                         log("有线模式：跳过 BLE 广播，等待手机走 AOA 接入");
                         return;
                     }
@@ -1897,6 +1901,8 @@ public class IccoaManager {
             try { adapter.pauseCast(); } catch (Throwable t) { log("pauseCast 异常: " + t); }
             try { adapter.disconnect(); } catch (Throwable t) { log("disconnect 异常: " + t); }
             try { adapter.stopAdvertise(); } catch (Throwable t) { log("stopAdvertise 异常: " + t); }
+            try { adapter.enableUsbDeviceDetection(false); } catch (Throwable t) { log("关 USB 发现异常: " + t); }
+            usbTransportEnabled = false;
             try {
                 adapter.unregisterCarConnectListener(connectListener);
                 adapter.unregisterPhoneDataListener(phoneDataListener);
@@ -2021,6 +2027,7 @@ public class IccoaManager {
             try { adapter.stopAdvertise(); } catch (Throwable t) { log("stopAdvertise 异常: " + t); }
             // 有线通道同样要停：插着数据线的手机在 AOA 通道上照样能自己连回来。
             try { adapter.enableUsbDeviceDetection(false); } catch (Throwable t) { log("关 USB 发现异常: " + t); }
+            usbTransportEnabled = false;
         }
         sessionActive = false;
         sessionStartedAt = 0L;

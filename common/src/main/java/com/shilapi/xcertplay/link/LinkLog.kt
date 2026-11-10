@@ -73,6 +73,9 @@ object LinkLog {
                         .start()
                     append(app, "SDK log capture started")
                     process.inputStream.bufferedReader().forEachLine { raw ->
+                        // append() also writes to logcat. Recapturing that tag recursively grows
+                        // the line on every pass and evicts the useful handshake from the file.
+                        if (raw.contains(TAG) || raw.contains("bulkTransfer")) return@forEachLine
                         if (raw.isNotBlank() && sdkMarkers.any { raw.contains(it) }) {
                             append(app, raw.trimEnd())
                         }

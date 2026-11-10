@@ -69,7 +69,11 @@ object PhoneLinkRouter {
 
             LinkAction.START_ICCOA -> {
                 LinkLog.startCapture(context)
-                startIccoa(context, wiredOnly = IcocaSettings.usb(context), askPermission = false)
+                startIccoa(
+                    context,
+                    wiredOnly = IcocaSettings.usb(context) && !IcocaSettings.wireless(context),
+                    askPermission = true,
+                )
             }
 
             LinkAction.IGNORE -> if (PhoneLinkPolicy.needsUsbAccess(kind, source)) {
@@ -96,28 +100,39 @@ object PhoneLinkRouter {
         askPermission: Boolean = false,
         onStarted: () -> Unit = {},
     ) {
-        // Always start: the SDK must be initialised for AOA, and the scan thread has to exist before
-        // the grant arrives — a grant only restarts a thread that already died, it cannot create one
-        // on its own. Permission is requested in parallel and re-arms the scan when it lands.
-        IcocaEngine.start(context, wiredOnly)
-        onStarted()
-        if (!wiredOnly || !askPermission) return
+        val start = {
+            if (!IcocaEngine.isStarted(context)) {
+                IcocaEngine.start(context, wiredOnly)
+            }
+            onStarted()
+        }
+        if (!IcocaSettings.usb(context) || !askPermission) {
+            start()
+            return
+        }
         val usb = context.getSystemService(Context.USB_SERVICE) as UsbManager
         val device = usb.deviceList.values
-            .firstOrNull { it.vendorId != UsbPhoneClassifier.APPLE_VENDOR_ID }
+            .firstOrNull { UsbPhoneClassifier.classify(signature(it)) == PhoneKind.ANDROID }
         if (device == null) {
             LinkLog.append(context, "wired: no phone attached yet, waiting for the attach event")
+            start()
             return
         }
         if (UsbPermissionBroker.has(context, device)) {
             LinkLog.append(context, "wired: permission already held")
-            IcocaEngine.refreshUsb(context)
+            val alreadyStarted = IcocaEngine.isStarted(context)
+            start()
+            if (alreadyStarted) IcocaEngine.refreshUsb(context)
             return
         }
         LinkLog.append(context, "wired: asking for USB permission")
         UsbPermissionBroker.request(context, device) { granted ->
             LinkLog.append(context, "wired: permission granted=$granted")
-            if (granted) IcocaEngine.refreshUsb(context)
+            if (granted) {
+                val alreadyStarted = IcocaEngine.isStarted(context)
+                start()
+                if (alreadyStarted) IcocaEngine.refreshUsb(context)
+            }
         }
     }
 

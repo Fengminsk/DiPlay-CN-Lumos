@@ -41,8 +41,7 @@ enum class LinkAction {
 /**
  * Classifies an attached USB device as an iPhone, an Android phone, or something else.
  *
- * CarPlay needs Apple's vendor id. ICCOA cannot open a USB link on the car side, so an Android
- * phone is only recognised here to *trigger* the wireless flow — the classifier therefore accepts
+ * CarPlay needs Apple's vendor id. ICCOA's wired path uses AOA, so the classifier accepts
  * Android's two usual USB personalities (AOA accessory mode, and the plain MTP/PTP device it
  * presents before switching), plus an ADB interface when developer options are on.
  */

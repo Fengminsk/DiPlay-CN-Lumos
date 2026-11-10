@@ -176,6 +176,7 @@ class DiPlayActivity : ComponentActivity(), AppAppearanceOwner {
     private var glassHome: DiPlayGlassHome? = null
     private var iccoaOverlay: DiPlayIccoaPairingOverlay? = null
     private var iccoaStarted = false
+    private var resumeIccoaAfterWifiSettings = false
     private var iccoaStateJob: Job? = null
     private var connectButton: Button? = null
     private var disconnectButton: Button? = null
@@ -525,6 +526,10 @@ class DiPlayActivity : ComponentActivity(), AppAppearanceOwner {
         // Back from the car settings: refresh the car hotspot reminder on the home page.
         if (!initialLaunch && !adbSwitchChangePending && !pausedForAdbSwitchChange &&
             (page == "home" || page == "settings" || page == "connection" || page == "setup")) render()
+        if (resumeIccoaAfterWifiSettings) {
+            resumeIccoaAfterWifiSettings = false
+            if (isIccoaWifiEnabled()) handler.post { openIccoaPairing() }
+        }
         startAppearanceUpdates()
         pausedForAdbSwitchChange = false
         if (initialLaunch) {
@@ -1059,30 +1064,27 @@ class DiPlayActivity : ComponentActivity(), AppAppearanceOwner {
         val root = FrameLayout(this).apply { background = DiPlaySkyDrawable(appNight) }
 
         val railScroll = ScrollView(this).apply {
-            isFillViewport = false
+            isFillViewport = true
             isVerticalScrollBarEnabled = false
+            clipToPadding = false
+            setPadding(0, headerSpace, 0, 0)
             addView(settingsRail())
             settingsRailScroll = this
         }
         root.addView(railScroll, FrameLayout.LayoutParams(railWidth, -1).apply {
             leftMargin = dp(32)
-            topMargin = headerSpace
-            bottomMargin = dp(24)
         })
         root.addView(categoryScroll, FrameLayout.LayoutParams(-1, -1).apply {
             leftMargin = dp(32) + railWidth + dp(24)
             rightMargin = dp(32)
         })
 
-        val scrimTop = if (appNight) 0xC80B121C.toInt() else 0xC8E7F1FD.toInt()
-        val scrimClear = if (appNight) 0x000B121C else 0x00E7F1FD
-        root.addView(View(this).apply {
-            background = GradientDrawable(
-                GradientDrawable.Orientation.TOP_BOTTOM,
-                intArrayOf(scrimTop, scrimClear),
-            )
+        val frost = DiPlaySettingsFrostHeader(this, listOf(railScroll, categoryScroll), appNight).apply {
             importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_NO
-        }, FrameLayout.LayoutParams(-1, headerSpace))
+        }
+        railScroll.setOnScrollChangeListener { _, _, _, _, _ -> frost.invalidate() }
+        categoryScroll.setOnScrollChangeListener { _, _, _, _, _ -> frost.invalidate() }
+        root.addView(frost, FrameLayout.LayoutParams(-1, headerSpace))
         root.addView(header, FrameLayout.LayoutParams(-1, dp(56)).apply {
             leftMargin = dp(32)
             rightMargin = dp(32)
@@ -1103,7 +1105,7 @@ class DiPlayActivity : ComponentActivity(), AppAppearanceOwner {
         val index = SettingsCategory.entries.indexOf(settingsCategory).coerceAtLeast(0)
         val from = railSlideFrom ?: index
         railSlideFrom = null
-        return DiPlayRailLayout(this, appNight, from, index).apply {
+        return DiPlayRailLayout(this, appNight, from, index, TEXT).apply {
             addView(items, FrameLayout.LayoutParams(-1, -2))
         }
     }
@@ -1116,16 +1118,13 @@ class DiPlayActivity : ComponentActivity(), AppAppearanceOwner {
             isClickable = true
             isFocusable = true
             isSelected = selected
-            foreground = focusRing(22)
+            foreground = android.graphics.drawable.LayerDrawable(arrayOf(
+                RippleDrawable(ColorStateList.valueOf(RIPPLE), null,
+                    rounded(Color.WHITE, Color.TRANSPARENT)),
+                focusRing(22),
+            ))
             contentDescription = getString(R.string.settings_open_category, title)
-            background = android.graphics.drawable.RippleDrawable(
-                ColorStateList.valueOf(RIPPLE),
-                GradientDrawable().apply {
-                    setColor(Color.TRANSPARENT)
-                    cornerRadius = dp(22).toFloat()
-                },
-                null,
-            )
+            background = null
             setPadding(dp(16), 0, dp(12), 0)
             addView(ImageView(this@DiPlayActivity).apply {
                 setImageResource(settingsCategoryIcon(category))
@@ -1662,72 +1661,86 @@ class DiPlayActivity : ComponentActivity(), AppAppearanceOwner {
             setTextColor(TEXT)
             setHintTextColor(MUTED)
             textSize = 17f
-            setPadding(dp(16), 0, dp(16), 0)
-            background = GradientDrawable().apply {
-                cornerRadius = dp(16).toFloat()
-                setColor(if (appNight) 0x1FFFFFFF else 0xCCFFFFFF.toInt())
-                setStroke(dp(1), if (appNight) 0x33FFFFFF else 0x99FFFFFF.toInt())
-            }
+            setPadding(0, 0, 0, 0)
+            background = null
             imeOptions = android.view.inputmethod.EditorInfo.IME_FLAG_NO_EXTRACT_UI or
                 android.view.inputmethod.EditorInfo.IME_ACTION_SEARCH
         }
         val results = mutableListOf<SettingsSearchResult>()
-        val adapter = object : ArrayAdapter<String>(this, 0) {
+        val adapter = object : ArrayAdapter<SettingsSearchResult>(this, 0) {
             override fun getView(position: Int, convertView: View?, parent: ViewGroup): View {
-                val row = convertView as? TextView ?: TextView(this@DiPlayActivity).apply {
-                    setPadding(dp(14), dp(14), dp(14), dp(14))
-                    textSize = 16f
-                    setTextColor(TEXT)
+                val row = convertView as? LinearLayout ?: row().apply {
+                    gravity = Gravity.CENTER_VERTICAL
+                    minimumHeight = dp(60)
+                    setPadding(dp(10), 0, dp(10), 0)
+                    background = RippleDrawable(
+                        ColorStateList.valueOf(RIPPLE),
+                        ColorDrawable(Color.TRANSPARENT),
+                        GradientDrawable().apply {
+                            cornerRadius = dp(16).toFloat()
+                            setColor(Color.WHITE)
+                        },
+                    )
+                    addView(ImageView(this@DiPlayActivity).apply {
+                        imageTintList = ColorStateList.valueOf(ACCENT)
+                        importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_NO
+                    }, LinearLayout.LayoutParams(dp(24), dp(24)).apply { marginEnd = dp(14) })
+                    addView(column().apply {
+                        addView(label("", 16, TEXT, true))
+                        addView(label("", 13, MUTED))
+                    }, LinearLayout.LayoutParams(0, -2, 1f))
+                    addView(ImageView(this@DiPlayActivity).apply {
+                        setImageResource(R.drawable.ic_dp_chevron)
+                        imageTintList = ColorStateList.valueOf(MUTED)
+                        importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_NO
+                    }, LinearLayout.LayoutParams(dp(18), dp(18)))
                 }
-                row.text = getItem(position)
+                val result = getItem(position) ?: return row
+                (row.getChildAt(0) as ImageView).setImageResource(settingsCategoryIcon(result.category))
+                val textColumn = row.getChildAt(1) as LinearLayout
+                (textColumn.getChildAt(0) as TextView).text = result.title
+                (textColumn.getChildAt(1) as TextView).apply {
+                    text = settingsCategoryTitle(result.category)
+                    visibility = if (input.text.isBlank()) View.GONE else View.VISIBLE
+                }
+                row.contentDescription = "${result.title} · ${settingsCategoryTitle(result.category)}"
                 return row
             }
         }
         val list = ListView(this).apply {
             this.adapter = adapter
-            divider = null
-            dividerHeight = 0
+            divider = ColorDrawable(if (appNight) 0x26FFFFFF else 0x1F274563)
+            dividerHeight = dp(1)
             setBackgroundColor(Color.TRANSPARENT)
             isVerticalScrollBarEnabled = false
+            overScrollMode = View.OVER_SCROLL_NEVER
         }
         val empty = label(getString(R.string.settings_search_empty), 15, MUTED).apply {
-            setPadding(dp(8), dp(12), dp(8), dp(12))
+            gravity = Gravity.CENTER
+            setPadding(dp(8), dp(20), dp(8), dp(20))
             visibility = View.GONE
         }
         val suggestions = SettingsCategory.entries.map {
             SettingsSearchResult(settingsCategoryTitle(it), it)
         }
+        val maxRows = if (resources.configuration.screenHeightDp < 700) 3 else 4
         fun update() {
             val query = input.text.toString()
             results.clear()
             if (query.isBlank()) results += suggestions else results += searchSettings(index, query)
             adapter.clear()
-            adapter.addAll(results.map {
-                if (query.isBlank()) it.title
-                else "${it.title} — ${settingsCategoryTitle(it.category)}"
-            })
+            adapter.addAll(results)
             empty.visibility = if (results.isEmpty() && query.isNotBlank()) View.VISIBLE else View.GONE
+            list.layoutParams = (list.layoutParams as? LinearLayout.LayoutParams ?: LinearLayout.LayoutParams(-1, 0)).apply {
+                height = dp(60) * minOf(maxRows, results.size)
+            }
         }
-        update()
-        input.addTextChangedListener(object : android.text.TextWatcher {
-            override fun afterTextChanged(s: android.text.Editable?) = update()
-            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) = Unit
-            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) = Unit
-        })
 
         var dialog: DiPlayDialog? = null
-        val panel = column().apply {
-            isClickable = true
-            setPadding(dp(24), dp(22), dp(24), dp(20))
-            val solid = GradientDrawable().apply {
-                cornerRadius = dp(28).toFloat()
-                setColor(if (appNight) 0xFF0E1622.toInt() else 0xFFF8FBFF.toInt())
-            }
-            background = LayerDrawable(arrayOf(solid, DiPlayLiquidGlassDrawable(dp(28).toFloat(), dark = appNight)))
-        }
+        val panel = column()
         val header = row().apply {
             gravity = Gravity.CENTER_VERTICAL
-            addView(label(getString(R.string.settings_search), 26, TEXT, true),
+            addView(label(getString(R.string.settings_search), 24, TEXT, true),
                 LinearLayout.LayoutParams(0, -2, 1f))
             addView(ImageButton(this@DiPlayActivity).apply {
                 setImageResource(R.drawable.ic_dp_close)
@@ -1735,61 +1748,59 @@ class DiPlayActivity : ComponentActivity(), AppAppearanceOwner {
                 scaleType = ImageView.ScaleType.CENTER
                 contentDescription = getString(R.string.cancel)
                 setPadding(dp(12), dp(12), dp(12), dp(12))
-                background = RippleDrawable(
-                    ColorStateList.valueOf(RIPPLE),
-                    GradientDrawable().apply {
-                        shape = GradientDrawable.OVAL
-                        setColor(if (appNight) 0x26FFFFFF else 0x33FFFFFF)
-                        setStroke(dp(1), if (appNight) 0x3DFFFFFF else 0x99FFFFFF.toInt())
-                    },
-                    null,
-                )
+                background = glassControl(dp(22).toFloat(), false)
                 setOnClickListener { dialog?.dismiss() }
+                DiPlayGlassTouch.install(this)
             }, LinearLayout.LayoutParams(dp(46), dp(46)))
         }
         panel.addView(header, LinearLayout.LayoutParams(-1, dp(46)))
-        panel.addView(input, LinearLayout.LayoutParams(-1, dp(56)).apply { topMargin = dp(16) })
+        val clear = ImageButton(this).apply {
+            setImageResource(R.drawable.ic_dp_close)
+            imageTintList = ColorStateList.valueOf(MUTED)
+            scaleType = ImageView.ScaleType.CENTER
+            contentDescription = getString(R.string.cancel)
+            background = null
+            visibility = View.GONE
+            setOnClickListener { input.text.clear() }
+        }
+        panel.addView(row().apply {
+            gravity = Gravity.CENTER_VERTICAL
+            background = glassControl(dp(20).toFloat(), false)
+            setPadding(dp(16), 0, dp(8), 0)
+            addView(ImageView(this@DiPlayActivity).apply {
+                setImageResource(R.drawable.ic_dp_search)
+                imageTintList = ColorStateList.valueOf(ACCENT)
+                importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_NO
+            }, LinearLayout.LayoutParams(dp(22), dp(22)).apply { marginEnd = dp(12) })
+            addView(input, LinearLayout.LayoutParams(0, -1, 1f))
+            addView(clear, LinearLayout.LayoutParams(dp(40), dp(40)))
+        }, LinearLayout.LayoutParams(-1, dp(56)).apply { topMargin = dp(14) })
         panel.addView(empty, LinearLayout.LayoutParams(-1, -2))
-        panel.addView(list, LinearLayout.LayoutParams(-1, dp(if (resources.configuration.screenHeightDp < 600) 180 else 320)).apply {
-            topMargin = dp(8)
+        panel.addView(list, LinearLayout.LayoutParams(-1, 0).apply { topMargin = dp(12) })
+        update()
+        input.addTextChangedListener(object : android.text.TextWatcher {
+            override fun afterTextChanged(s: android.text.Editable?) {
+                clear.visibility = if (s.isNullOrEmpty()) View.GONE else View.VISIBLE
+                update()
+            }
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) = Unit
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) = Unit
         })
-
-        val overlay = FrameLayout(this).apply {
-            setBackgroundColor(if (appNight) 0x99060C14.toInt() else 0x660B1A2E.toInt())
-        }
-        overlay.addView(panel, FrameLayout.LayoutParams(
-            minOf(dp(720), resources.displayMetrics.widthPixels - dp(48)),
-            -2,
-            Gravity.CENTER,
-        ))
-        dialog = appDialogBuilder().setView(overlay).create()
-        dialog?.apply {
-            window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
-            window?.setLayout(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
-            window?.setDimAmount(0f)
-            window?.addFlags(android.view.WindowManager.LayoutParams.FLAG_FULLSCREEN)
-            window?.setSoftInputMode(
-                android.view.WindowManager.LayoutParams.SOFT_INPUT_STATE_HIDDEN or
-                    android.view.WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE,
-            )
-        }
-        overlay.setOnClickListener { dialog?.dismiss() }
-        list.setOnItemClickListener { _, _, position, _ ->
+        dialog = appDialogBuilder().setView(panel).setOpaqueGlass(true)
+            .setMaxWidthDp(620).setFitIme(true).create()
+        fun openResult(position: Int) {
+            val result = results.getOrNull(position) ?: return
             dialog?.dismiss()
-            val result = results[position]
             if (input.text.isBlank()) openSettingsCategory(result.category) else openSearchResult(result)
         }
+        list.setOnItemClickListener { _, _, position, _ -> openResult(position) }
+        input.setOnEditorActionListener { _, actionId, _ ->
+            if (actionId == android.view.inputmethod.EditorInfo.IME_ACTION_SEARCH && results.isNotEmpty()) {
+                openResult(0)
+                true
+            } else false
+        }
         dialog?.show()
-        dialog?.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
-        dialog?.window?.decorView?.setBackgroundColor(Color.TRANSPARENT)
-        dialog?.window?.decorView?.systemUiVisibility = (
-            View.SYSTEM_UI_FLAG_FULLSCREEN or
-                View.SYSTEM_UI_FLAG_HIDE_NAVIGATION or
-                View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY or
-                View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN or
-                View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION or
-                View.SYSTEM_UI_FLAG_LAYOUT_STABLE
-            )
     }
 
     private fun advancedSettings(content: LinearLayout) {
@@ -4936,6 +4947,10 @@ class DiPlayActivity : ComponentActivity(), AppAppearanceOwner {
     private fun iccoaMissingRuntimePermissions(): List<String> =
         iccoaRuntimePermissions().filter { checkSelfPermission(it) != PackageManager.PERMISSION_GRANTED }
 
+    private fun isIccoaWifiEnabled(): Boolean =
+        (applicationContext.getSystemService(Context.WIFI_SERVICE) as? android.net.wifi.WifiManager)
+            ?.isWifiEnabled == true
+
     private fun iccoaSdkRuntimeAvailable(): Boolean = runCatching {        Class.forName("com.ucar.vehiclesdk.IAppSurfaceStateListener")
         val extracted = java.io.File(applicationInfo.nativeLibraryDir, "libusbio.so")
         if (extracted.isFile) return@runCatching true
@@ -4969,6 +4984,20 @@ class DiPlayActivity : ComponentActivity(), AppAppearanceOwner {
             iccoaPermissions.launch(iccoaMissingRuntimePermissions().toTypedArray())
             return
         }
+        val wired = IcocaSettings.usb(this) && !IcocaSettings.wireless(this)
+        if (!wired && com.miauto.app.ApReusePrefs.transport(this) != "ap" && !isIccoaWifiEnabled()) {
+            LinkLog.append(this, "ICCOA Wi-Fi Direct paused: head-unit Wi-Fi is off")
+            appDialogBuilder()
+                .setTitle(getString(R.string.settings_iccoa_transport_p2p))
+                .setMessage(getString(R.string.turn_on_wi_fi_in_the_head_unit_s_settings_to_connect))
+                .setPositiveButton(getString(R.string.open_car_wi_fi_settings)) { _, _ ->
+                    resumeIccoaAfterWifiSettings = true
+                    openCarClientWifiSettings()
+                }
+                .setNegativeButton(getString(R.string.later), null)
+                .show()
+            return
+        }
         PhoneLinkSettings.saveSource(this, ProjectionSource.ICCOA)
         // A protocol switch cuts the other link; nothing else does.
         if (CarPlayBackgroundSession.hasSession()) {
@@ -4976,8 +5005,6 @@ class DiPlayActivity : ComponentActivity(), AppAppearanceOwner {
         }
         // Keep a file record: a Pad testing against a phone is not on adb, so logcat alone loses it.
         LinkLog.startCapture(this)
-        com.shilapi.xcertplay.icoca.IcocaEngine.startWatchdog(this)
-        val wired = IcocaSettings.usb(this) && !IcocaSettings.wireless(this)
         LinkLog.append(this, "ICCOA selected: wired=$wired")
         // Wired needs the USB grant *before* the SDK scans: the SDK reads the serial number before
         // checking permission and a SecurityException kills its scan thread for good.
@@ -4989,13 +5016,11 @@ class DiPlayActivity : ComponentActivity(), AppAppearanceOwner {
             onProjection = { handoffIccoaProjection() },
             onDisconnect = { removeIccoaOverlay(stopEngine = true) },
         )
-        if (!iccoaStarted) overlay.render(IcocaBridge.State())
+        overlay.render(engine?.state?.value ?: IcocaBridge.State())
         iccoaOverlay = overlay
         glassHome?.setPairingMode(true)
-        if (iccoaStarted) {
-            iccoaStateJob = lifecycleScope.launch {
-                IcocaEngine.bridge(this@DiPlayActivity).state.collect { state -> overlay.render(state) }
-            }
+        iccoaStateJob = lifecycleScope.launch {
+            IcocaEngine.bridge(this@DiPlayActivity).state.collect { state -> overlay.render(state) }
         }
         addContentView(overlay, ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT))
         var backdropFrame = 0
@@ -5694,20 +5719,18 @@ class DiPlayActivity : ComponentActivity(), AppAppearanceOwner {
     private fun button(title: String, primary: Boolean, click: () -> Unit) = SettingButton(this, MUTED, ACCENT).apply {
         isAllCaps = false; textSize = 18f; setTextColor(if (primary) ON_ACCENT else TEXT)
         typeface = Typeface.create("sans-serif-medium", Typeface.NORMAL)
-        background = android.graphics.drawable.RippleDrawable(ColorStateList.valueOf(RIPPLE), rounded(if (primary) ACCENT else BUTTON, if (primary) ACCENT else BORDER), null)
+        background = glassControl(dp(20).toFloat(), primary)
         setPadding(dp(16), 0, dp(16), 0); minHeight = dp(56); stateListAnimator = null
         compoundDrawablePadding = dp(12)
         foreground = focusRing()
         text = title
         searchIndexSink?.add(title.substringBefore(VALUE_SEPARATOR))
         setOnClickListener { click() }
+        DiPlayGlassTouch.install(this)
         doOnLayout {
             // Short buttons retain the full-size button's corner proportions.
             val radius = minOf(dp(20).toFloat(), height * 20f / cornerReferenceHeight)
-            background = android.graphics.drawable.RippleDrawable(ColorStateList.valueOf(RIPPLE),
-                rounded(if (primary) ACCENT else BUTTON, if (primary) ACCENT else BORDER).apply {
-                    cornerRadius = radius
-                }, null)
+            background = glassControl(radius, primary)
             foreground = focusRing((radius / resources.displayMetrics.density).roundToInt())
         }
     }
@@ -5721,11 +5744,7 @@ class DiPlayActivity : ComponentActivity(), AppAppearanceOwner {
         minimumWidth = dp(48)
         minimumHeight = dp(48)
         stateListAnimator = null
-        background = android.graphics.drawable.RippleDrawable(
-            ColorStateList.valueOf(RIPPLE),
-            rounded(BUTTON, BORDER),
-            null,
-        )
+        background = glassControl(dp(20).toFloat(), false)
         foreground = focusRing(radiusDp = 20)
         setOnClickListener { click() }
         DiPlayGlassTouch.install(this)
@@ -5734,6 +5753,12 @@ class DiPlayActivity : ComponentActivity(), AppAppearanceOwner {
     // For an action whose label happens to contain the separator, such as "Turn on … · ADB".
     private fun actionButton(title: String, primary: Boolean, click: () -> Unit) =
         button(title, primary, click).apply { action = true; text = title }
+
+    private fun glassControl(radius: Float, primary: Boolean) = RippleDrawable(
+        ColorStateList.valueOf(RIPPLE),
+        DiPlayLiquidGlassDrawable(radius, appNight, control = true, tinted = primary),
+        null,
+    )
 
     /**
      * Text in the "Title · Value" form opens a choice, so it reads as a setting row:
