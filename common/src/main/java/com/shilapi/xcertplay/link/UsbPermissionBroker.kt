@@ -31,11 +31,13 @@ object UsbPermissionBroker {
     private const val EXTRA_DEVICE_ID = "device_id"
     private const val EXTRA_DEVICE_KEY = "device_key"
 
-    /** Prompts allowed per process for one vendor/product pair (AOA re-enumeration needs two). */
+    /**
+     * A phone re-enumerates when it switches to AOA, and the ROM may bounce it more than once. The
+     * limits are per plug cycle, not per process: counting per process meant a long-running app
+     * quietly ran out of prompts and every later tap was answered with a made-up "denied".
+     */
     private const val MAX_PROMPTS_PER_DEVICE = 3
-
-    /** Absolute cap per process: a phone that keeps re-enumerating must not trap the driver. */
-    private const val MAX_PROMPTS_TOTAL = 2
+    private const val MAX_PROMPTS_PER_CYCLE = 4
 
     private val waiting = ConcurrentHashMap<String, MutableList<(Boolean) -> Unit>>()
     private val prompts = ConcurrentHashMap<String, Int>()
@@ -65,7 +67,7 @@ object UsbPermissionBroker {
                 return
             }
             val promptsUsed = prompts[key] ?: 0
-            if (promptsUsed >= MAX_PROMPTS_PER_DEVICE || totalPrompts >= MAX_PROMPTS_TOTAL) {
+            if (promptsUsed >= MAX_PROMPTS_PER_DEVICE || totalPrompts >= MAX_PROMPTS_PER_CYCLE) {
                 onResult(false)
                 return
             }
@@ -80,6 +82,17 @@ object UsbPermissionBroker {
             .putExtra(EXTRA_DEVICE_KEY, key)
         val flags = PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_MUTABLE
         manager.requestPermission(device, PendingIntent.getBroadcast(app, device.deviceId, base, flags))
+    }
+
+    /**
+     * Called when the USB bus goes empty: the next plug is a fresh cycle and starts with a full
+     * prompt budget again.
+     */
+    fun resetForUnplug() {
+        synchronized(this) {
+            prompts.clear()
+            totalPrompts = 0
+        }
     }
 
     private fun ensureReceiver(app: Context) {

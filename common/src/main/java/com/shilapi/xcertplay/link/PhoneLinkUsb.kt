@@ -52,6 +52,10 @@ object PhoneLinkUsb {
                         "usb scan: " + devices.joinToString { "${it.vendorId.toString(16)}:${it.productId.toString(16)}" },
                     )
                 }
+                if (devices.isEmpty() && seen.isNotEmpty()) {
+                    // Back to a bare bus: the next plug is a new permission cycle.
+                    UsbPermissionBroker.resetForUnplug()
+                }
                 devices.filter { keyOf(it) !in seen }.forEach {
                     runCatching { PhoneLinkRouter.onUsbAttached(app, it) }
                 }

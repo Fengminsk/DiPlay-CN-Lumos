@@ -178,7 +178,8 @@ class IcocaBridge(context: Context) : IccoaManager.Listener {
      * broadcast, so a plugged phone cannot be pulled into a wireless session first.
      */
     fun start(wiredOnly: Boolean = false) {
-        manager.setUsbOnly(wiredOnly)
+        // Switching transport tears advertising down; never do that to a live session.
+        if (_state.value.phase != Phase.Connected) manager.setUsbOnly(wiredOnly)
         hotspotGate.startWatching()
         if (started) {
             AppLog.i("ICCOA: start() ignored — already started; restarting advertise")
