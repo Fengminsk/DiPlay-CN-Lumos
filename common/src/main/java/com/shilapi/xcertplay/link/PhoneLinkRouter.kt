@@ -51,18 +51,55 @@ object PhoneLinkRouter {
 
     /** Applies the decision and returns it, so callers (and tests) can see what was chosen. */
     fun onUsbAttached(context: Context, device: UsbDevice): LinkAction {
-        val action = decide(context, device)
-        Log.i(TAG, "attached vid=0x${device.vendorId.toString(16)} -> $action")
+        val kind = UsbPhoneClassifier.classify(signature(device))
+        val source = PhoneLinkSettings.loadSource(context)
+        val action = PhoneLinkPolicy.decide(kind, source)
+        Log.i(TAG, "attached vid=0x${device.vendorId.toString(16)} kind=$kind source=$source -> $action")
         when (action) {
             LinkAction.START_CARPLAY -> context.startActivity(
                 Intent(context, CarPlayHostActivity::class.java)
                     .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK),
             )
 
-            LinkAction.START_ICCOA -> IcocaEngine.start(context)
-            LinkAction.IGNORE -> Unit
+            LinkAction.START_ICCOA -> {
+                IcocaEngine.start(context)
+                requestUsbAccess(context, device)
+            }
+
+            LinkAction.IGNORE -> if (PhoneLinkPolicy.needsUsbAccess(kind, source)) {
+                // The phone may still be in charging-only mode; the AOA handshake can switch it,
+                // but only once the app is allowed to open the device.
+                requestUsbAccess(context, device)
+            }
         }
         return action
+    }
+
+    /**
+     * Prompts for USB permission on an attached phone and re-arms the wired scan afterwards.
+     *
+     * Without this the ICCOA SDK never sees the device: it requires `UsbManager.hasPermission()`
+     * and its own automatic grant needs the signature-level `MANAGE_USB`.
+     */
+    fun requestUsbAccess(context: Context, device: UsbDevice) {
+        UsbPermissionBroker.request(context, device) { granted ->
+            if (granted) {
+                IcocaEngine.refreshUsb(context)
+            } else {
+                Log.w(TAG, "USB permission refused for vid=0x${device.vendorId.toString(16)}")
+            }
+        }
+    }
+
+    /**
+     * Asks for permission on phones that were plugged in before ICCOA was selected, so switching
+     * the source does not require re-plugging the cable.
+     */
+    fun requestUsbAccessForAttachedPhones(context: Context) {
+        val usb = context.getSystemService(Context.USB_SERVICE) as UsbManager
+        usb.deviceList.values
+            .firstOrNull { it.vendorId != UsbPhoneClassifier.APPLE_VENDOR_ID }
+            ?.let { requestUsbAccess(context, it) }
     }
 
     /** Convenience for intent-driven call sites. */

@@ -90,4 +90,14 @@ object PhoneLinkPolicy {
         kind == PhoneKind.ANDROID && source == ProjectionSource.ICCOA -> LinkAction.START_ICCOA
         else -> LinkAction.IGNORE
     }
+
+    /**
+     * Whether an attached device should prompt for USB permission.
+     *
+     * With ICCOA selected, any non-Apple device is a candidate: the SDK's AOA handshake switches a
+     * phone out of whatever mode it started in, so a device we cannot classify yet may still work
+     * once it may be opened. CarPlay has its own permission flow and is left alone.
+     */
+    fun needsUsbAccess(kind: PhoneKind, source: ProjectionSource): Boolean =
+        source == ProjectionSource.ICCOA && kind != PhoneKind.IPHONE
 }

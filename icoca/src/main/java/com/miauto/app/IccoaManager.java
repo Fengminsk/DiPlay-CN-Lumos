@@ -2225,6 +2225,43 @@ public class IccoaManager {
     }
 
     /**
+     * 应用侧拿到 USB 设备权限后重新拉起有线扫描。
+     *
+     * <p>SDK 只在初始化成功时开一次 USB 发现；而它扫设备时要求 {@code UsbManager.hasPermission}
+     * 已经为 true（否则要靠需要 MANAGE_USB 的反射授权，普通安装拿不到）。所以插线那一刻还没授权的话，
+     * 扫描线程会一直空转（500ms 一轮）却永远不认这台手机。授权完成后调这里，线程下一轮就能接上。
+     */
+    public void refreshUsbTransport() {
+        if (adapter == null) {
+            log("USB 权限已拿到，但 SDK 尚未初始化 —— 初始化时会重新开启有线发现");
+            return;
+        }
+        enableUsbTransport();
+        startAoaScanFallback();
+    }
+
+    /**
+     * 兜底把 AOA 轮询线程拉起来。
+     *
+     * <p>Android 14 起，`registerReceiver` 必须带 EXPORTED/NOT_EXPORTED 标记，而 SDK 里
+     * {@code AOAAccessoryReceiver.registerReceiver()} 没带 —— 在 targetSdk ≥ 34 的应用里会抛
+     * SecurityException，于是 `startUsbDeviceScanning()` 在注册那一步就中断，扫描线程根本起不来。
+     * 这个线程本身只轮询 {@code UsbManager.getDeviceList()} 并且每 500ms 重试，不依赖那个接收器，
+     * 所以可以直接反射拉起。只在没有会话时做，避免连接中途另开一条链路。
+     */
+    private void startAoaScanFallback() {
+        if (sessionActive) return;
+        try {
+            Class<?> manager = Class.forName("com.ucar.connect.aoa.AOAConnectManager");
+            Object instance = manager.getMethod("getInstance").invoke(null);
+            manager.getMethod("startAOAConnectThread").invoke(instance);
+            log("USB: 已兜底启动 AOA 扫描线程（SDK 自身注册监听失败时使用）");
+        } catch (Throwable t) {
+            log("USB: 兜底启动 AOA 扫描线程失败: " + t);
+        }
+    }
+
+    /**
      * 尝试起投。
      *
      * <p>重试有上限：停车待机页没有 Surface，无上限重试会变成一个永不停止的 500ms 定时器

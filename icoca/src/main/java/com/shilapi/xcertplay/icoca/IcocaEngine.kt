@@ -38,5 +38,15 @@ object IcocaEngine {
         bridge(context).stop()
     }
 
+    /**
+     * Re-arms the wired (AOA) scan after the app obtained USB permission for an attached phone.
+     *
+     * The SDK's scan thread polls forever but only accepts devices it already has permission for,
+     * and it never prompts by itself, so this is the point where a wired phone becomes visible.
+     */
+    fun refreshUsb(context: Context) {
+        bridge(context).manager.refreshUsbTransport()
+    }
+
     fun isStarted(context: Context): Boolean = bridge(context).isStarted
 }

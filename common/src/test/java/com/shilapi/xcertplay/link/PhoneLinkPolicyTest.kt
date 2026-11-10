@@ -1,6 +1,8 @@
 package com.shilapi.xcertplay.link
 
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
 import org.junit.Test
 
 /**
@@ -99,6 +101,21 @@ class PhoneLinkPolicyTest {
     fun unrecognisedDeviceNeverStartsAnEngine() {
         for (source in ProjectionSource.entries) {
             assertEquals(LinkAction.IGNORE, PhoneLinkPolicy.decide(PhoneKind.UNKNOWN, source))
+        }
+    }
+
+    @Test
+    fun iccoaAsksForUsbAccessEvenWhenTheDeviceCannotBeClassifiedYet() {
+        // A phone plugged in "charging only" still becomes an AOA accessory once it may be opened.
+        assertTrue(PhoneLinkPolicy.needsUsbAccess(PhoneKind.UNKNOWN, ProjectionSource.ICCOA))
+        assertTrue(PhoneLinkPolicy.needsUsbAccess(PhoneKind.ANDROID, ProjectionSource.ICCOA))
+        assertFalse(PhoneLinkPolicy.needsUsbAccess(PhoneKind.IPHONE, ProjectionSource.ICCOA))
+    }
+
+    @Test
+    fun carplayNeverPromptsForUsbFromThisPath() {
+        for (kind in PhoneKind.entries) {
+            assertFalse(PhoneLinkPolicy.needsUsbAccess(kind, ProjectionSource.CARPLAY))
         }
     }
 }
