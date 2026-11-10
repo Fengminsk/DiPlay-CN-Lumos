@@ -79,7 +79,12 @@ object PhoneLinkUsb {
                 newDevices.forEach {
                     runCatching { PhoneLinkRouter.onUsbAttached(app, it) }
                 }
-                Thread.sleep(POLL_INTERVAL_MS)
+                try {
+                    Thread.sleep(POLL_INTERVAL_MS)
+                } catch (_: InterruptedException) {
+                    // Closing the home screen wakes the poller; interruption is its normal exit.
+                    break
+                }
             }
         }, "PhoneLinkUsb").apply {
             isDaemon = true

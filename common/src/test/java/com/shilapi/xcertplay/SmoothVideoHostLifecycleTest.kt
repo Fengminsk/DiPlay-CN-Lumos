@@ -26,6 +26,7 @@ import org.junit.runner.RunWith
 import org.mockito.MockedConstruction
 import org.mockito.Mockito.mock
 import org.mockito.Mockito.mockConstruction
+import org.mockito.Mockito.never
 import org.mockito.Mockito.spy
 import org.mockito.Mockito.verify
 import org.mockito.Mockito.`when`
@@ -145,6 +146,25 @@ class SmoothVideoHostLifecycleTest {
             assertSame(controller, getField("controller"))
             assertTrue(CarPlayBackgroundSession.isOwner(activity))
             assertEquals(0, stop.calls)
+        }
+    }
+
+    @Test fun returningToAnAlreadyStreamingSessionRequestsAPictureForTheNewSurface() {
+        val sink = mock(AndroidMediaSink::class.java)
+        val surface = surface()
+        setField("sink", sink)
+        val attach = activity.javaClass.getDeclaredMethod("attachSurface", Surface::class.java)
+            .apply { isAccessible = true }
+        CarPlayLiveSession.idle()
+        try {
+            attach.invoke(activity, surface)
+            verify(sink, never()).refreshPicture(110)
+
+            CarPlayLiveSession.streaming()
+            attach.invoke(activity, surface)
+            verify(sink).refreshPicture(110)
+        } finally {
+            CarPlayLiveSession.idle()
         }
     }
 

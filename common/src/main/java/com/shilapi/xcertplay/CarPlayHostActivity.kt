@@ -569,8 +569,6 @@ class CarPlayHostActivity : ComponentActivity() {
             videoSurfaceOwner.replace(surface, releaseOnDetach = false)
             appendLog("SurfaceView video surface created valid=${surface.isValid}")
             attachSurface(surface)
-            // A still CarPlay screen sends no frames, so ask for one instead of showing the parked gap.
-            if (smoothVideo) sink?.refreshPicture(SCREEN_TYPE_MAIN)
             videoView?.let { updateVideoLayout(it.width, it.height) }
         }
 
@@ -5082,6 +5080,9 @@ class CarPlayHostActivity : ComponentActivity() {
 
     private fun attachSurface(surface: Surface) {
         sink?.setSurface(SCREEN_TYPE_MAIN, surface)
+        // The session may still be streaming into the service's offscreen surface. A static
+        // iPhone screen can otherwise leave a newly opened host black until the next video frame.
+        if (CarPlayLiveSession.value().firstFrame) sink?.refreshPicture(SCREEN_TYPE_MAIN)
         if (AirPlayPersistence.loadClusterMapEnabled(this)) {
             clusterSurface?.let { sink?.setSurface(SCREEN_TYPE_ALT, it) }
         } else {

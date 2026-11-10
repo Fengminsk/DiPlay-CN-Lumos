@@ -899,7 +899,7 @@ private class VideoDecoder(
                         is VideoJob.SurfaceChanged -> changeSurface(job.surface)
                         is VideoJob.DetachSurface -> detach(job.request)
                         // Once per new surface, so it skips the rate limit an earlier request may still hold.
-                        is VideoJob.RefreshPicture -> if (decoder != null) {
+                        is VideoJob.RefreshPicture -> if (lastConfig != null && outputSurface != null) {
                             lastKeyFrameRequestNs = System.nanoTime()
                             requestKeyFrame()
                         }

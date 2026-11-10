@@ -5122,6 +5122,9 @@ class DiPlayActivity : ComponentActivity(), AppAppearanceOwner {
             return
         }
         AirPlayPersistence.saveWirelessEnabled(this, wireless)
+        // The connection card is shown before the new Service reports a stage. Clear the
+        // previous transport's last status so a Wi-Fi attempt cannot display a USB wait.
+        CarPlayLiveSession.preparing(getString(R.string.connecting_to_your_iphone))
         page = "home"
         render()
         // USB attach may arrive while the wireless session is still closing. Show the
