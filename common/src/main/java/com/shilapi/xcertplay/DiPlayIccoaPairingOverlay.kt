@@ -32,6 +32,7 @@ internal class DiPlayIccoaPairingOverlay(
     private val night: Boolean,
     private val onClose: () -> Unit,
     private val onProjection: () -> Unit,
+    private val onDisconnect: () -> Unit = {},
 ) : FrameLayout(context) {
 
     private val card: LinearLayout
@@ -40,6 +41,7 @@ internal class DiPlayIccoaPairingOverlay(
     private var expanded = false
     private val codeView: TextView
     private val statusView: TextView
+    private val disconnectView: TextView
     private val spinner: DiPlaySpinner
     private val accent = 0xFF9FD0FF.toInt()
 
@@ -111,8 +113,12 @@ internal class DiPlayIccoaPairingOverlay(
             gravity = Gravity.CENTER
             setPadding(0, dp(18), 0, 0)
         }, LinearLayout.LayoutParams(-1, -2))
+        val wired = IcocaSettings.usb(context) && !IcocaSettings.wireless(context)
         card.addView(TextView(context).apply {
-            text = "BLE + Wi-Fi"
+            text = context.getString(
+                if (wired) R.string.glass_iccoa_transport_usb
+                else R.string.glass_iccoa_transport_wireless,
+            )
             setTextColor(0x99FFFFFF.toInt())
             textSize = 12f
             gravity = Gravity.CENTER
@@ -129,6 +135,19 @@ internal class DiPlayIccoaPairingOverlay(
             setPadding(0, dp(10), 0, dp(6))
         }
         card.addView(codeView, LinearLayout.LayoutParams(-1, -2))
+
+        // Closing the card only hides it; disconnecting is an explicit decision.
+        disconnectView = TextView(context).apply {
+            text = context.getString(R.string.disconnect)
+            setTextColor(0xCC9FD0FF.toInt())
+            textSize = 14f
+            gravity = Gravity.CENTER
+            setPadding(0, dp(6), 0, dp(6))
+            visibility = GONE
+            isClickable = true
+            setOnClickListener { onDisconnect() }
+        }
+        card.addView(disconnectView, LinearLayout.LayoutParams(-1, -2))
 
         card.addView(View(context).apply {
             background = GradientDrawable(
@@ -216,6 +235,7 @@ internal class DiPlayIccoaPairingOverlay(
     fun render(state: IcocaBridge.State) {
         codeView.text = state.pinCode ?: "••••••"
         val connected = state.phase == IcocaBridge.Phase.Connected
+        disconnectView.visibility = if (connected) View.VISIBLE else View.GONE
         spinner.visibility = if (connected) View.GONE else View.VISIBLE
         val message = when (state.phase) {
             IcocaBridge.Phase.Connected -> context.getString(R.string.glass_iccoa_connected)

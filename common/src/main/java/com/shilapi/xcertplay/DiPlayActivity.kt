@@ -524,11 +524,8 @@ class DiPlayActivity : ComponentActivity(), AppAppearanceOwner {
         iccoaOverlay = null
         iccoaStateJob?.cancel()
         iccoaStateJob = null
-        if (iccoaStarted) {
-            iccoaStarted = false
-            val appContext = applicationContext
-            Thread { runCatching { IcocaEngine.stop(appContext) } }.apply { isDaemon = true }.start()
-        }
+        // The engine deliberately outlives this screen. Opening settings, going home or rotating
+        // must not drop a running session; only an explicit disconnect or a protocol switch does.
         glassHome?.setPairingMode(false)
         phoneLinkUsb?.close()
         phoneLinkUsb = null
@@ -659,6 +656,13 @@ class DiPlayActivity : ComponentActivity(), AppAppearanceOwner {
                 night = appNight,
                 initialWireless = loadHomeWireless(),
                 onCarPlay = {
+                    // Switching to CarPlay is the one protocol switch that cuts ICCOA without the
+                    // driver pressing disconnect.
+                    if (iccoaStarted) {
+                        iccoaStarted = false
+                        val appContext = applicationContext
+                        Thread { runCatching { IcocaEngine.stop(appContext) } }.apply { isDaemon = true }.start()
+                    }
                     if (CarPlayBackgroundSession.hasSession()) openProjection()
                     else if (!carplaySetupDone()) openCarplaySetupFromHome()
                     else connect(loadHomeWireless())
@@ -4850,6 +4854,10 @@ class DiPlayActivity : ComponentActivity(), AppAppearanceOwner {
             return
         }
         PhoneLinkSettings.saveSource(this, ProjectionSource.ICCOA)
+        // A protocol switch cuts the other link; nothing else does.
+        if (CarPlayBackgroundSession.hasSession()) {
+            CarPlayBackgroundSession.stop { runOnUiThread { resetWirelessGroup() } }
+        }
         // Keep a file record: a Pad testing against a phone is not on adb, so logcat alone loses it.
         LinkLog.startCapture(this)
         val wired = IcocaSettings.usb(this) && !IcocaSettings.wireless(this)
@@ -4864,6 +4872,7 @@ class DiPlayActivity : ComponentActivity(), AppAppearanceOwner {
             night = appNight,
             onClose = { removeIccoaOverlay() },
             onProjection = { handoffIccoaProjection() },
+            onDisconnect = { removeIccoaOverlay(stopEngine = true) },
         )
         if (!iccoaStarted) overlay.render(IcocaBridge.State())
         iccoaOverlay = overlay
@@ -4886,14 +4895,16 @@ class DiPlayActivity : ComponentActivity(), AppAppearanceOwner {
         overlay.post(backdropTick)
     }
 
-    private fun removeIccoaOverlay() {
+    private fun removeIccoaOverlay(stopEngine: Boolean = false) {
         val overlay = iccoaOverlay ?: return
         iccoaOverlay = null
         glassHome?.setPairingMode(false)
         iccoaStateJob?.cancel()
         iccoaStateJob = null
         (overlay.parent as? ViewGroup)?.removeView(overlay)
-        if (iccoaStarted) {
+        // Closing the card (or coming back from the projection page) only hides the UI. The link
+        // stays up until the driver disconnects or switches protocol.
+        if (stopEngine && iccoaStarted) {
             iccoaStarted = false
             val appContext = applicationContext
             Thread { runCatching { IcocaEngine.stop(appContext) } }.apply { isDaemon = true }.start()

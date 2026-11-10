@@ -794,6 +794,8 @@
     <string name="glass_iccoa_pairing">正在配对…</string>
     <string name="glass_iccoa_hotspot">请先打开车载热点</string>
     <string name="glass_iccoa_valid">有效期 120 秒</string>
+    <string name="glass_iccoa_transport_wireless">蓝牙 + 无线</string>
+    <string name="glass_iccoa_transport_usb">USB 有线</string>
     <string name="glass_carplay_prompt">在 iPhone 上完成 CarPlay 连接</string>
     <string name="glass_carplay_usb_find">通过 USB 发现 iPhone</string>
     <string name="glass_carplay_usb_permission">允许 USB 访问</string>

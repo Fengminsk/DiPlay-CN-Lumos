@@ -59,8 +59,14 @@ object UsbPermissionBroker {
             return
         }
         synchronized(this) {
-            if (askCount >= MAX_ASKS_PER_PROCESS) return
-            if (!asked.add("${device.vendorId}:${device.productId}")) return
+            if (askCount >= MAX_ASKS_PER_PROCESS ||
+                !asked.add("${device.vendorId}:${device.productId}")
+            ) {
+                // Already asked (or capped). Answer now so callers never wait forever; a permission
+                // that arrives later still reaches the scan through the broadcast below.
+                onResult(false)
+                return
+            }
             askCount++
         }
         ensureReceiver(app)

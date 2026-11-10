@@ -108,8 +108,9 @@ class IcocaProjectionActivity : ComponentActivity() {
 
     override fun onDestroy() {
         IcocaProjectionHost.setForeground(false)
-        val appContext = applicationContext
-        Thread { runCatching { IcocaEngine.stop(appContext) } }.apply { isDaemon = true }.start()
+        // Leaving the projection page is not a disconnect: the session stays up, only the surface
+        // goes away. Coming back re-attaches to the same link instead of renegotiating from zero.
+        runCatching { IcocaEngine.bridge(applicationContext).onSurfaceDestroyed() }
         super.onDestroy()
     }
 }
