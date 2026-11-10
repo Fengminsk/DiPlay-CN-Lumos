@@ -259,7 +259,7 @@ class DiPlayActivity : ComponentActivity(), AppAppearanceOwner {
         connect(notificationTransport)
     }
     private val tick = object : Runnable {
-        override fun run() { refreshStatus(); handler.postDelayed(this, 1000) }
+        override fun run() { refreshStatus(); updateHomePermissionBadge(); handler.postDelayed(this, 1000) }
     }
     private val appearancePoll = object : Runnable {
         override fun run() {
@@ -512,6 +512,7 @@ class DiPlayActivity : ComponentActivity(), AppAppearanceOwner {
 
     override fun onResume() {
         permissionDialogRefresh?.invoke()
+        updateHomePermissionBadge()
         super.onResume()
         applyFullscreenMode()
         // Returning from another activity can bring the head unit's own density back.
@@ -1390,23 +1391,30 @@ class DiPlayActivity : ComponentActivity(), AppAppearanceOwner {
     }
 
     private fun settingsPageTitle(content: LinearLayout, title: String, subtitle: String) {
-        val missing = PermissionCenter.missing(this).size
-        val titleSize = if (isExpandedSettingsLayout) 34 else 26
-        if (missing > 0) {
-            // The badge only exists while something is missing; tapping it lists what is off.
-            val row = LinearLayout(this).apply {
-                orientation = LinearLayout.HORIZONTAL
-                gravity = Gravity.CENTER_VERTICAL
-            }
-            row.addView(permissionBadge(missing), LinearLayout.LayoutParams(dp(38), dp(38)))
-            row.addView(
-                label(title, titleSize, TEXT, true).apply { setPadding(dp(12), 0, 0, 0) },
-            )
-            content.addView(row)
-        } else {
-            content.addView(label(title, titleSize, TEXT, true))
-        }
+        content.addView(label(title, if (isExpandedSettingsLayout) 34 else 26, TEXT, true))
         content.addView(label(subtitle, 16, MUTED).apply { setPadding(0, dp(6), 0, dp(20)) })
+    }
+
+    /**
+     * Home-screen badge: only while something is missing, sitting under the settings entry.
+     * Tapping it opens the permission list.
+     */
+    private fun updateHomePermissionBadge() {
+        val missing = PermissionCenter.missing(this).size
+        if (page != "home" || missing == 0) {
+            permissionBadgeView?.let { runCatching { (it.parent as? ViewGroup)?.removeView(it) } }
+            permissionBadgeView = null
+            return
+        }
+        val badge = permissionBadgeView ?: permissionBadge(missing).also {
+            permissionBadgeView = it
+            addContentView(it, FrameLayout.LayoutParams(dp(44), dp(44)).apply {
+                gravity = Gravity.TOP or Gravity.END
+                topMargin = dp(96)
+                rightMargin = dp(20)
+            })
+        }
+        (badge as TextView).text = if (missing > 9) "9+" else missing.toString()
     }
 
     private fun permissionBadge(count: Int): View = TextView(this).apply {
@@ -5975,3 +5983,5 @@ private var usbAutoConfirmOffered = false
 private const val STARTUP_PERMISSION_REVIEW_DELAY_MS = 1200L
 
 private var permissionDialogRefresh: (() -> Unit)? = null
+
+private var permissionBadgeView: View? = null

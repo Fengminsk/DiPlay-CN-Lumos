@@ -13,8 +13,8 @@ import com.miauto.app.DeviceDisplay
  */
 object IcocaEngine {
 
-    private const val WATCHDOG_INTERVAL_MS = 3_000L
-    private const val WATCHDOG_SOFT_ATTEMPTS = 3
+    private const val WATCHDOG_INTERVAL_MS = 4_000L
+    private const val WATCHDOG_SOFT_ATTEMPTS = 5
     private const val APPLE_VENDOR_ID = 0x05AC
 
     @Volatile
@@ -81,8 +81,10 @@ object IcocaEngine {
                             continue
                         }
                         attempts++
-                        if (attempts <= WATCHDOG_SOFT_ATTEMPTS) {
-                            engine.manager.refreshUsbTransport(true)
+                        if (attempts % WATCHDOG_SOFT_ATTEMPTS != 0) {
+                            // Only nudge once every five idle ticks: a forced re-arm while the SDK
+                            // is mid-handshake makes the phone fall back to normal USB mode.
+                            engine.manager.refreshUsbTransport(false)
                         } else {
                             // Rebuilding is the only way out once the SDK's own state machine is
                             // wedged; reinitialising is safe because init-once is reset here.

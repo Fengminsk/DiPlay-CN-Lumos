@@ -2278,14 +2278,29 @@ public class IccoaManager {
      * 完全绕开 BLE 发现。SDK 内部会自己处理 AOA 模式切换与鉴权（PIN 由 carId 派生）。
      */
     private void enableUsbTransport() {
+        enableUsbTransport(false);
+    }
+
+    /**
+     * @param force 重新下发一次开启；常规路径只下一次。
+     *
+     * <p>重复调用 `enableUsbDeviceDetection(true)` 会重新走一遍扫描启动，把 SDK 正在进行的
+     * AOA 握手打断——手机于是退回普通 U 盘模式重新枚举，表现为「模式来回跳、每次跳都弹授权、
+     * 连接反复断开」。
+     */
+    private void enableUsbTransport(boolean force) {
         if (adapter == null) return;
+        if (usbTransportEnabled && !force) return;
         try {
             adapter.enableUsbDeviceDetection(true);
+            usbTransportEnabled = true;
             log("✓ 已启用 USB 有线通道（enableUsbDeviceDetection(true)）：插上数据线即可尝试连接");
         } catch (Throwable t) {
             log("✗ enableUsbDeviceDetection 失败: " + t);
         }
     }
+
+    private volatile boolean usbTransportEnabled;
 
     /**
      * 应用侧拿到 USB 设备权限后重新拉起有线扫描。
@@ -2311,7 +2326,7 @@ public class IccoaManager {
             sessionActive = false;
             log("USB: 强制重新武装有线扫描（清除残留会话标记）");
         }
-        enableUsbTransport();
+        enableUsbTransport(force);
         startAoaScanFallback(force);
     }
 
