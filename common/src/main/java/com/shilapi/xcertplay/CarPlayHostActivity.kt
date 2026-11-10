@@ -4157,6 +4157,7 @@ class CarPlayHostActivity : ComponentActivity() {
             }
 
             override fun onVideoFrameRendered(session: AirPlaySession) {
+        CarPlayLiveSession.streaming()
                 runOnUiThread {
                     if (controllerGeneration != restartGeneration || activeAirPlaySession !== session || shuttingDown.get()) return@runOnUiThread
                     if (!startupRetryBudget.firstFrame(session, android.os.SystemClock.elapsedRealtime())) return@runOnUiThread
@@ -4171,6 +4172,7 @@ class CarPlayHostActivity : ComponentActivity() {
             }
 
             override fun onSessionEnded(session: AirPlaySession) {
+        CarPlayLiveSession.idle()
                 runOnUiThread {
                     val active = activeAirPlaySession
                     if (active != null && active !== session) {
@@ -4436,6 +4438,7 @@ class CarPlayHostActivity : ComponentActivity() {
                 finish()
             }
         }
+        CarPlayLiveSession.preparing()
         try {
             ContextCompat.startForegroundService(this, Intent(this, DiPlaySessionService::class.java))
             next.start()
@@ -5219,6 +5222,7 @@ class CarPlayHostActivity : ComponentActivity() {
 
     private fun setConnectionStage(message: String) {
         latestStage = message
+        CarPlayLiveSession.connecting(message)
         stageStatusView?.text = friendlyStage(message)
         stageHintView?.text = getString(R.string.connection_stage_diagnostic_hint)
         updateDebugOverlays()
