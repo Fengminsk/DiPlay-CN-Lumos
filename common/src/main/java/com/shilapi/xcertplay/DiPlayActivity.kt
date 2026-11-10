@@ -4956,6 +4956,18 @@ class DiPlayActivity : ComponentActivity(), AppAppearanceOwner {
 
     private fun openIccoaPairing() {
         if (iccoaOverlay != null) return
+        // A tap while the link is already up means "show me the picture", not "pair again":
+        // re-running the start path is what used to interrupt a working session.
+        val engine = runCatching { IcocaEngine.bridge(this) }.getOrNull()
+        if (engine != null && engine.isStarted &&
+            engine.state.value.phase == IcocaBridge.Phase.Connected
+        ) {
+            startActivity(
+                Intent(this, IcocaProjectionActivity::class.java)
+                    .addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT),
+            )
+            return
+        }
         if (!iccoaHasRuntimePermissions()) {
             // Android 10 needs precise location for Wi-Fi P2P/AP; without it the phone can see the
             // car over BLE but the Wi-Fi handshake never completes.

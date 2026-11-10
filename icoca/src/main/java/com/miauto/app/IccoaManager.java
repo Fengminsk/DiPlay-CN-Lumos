@@ -1592,6 +1592,12 @@ public class IccoaManager {
      * BLE 抢走，插着线的手机就变成「有线模式却走了无线」。这里连同兜底广播和两个延时任务一起撤。
      */
     private void stopWirelessAdvertising() {
+        // Never touch a live session: stopAdvertise() on a connected wireless link drops it, which
+        // is what made "connected, went home, tapped ICCOA again" end in a disconnect.
+        if (sessionActive) {
+            log("有线模式：当前已有会话，不动广播");
+            return;
+        }
         if (adapter != null) {
             try {
                 adapter.stopAdvertise();

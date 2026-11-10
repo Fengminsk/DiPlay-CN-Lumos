@@ -79,7 +79,7 @@ class IcocaProjectionActivity : ComponentActivity() {
         val preview = intent.getBooleanExtra("iccoa_preview", false)
         lifecycleScope.launch {
             bridge.state.collect { state ->
-                if (!preview && (state.phase == IcocaBridge.Phase.Disconnected || state.phase == IcocaBridge.Phase.Idle)) {
+                if (!preview && state.phase == IcocaBridge.Phase.Disconnected) {
                     if (!isFinishing) finish()
                 }
             }
