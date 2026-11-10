@@ -289,10 +289,37 @@ class DiPlayActivity : ComponentActivity(), AppAppearanceOwner {
     }
     private val iccoaPermissions = registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) {
         if (iccoaHasRuntimePermissions()) {
+            askForUsbAutoConfirmAtLaunch()
             openIccoaPairing()
         } else {
             permissionHelp(getString(R.string.location), getString(R.string.iccoa_permission_needed))
         }
+    }
+
+    /**
+     * Asks at launch for whatever the app is missing, instead of waiting for the driver to open the
+     * feature that needs it. Runs once per process, a moment after the home screen is up so the
+     * prompt does not race the first frame.
+     */
+    private fun reviewStartupPermissions() {
+        if (startupPermissionReviewDone) return
+        startupPermissionReviewDone = true
+        handler.postDelayed({
+            if (isFinishing || isDestroyed) return@postDelayed
+            val missing = iccoaMissingRuntimePermissions()
+            if (missing.isNotEmpty()) {
+                iccoaPermissions.launch(missing.toTypedArray())
+            } else {
+                askForUsbAutoConfirmAtLaunch()
+            }
+        }, STARTUP_PERMISSION_REVIEW_DELAY_MS)
+    }
+
+    /** The accessibility service makes USB permission dialogs self-confirming; offer it once. */
+    private fun askForUsbAutoConfirmAtLaunch() {
+        if (usbAutoConfirmOffered || UsbAutoConfirmService.isEnabled(this)) return
+        usbAutoConfirmOffered = true
+        promptEnableUsbAutoConfirm()
     }
     private val iconPicker = registerForActivityResult(ActivityResultContracts.GetContent(), ::cropIcon)
     private val iconDocumentPicker = registerForActivityResult(ActivityResultContracts.OpenDocument(), ::cropIcon)
@@ -342,6 +369,7 @@ class DiPlayActivity : ComponentActivity(), AppAppearanceOwner {
         IcocaProjectionHost.attach(this)
         phoneLinkUsb = runCatching { com.shilapi.xcertplay.link.PhoneLinkUsb.attach(this) }.getOrNull()
         CloudLogArchive.start(applicationContext)
+        reviewStartupPermissions()
         // Back on the home page finishes this activity while the session runs on, so the icon lands here.
         if (savedInstanceState == null && isLauncherIntent(intent) && CarPlayBackgroundSession.hasSession() &&
             AirPlayPersistence.loadLauncherReturnsToCarPlay(this)) {
@@ -5853,37 +5881,7 @@ class DiPlayActivity : ComponentActivity(), AppAppearanceOwner {
     private const val SETTINGS_FLOAT_HEADER_DP = 88
     }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+/** Process-wide, so a rotation or a second screen does not re-ask. */
+private var startupPermissionReviewDone = false
+private var usbAutoConfirmOffered = false
+private const val STARTUP_PERMISSION_REVIEW_DELAY_MS = 1200L
