@@ -779,6 +779,108 @@
     <string name="settings_iccoa_mic_noise">Шумоподавление</string>
     <string name="settings_iccoa_touch_toggle">Измеренная сенсорная область</string>
     <string name="settings_iccoa_hud">Зеркало на HUD</string>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    <string name="settings_ambient_title">Атмосферная подсветка (экспериментально)</string>
+    <string name="settings_ambient_configuration">Настройки подсветки</string>
+    <string name="settings_ambient_static">Постоянный</string>
+    <string name="settings_ambient_energy">Энергия звука</string>
+    <string name="settings_ambient_beat">Ритм</string>
+    <string name="settings_ambient_tempo">Оценка BPM</string>
+    <string name="settings_ambient_bass">Приоритет басов</string>
+    <string name="settings_ambient_smart">Умное следование</string>
+    <string name="settings_ambient_slow">Плавно</string>
+    <string name="settings_ambient_standard">Стандартно</string>
+    <string name="settings_ambient_fast">Быстро</string>
+    <string name="settings_ambient_enabled">Вкл.</string>
+    <string name="settings_ambient_disabled">Выкл.</string>
+    <string name="settings_ambient_summary">%1$s · %2$s · %3$s · %4$d цветов · яркость %5$d</string>
+    <string name="settings_ambient_enable">Управлять подсветкой</string>
+    <string name="settings_ambient_enable_description">При отключении выполняется попытка восстановить исходные цвета, яркость и зону. Требуется существующая авторизация ADB.</string>
+    <string name="settings_ambient_music">Следовать музыке</string>
+    <string name="settings_ambient_music_description">При воспроизведении следует музыке или использует постоянные цвета и яркость. Что делает подсветка, когда музыка не играет, настраивается ниже отдельно. Изменения применяются после сохранения.</string>
+    <string name="settings_ambient_color_mode">Смена цвета</string>
+    <string name="settings_ambient_speed">Скорость изменения яркости</string>
+    <string name="settings_ambient_behavior_title">Что происходит</string>
+    <string name="settings_ambient_behavior_off">Управление выключено. Автомобиль сохраняет собственные цвета, яркость и зону подсветки.</string>
+    <string name="settings_ambient_behavior_follow">Играет музыка · %1$s: подсветка следует за музыкой, до уровня %2$d.</string>
+    <string name="settings_ambient_behavior_fixed">Играет музыка · %1$s: подсветка горит одним фиксированным цветом на уровне %2$d.</string>
+    <string name="settings_ambient_behavior_idle">Пауза, остановка или отключение: все зоны снижаются до минимального уровня, при котором подсветка может погаснуть.</string>
+    <string name="settings_ambient_behavior_idle_steady">Пауза, остановка или отключение · %1$s: подсветка сохраняет выбранный цвет на уровне %2$d.</string>
+    <string name="settings_ambient_behavior_idle_car">Нет музыки 15 секунд: подсветка возвращается к настройкам автомобиля, а DiPlay снова берёт управление, когда начинается музыка.</string>
+    <string name="settings_ambient_behavior_other_zone">Другая зона не меняется, пока играет музыка.</string>
+    <string name="settings_ambient_behavior_lowest">Уровень 0: все зоны всегда остаются на минимальном уровне, при котором подсветка может погаснуть.</string>
+    <string name="settings_ambient_idle">Когда музыка не играет</string>
+    <string name="settings_ambient_idle_steady">Постоянное свечение</string>
+    <string name="settings_ambient_idle_car">Подсветка автомобиля</string>
+    <string name="settings_ambient_idle_off">Минимальный уровень (может быть тёмным)</string>
+    <string name="settings_ambient_behavior_restore">Выключите управление, чтобы вернуть подсветку к настройкам автомобиля.</string>
+    <string name="settings_ambient_mode_energy_desc">Цвета меняются в зависимости от громкости музыки.</string>
+    <string name="settings_ambient_mode_beat_desc">Цвета меняются на каждый удар ритма.</string>
+    <string name="settings_ambient_mode_tempo_desc">Цвета меняются в оценённом темпе (BPM).</string>
+    <string name="settings_ambient_mode_bass_desc">Цвета меняются на удары баса.</string>
+    <string name="settings_ambient_mode_smart_desc">Цвета меняются на удары баса и сильные ритмы.</string>
+    <string name="settings_ambient_spectrum_note">Головное устройство следует спектру музыки: басы дают тёплый оттенок, высокие частоты — холодный; яркость следует за музыкой.</string>
+    <string name="settings_ambient_colors_title">Цвета</string>
+    <string name="settings_ambient_colors_hint_follow">Нажмите на цвета, которые может использовать подсветка. Она меняется между выбранными.</string>
+    <string name="settings_ambient_colors_hint_fixed">Нажмите на нужный цвет. В фиксированном режиме показывается один цвет.</string>
+    <string name="settings_ambient_colors_hint_album">Цвета берутся с обложки альбома. Выключите «Цвет обложки альбома», чтобы выбрать цвета самостоятельно.</string>
+    <string name="settings_ambient_swatch">Цвет %1$d</string>
+    <string name="settings_ambient_swatch_selected">Цвет %1$d, выбран</string>
+    <string name="settings_ambient_brightness_value">Уровень %1$d из 6</string>
+    <string name="settings_ambient_select_one">Выберите хотя бы один цвет</string>
+    <string name="settings_ambient_brightness">Максимальная яркость</string>
+    <string name="settings_ambient_night_brightness">Ночная яркость</string>
+    <string name="settings_ambient_minimum">0 (минимальный уровень)</string>
+    <string name="settings_ambient_area">Зона</string>
+    <string name="settings_ambient_front">Передняя</string>
+    <string name="settings_ambient_rear">Задняя</string>
+    <string name="settings_ambient_all">Все</string>
+    <string name="settings_ambient_parked_notice">Настраивайте на стоянке. Экспериментальная поддержка некоторых интерфейсов BYD; совместимость зависит от модели и прошивки. Уровень 0 означает минимум OEM, а не выключение.</string>
+    <string name="settings_ambient_checking">Проверка…</string>
+    <string name="settings_ambient_unavailable">Проверка без записи не пройдена: нет существующей авторизации ADB или подходящего интерфейса. Настройки не сохранены. Настройте доступ отдельно на стоянке; функция не включает ADB и не запрашивает авторизацию.</string>
+    <string name="settings_ambient_car_rhythm">Штатный музыкальный ритм автомобиля</string>
+    <string name="settings_ambient_car_rhythm_description">Пока играет музыка CarPlay, работает штатный музыкальный ритм подсветки автомобиля с цветами и эффектами из его меню подсветки, где должен быть включён «Музыкальный ритм». DiPlay в это время сам лампами не управляет. Проверяется при включении. Сетевой ADB автомобиля нужен, только если головное устройство не даёт DiPlay включить ритм самостоятельно.</string>
+    <string name="settings_ambient_car_rhythm_unavailable">Штатный музыкальный ритм недоступен: DiPlay не может включить его самостоятельно, а сетевого доступа ADB для DiPlay или нужного вызова аудиосервиса головного устройства нет. Ничего не сохранено.</string>
+    <string name="settings_ambient_car_rhythm_feed">Передавать данные музыки в ритм автомобиля (старые головные устройства)</string>
+    <string name="settings_ambient_car_rhythm_feed_description">На некоторых головных устройствах (например, Han 2023 года) ритм автомобиля запускается, но подсветка остаётся тёмной, потому что автомобиль не строит собственный спектр для музыки CarPlay. Эта функция отправляет контроллеру подсветки 16 частотных полос воспроизводимой музыки, и собственный ритм автомобиля, включая панель со стороны пассажира, следует за ней. Действует только при включённом выше ритме музыки автомобиля и требует сетевой ADB автомобиля.</string>
+    <string name="settings_ambient_album">Цвет обложки альбома</string>
+    <string name="settings_ambient_album_description">Цвет обложки приближённо сопоставляется с доступными цветами автомобиля. Для серой, чёрной или отсутствующей обложки используются все 31 цвет; для преимущественно белой — белый или холодный белый.</string>
+    <string name="settings_ambient_day_brightness">Дневная яркость</string>
 </resources>
 
 

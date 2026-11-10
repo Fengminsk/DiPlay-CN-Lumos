@@ -839,6 +839,108 @@
     <string name="settings_iccoa_mic_noise">降噪</string>
     <string name="settings_iccoa_touch_toggle">實測觸控區域</string>
     <string name="settings_iccoa_hud">HUD 鏡像</string>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    <string name="settings_ambient_title">氛圍燈（實驗性）</string>
+    <string name="settings_ambient_configuration">氛圍燈設定</string>
+    <string name="settings_ambient_static">固定</string>
+    <string name="settings_ambient_energy">聲音能量</string>
+    <string name="settings_ambient_beat">節拍</string>
+    <string name="settings_ambient_tempo">估算 BPM</string>
+    <string name="settings_ambient_bass">低音優先</string>
+    <string name="settings_ambient_smart">智慧跟隨</string>
+    <string name="settings_ambient_slow">平滑</string>
+    <string name="settings_ambient_standard">標準</string>
+    <string name="settings_ambient_fast">快速</string>
+    <string name="settings_ambient_enabled">開啟</string>
+    <string name="settings_ambient_disabled">關閉</string>
+    <string name="settings_ambient_summary">%1$s · %2$s · %3$s · %4$d 色 · 亮度 %5$d</string>
+    <string name="settings_ambient_enable">啟用氛圍燈控制</string>
+    <string name="settings_ambient_enable_description">關閉後會嘗試還原原始燈光顏色、亮度及區域。需要既有的 ADB 授權。</string>
+    <string name="settings_ambient_music">跟隨音樂</string>
+    <string name="settings_ambient_music_description">播放時跟隨音樂；關閉跟隨後使用固定顏色及亮度。    沒有音樂播放時的燈光表現在下方另外設定，儲存後生效。</string>
+    <string name="settings_ambient_color_mode">顏色變化</string>
+    <string name="settings_ambient_speed">亮度過渡速度</string>
+    <string name="settings_ambient_behavior_title">運作方式</string>
+    <string name="settings_ambient_behavior_off">控制已關閉。車輛維持自己的燈光顏色、亮度和區域。</string>
+    <string name="settings_ambient_behavior_follow">播放音樂時 · %1$s：燈光跟隨音樂變化，最高到第 %2$d 檔。</string>
+    <string name="settings_ambient_behavior_fixed">播放音樂時 · %1$s：燈光維持單一固定顏色，亮度第 %2$d 檔。</string>
+    <string name="settings_ambient_behavior_idle">暫停、停止或中斷連線時：所有區域降到最低亮度，燈光可能完全熄滅。</string>
+    <string name="settings_ambient_behavior_idle_steady">暫停、停止或中斷連線 · %1$s：燈光維持所選顏色，亮度為第 %2$d 檔。</string>
+    <string name="settings_ambient_behavior_idle_car">15 秒沒有音樂：燈光恢復為車輛自己的設定，音樂開始後 DiPlay 會再次接管。</string>
+    <string name="settings_ambient_behavior_other_zone">播放音樂時，另一個區域不會變動。</string>
+    <string name="settings_ambient_behavior_lowest">第 0 檔：所有區域始終維持最低亮度，燈光可能完全熄滅。</string>
+    <string name="settings_ambient_idle">沒有音樂播放時</string>
+    <string name="settings_ambient_idle_steady">穩定常亮</string>
+    <string name="settings_ambient_idle_car">車輛自己的燈光</string>
+    <string name="settings_ambient_idle_off">最低亮度（可能熄滅）</string>
+    <string name="settings_ambient_behavior_restore">關閉控制即可把燈光還給車輛自己的設定。</string>
+    <string name="settings_ambient_mode_energy_desc">顏色隨音樂的響度變化。</string>
+    <string name="settings_ambient_mode_beat_desc">顏色隨每個節拍變化。</string>
+    <string name="settings_ambient_mode_tempo_desc">顏色依估算的速度（BPM）變化。</string>
+    <string name="settings_ambient_mode_bass_desc">顏色隨低音鼓點變化。</string>
+    <string name="settings_ambient_mode_smart_desc">顏色隨低音鼓點和強拍變化。</string>
+    <string name="settings_ambient_spectrum_note">本車依音樂頻譜自動配色：低頻偏暖、高頻偏冷，亮度隨音樂能量起伏。</string>
+    <string name="settings_ambient_colors_title">顏色</string>
+    <string name="settings_ambient_colors_hint_follow">點選燈光可以使用的顏色。燈光會在你選的顏色之間變化。</string>
+    <string name="settings_ambient_colors_hint_fixed">點選要使用的顏色。固定模式只顯示一種顏色。</string>
+    <string name="settings_ambient_colors_hint_album">顏色取自專輯封面。關閉「跟隨專輯封面」即可自行選擇顏色。</string>
+    <string name="settings_ambient_swatch">顏色 %1$d</string>
+    <string name="settings_ambient_swatch_selected">顏色 %1$d，已選</string>
+    <string name="settings_ambient_brightness_value">第 %1$d 檔，共 6 檔</string>
+    <string name="settings_ambient_select_one">請至少選擇一個顏色</string>
+    <string name="settings_ambient_brightness">最高亮度</string>
+    <string name="settings_ambient_night_brightness">夜間亮度</string>
+    <string name="settings_ambient_minimum">0（最低檔）</string>
+    <string name="settings_ambient_area">區域</string>
+    <string name="settings_ambient_front">前排</string>
+    <string name="settings_ambient_rear">後排</string>
+    <string name="settings_ambient_all">全部</string>
+    <string name="settings_ambient_parked_notice">請停車後設定。實驗性支援部分 BYD 燈光介面，無法保證每種車型及韌體相容。0 表示原廠最低檔，不代表關燈。</string>
+    <string name="settings_ambient_checking">檢查中…</string>
+    <string name="settings_ambient_unavailable">唯讀檢查失敗：缺少既有 ADB 授權或支援的燈光介面。未儲存燈光設定。請停車後另行設定存取；本功能不啟用 ADB，也不請求授權。</string>
+    <string name="settings_ambient_car_rhythm">車輛原廠音樂律動</string>
+    <string name="settings_ambient_car_rhythm_description">播放 CarPlay 音樂時，啟用車輛原廠的氛圍燈音樂律動，顏色與效果使用車輛氛圍燈選單中的設定（需在其中開啟音樂律動）。期間 DiPlay 不直接控制燈光。開啟時會檢查。僅當車機不允許 DiPlay 自行啟動律動時，才需要車機網路 ADB。</string>
+    <string name="settings_ambient_car_rhythm_unavailable">車輛音樂律動無法使用：DiPlay 無法自行啟動律動，並且沒有網路 ADB 權限或車機音訊服務不支援所需呼叫。未儲存任何設定。</string>
+    <string name="settings_ambient_car_rhythm_feed">向車輛律動傳送音樂資料（較舊的車機）</string>
+    <string name="settings_ambient_car_rhythm_feed_description">在部分車機（如 2023 款漢）上，車輛的律動會啟動但燈光保持熄滅，因為車輛不會為 CarPlay 音樂產生自己的頻譜。此選項會把正在播放音樂的 16 個頻段傳送給車輛的燈光控制器，讓車輛自身的律動（包括副駕駛一側的儀表台）隨之變化。僅在上方的車輛音樂律動開啟時有效，並且需要車輛的網路 ADB。</string>
+    <string name="settings_ambient_album">跟隨專輯封面</string>
+    <string name="settings_ambient_album_description">按封面取色並近似對應原車可用色號。灰黑或無封面時使用全部31色；大面積白色封面可使用白色或冷白。</string>
+    <string name="settings_ambient_day_brightness">日間亮度</string>
 </resources>
 
 

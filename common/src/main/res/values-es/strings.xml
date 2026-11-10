@@ -779,6 +779,108 @@
     <string name="settings_iccoa_mic_noise">Supresión de ruido</string>
     <string name="settings_iccoa_touch_toggle">Superficie táctil medida</string>
     <string name="settings_iccoa_hud">Duplicar en HUD</string>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    <string name="settings_ambient_title">Iluminación ambiental (experimental)</string>
+    <string name="settings_ambient_configuration">Ajustes de iluminación ambiental</string>
+    <string name="settings_ambient_static">Fijo</string>
+    <string name="settings_ambient_energy">Energía del sonido</string>
+    <string name="settings_ambient_beat">Ritmo</string>
+    <string name="settings_ambient_tempo">BPM estimados</string>
+    <string name="settings_ambient_bass">Prioridad de graves</string>
+    <string name="settings_ambient_smart">Seguimiento inteligente</string>
+    <string name="settings_ambient_slow">Suave</string>
+    <string name="settings_ambient_standard">Estándar</string>
+    <string name="settings_ambient_fast">Rápido</string>
+    <string name="settings_ambient_enabled">Activado</string>
+    <string name="settings_ambient_disabled">Desactivado</string>
+    <string name="settings_ambient_summary">%1$s · %2$s · %3$s · %4$d colores · brillo %5$d</string>
+    <string name="settings_ambient_enable">Activar control de iluminación ambiental</string>
+    <string name="settings_ambient_enable_description">Al desactivarlo se intenta restaurar los colores, el brillo y la zona originales. Requiere autorización ADB existente.</string>
+    <string name="settings_ambient_music">Seguir la música</string>
+    <string name="settings_ambient_music_description">Durante la reproducción, sigue la música o usa colores y brillo fijos si se desactiva. Lo que hacen las luces cuando no suena música se ajusta por separado abajo. Los cambios se aplican al guardar.</string>
+    <string name="settings_ambient_color_mode">Cambios de color</string>
+    <string name="settings_ambient_speed">Velocidad de transición del brillo</string>
+    <string name="settings_ambient_behavior_title">Qué ocurre</string>
+    <string name="settings_ambient_behavior_off">El control está desactivado. El coche mantiene sus propios colores, brillo y zona.</string>
+    <string name="settings_ambient_behavior_follow">Con música · %1$s: las luces siguen la música, hasta el nivel %2$d.</string>
+    <string name="settings_ambient_behavior_fixed">Con música · %1$s: las luces se quedan en un color fijo en el nivel %2$d.</string>
+    <string name="settings_ambient_behavior_idle">En pausa, detenido o desconectado: todas las zonas bajan al nivel mínimo, que puede apagar las luces.</string>
+    <string name="settings_ambient_behavior_idle_steady">En pausa, detenido o desconectado · %1$s: las luces mantienen el color elegido al nivel %2$d.</string>
+    <string name="settings_ambient_behavior_idle_car">Sin música durante 15 segundos: las luces vuelven a los ajustes del coche y DiPlay retoma el control cuando empieza la música.</string>
+    <string name="settings_ambient_behavior_other_zone">La otra zona no cambia mientras suena la música.</string>
+    <string name="settings_ambient_behavior_lowest">Nivel 0: todas las zonas se quedan en el nivel mínimo, que puede apagar las luces.</string>
+    <string name="settings_ambient_idle">Cuando no suena música</string>
+    <string name="settings_ambient_idle_steady">Brillo constante</string>
+    <string name="settings_ambient_idle_car">Iluminación del coche</string>
+    <string name="settings_ambient_idle_off">Nivel mínimo (puede quedar oscuro)</string>
+    <string name="settings_ambient_behavior_restore">Desactiva el control para devolver las luces a los ajustes del coche.</string>
+    <string name="settings_ambient_mode_energy_desc">Los colores cambian según lo fuerte que suena la música.</string>
+    <string name="settings_ambient_mode_beat_desc">Los colores cambian en cada pulso.</string>
+    <string name="settings_ambient_mode_tempo_desc">Los colores cambian al ritmo estimado (BPM).</string>
+    <string name="settings_ambient_mode_bass_desc">Los colores cambian con los golpes de graves.</string>
+    <string name="settings_ambient_mode_smart_desc">Los colores cambian con los graves y los pulsos fuertes.</string>
+    <string name="settings_ambient_spectrum_note">Esta unidad sigue el espectro de la música: los graves dan calidez y los agudos frialdad; el brillo sigue la música.</string>
+    <string name="settings_ambient_colors_title">Colores</string>
+    <string name="settings_ambient_colors_hint_follow">Toca los colores que pueden usar las luces. Cambian entre tu selección.</string>
+    <string name="settings_ambient_colors_hint_fixed">Toca el color que quieres usar. El modo fijo muestra un solo color.</string>
+    <string name="settings_ambient_colors_hint_album">Los colores salen de la portada del álbum. Desactiva Seguir la portada del álbum para elegirlos tú.</string>
+    <string name="settings_ambient_swatch">Color %1$d</string>
+    <string name="settings_ambient_swatch_selected">Color %1$d, seleccionado</string>
+    <string name="settings_ambient_brightness_value">Nivel %1$d de 6</string>
+    <string name="settings_ambient_select_one">Selecciona al menos un color</string>
+    <string name="settings_ambient_brightness">Brillo máximo</string>
+    <string name="settings_ambient_night_brightness">Brillo nocturno</string>
+    <string name="settings_ambient_minimum">0 (nivel mínimo)</string>
+    <string name="settings_ambient_area">Zona</string>
+    <string name="settings_ambient_front">Delantera</string>
+    <string name="settings_ambient_rear">Trasera</string>
+    <string name="settings_ambient_all">Todas</string>
+    <string name="settings_ambient_parked_notice">Configura con el vehículo estacionado. Compatibilidad experimental con algunas interfaces BYD; puede variar según modelo y firmware. El nivel 0 es el mínimo OEM, no apagado.</string>
+    <string name="settings_ambient_checking">Comprobando…</string>
+    <string name="settings_ambient_unavailable">La comprobación de solo lectura falló: falta autorización ADB existente o una interfaz compatible. No se guardaron ajustes. Configura el acceso por separado con el vehículo estacionado; esta función no activa ADB ni solicita autorización.</string>
+    <string name="settings_ambient_car_rhythm">Ritmo musical propio del coche</string>
+    <string name="settings_ambient_car_rhythm_description">Mientras suena música de CarPlay, funciona el ritmo musical propio de la iluminación ambiental del coche, con los colores y efectos de su menú de iluminación, donde el ritmo musical debe estar activado. Mientras tanto, DiPlay no controla las luces. Se comprueba al activarlo. Solo requiere el ADB de red del coche si la unidad principal no permite que DiPlay active el ritmo por sí mismo.</string>
+    <string name="settings_ambient_car_rhythm_unavailable">El ritmo musical del coche no está disponible: DiPlay no puede activarlo por sí mismo y falta el acceso ADB de red de DiPlay o la llamada al servicio de audio de la unidad principal. No se guardó nada.</string>
+    <string name="settings_ambient_car_rhythm_feed">Enviar datos de la música al ritmo del coche (unidades antiguas)</string>
+    <string name="settings_ambient_car_rhythm_feed_description">En algunas unidades (como un Han de 2023) el ritmo del coche arranca pero las luces quedan apagadas, porque el coche no genera un espectro propio para la música de CarPlay. Esto envía las 16 bandas de frecuencia de la música reproducida al controlador de luces del coche, de modo que el ritmo del coche, incluido el salpicadero del pasajero, la siga. Solo tiene efecto con el ritmo musical del coche activado arriba y requiere el ADB de red del coche.</string>
+    <string name="settings_ambient_album">Seguir la portada del álbum</string>
+    <string name="settings_ambient_album_description">Usa el color de la portada o colores cercanos disponibles del vehículo. Las portadas grises, negras o ausentes usan los 31 colores; las mayormente blancas pueden usar blanco o blanco frío.</string>
+    <string name="settings_ambient_day_brightness">Brillo diurno</string>
 </resources>
 
 

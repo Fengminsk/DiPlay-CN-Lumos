@@ -791,6 +791,108 @@
     <string name="settings_iccoa_mic_noise">Придушення шуму</string>
     <string name="settings_iccoa_touch_toggle">Виміряна сенсорна область</string>
     <string name="settings_iccoa_hud">Дзеркало на HUD</string>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    <string name="settings_ambient_title">Атмосферне підсвічування (експериментально)</string>
+    <string name="settings_ambient_configuration">Налаштування підсвічування</string>
+    <string name="settings_ambient_static">Постійний</string>
+    <string name="settings_ambient_energy">Енергія звуку</string>
+    <string name="settings_ambient_beat">Ритм</string>
+    <string name="settings_ambient_tempo">Оцінка BPM</string>
+    <string name="settings_ambient_bass">Пріоритет басів</string>
+    <string name="settings_ambient_smart">Розумне слідування</string>
+    <string name="settings_ambient_slow">Плавно</string>
+    <string name="settings_ambient_standard">Стандартно</string>
+    <string name="settings_ambient_fast">Швидко</string>
+    <string name="settings_ambient_enabled">Увімк.</string>
+    <string name="settings_ambient_disabled">Вимк.</string>
+    <string name="settings_ambient_summary">%1$s · %2$s · %3$s · %4$d кольорів · яскравість %5$d</string>
+    <string name="settings_ambient_enable">Керувати підсвічуванням</string>
+    <string name="settings_ambient_enable_description">Після вимкнення виконується спроба відновити початкові кольори, яскравість і зону. Потрібна наявна авторизація ADB.</string>
+    <string name="settings_ambient_music">Слідувати музиці</string>
+    <string name="settings_ambient_music_description">Під час відтворення слідує музиці або використовує постійні кольори та яскравість. Що робить підсвічування, коли музика не грає, налаштовується нижче окремо. Зміни застосовуються після збереження.</string>
+    <string name="settings_ambient_color_mode">Зміна кольору</string>
+    <string name="settings_ambient_speed">Швидкість зміни яскравості</string>
+    <string name="settings_ambient_behavior_title">Що відбувається</string>
+    <string name="settings_ambient_behavior_off">Керування вимкнено. Автомобіль зберігає власні кольори, яскравість і зону підсвічування.</string>
+    <string name="settings_ambient_behavior_follow">Грає музика · %1$s: підсвічування слідує за музикою, до рівня %2$d.</string>
+    <string name="settings_ambient_behavior_fixed">Грає музика · %1$s: підсвічування горить одним фіксованим кольором на рівні %2$d.</string>
+    <string name="settings_ambient_behavior_idle">Пауза, зупинка або відключення: усі зони знижуються до мінімального рівня, за якого підсвічування може згаснути.</string>
+    <string name="settings_ambient_behavior_idle_steady">Пауза, зупинка або відключення · %1$s: підсвічування зберігає вибраний колір на рівні %2$d.</string>
+    <string name="settings_ambient_behavior_idle_car">Немає музики 15 секунд: підсвічування повертається до налаштувань автомобіля, а DiPlay знову бере керування, коли починається музика.</string>
+    <string name="settings_ambient_behavior_other_zone">Інша зона не змінюється, поки грає музика.</string>
+    <string name="settings_ambient_behavior_lowest">Рівень 0: усі зони завжди залишаються на мінімальному рівні, за якого підсвічування може згаснути.</string>
+    <string name="settings_ambient_idle">Коли музика не грає</string>
+    <string name="settings_ambient_idle_steady">Постійне свічення</string>
+    <string name="settings_ambient_idle_car">Підсвічування автомобіля</string>
+    <string name="settings_ambient_idle_off">Мінімальний рівень (може бути темно)</string>
+    <string name="settings_ambient_behavior_restore">Вимкніть керування, щоб повернути підсвічування до налаштувань автомобіля.</string>
+    <string name="settings_ambient_mode_energy_desc">Кольори змінюються залежно від гучності музики.</string>
+    <string name="settings_ambient_mode_beat_desc">Кольори змінюються на кожен удар ритму.</string>
+    <string name="settings_ambient_mode_tempo_desc">Кольори змінюються в оціненому темпі (BPM).</string>
+    <string name="settings_ambient_mode_bass_desc">Кольори змінюються на удари баса.</string>
+    <string name="settings_ambient_mode_smart_desc">Кольори змінюються на удари баса та сильні ритми.</string>
+    <string name="settings_ambient_spectrum_note">Головний пристрій стежить за спектром музики: баси дають теплий відтінок, високі частоти — холодний; яскравість змінюється разом із музикою.</string>
+    <string name="settings_ambient_colors_title">Кольори</string>
+    <string name="settings_ambient_colors_hint_follow">Торкніться кольорів, які може використовувати підсвічування. Воно змінюється між вибраними.</string>
+    <string name="settings_ambient_colors_hint_fixed">Торкніться потрібного кольору. У фіксованому режимі показується один колір.</string>
+    <string name="settings_ambient_colors_hint_album">Кольори беруться з обкладинки альбому. Вимкніть «Колір обкладинки альбому», щоб вибрати кольори самостійно.</string>
+    <string name="settings_ambient_swatch">Колір %1$d</string>
+    <string name="settings_ambient_swatch_selected">Колір %1$d, вибрано</string>
+    <string name="settings_ambient_brightness_value">Рівень %1$d з 6</string>
+    <string name="settings_ambient_select_one">Виберіть хоча б один колір</string>
+    <string name="settings_ambient_brightness">Максимальна яскравість</string>
+    <string name="settings_ambient_night_brightness">Нічна яскравість</string>
+    <string name="settings_ambient_minimum">0 (мінімальний рівень)</string>
+    <string name="settings_ambient_area">Зона</string>
+    <string name="settings_ambient_front">Передня</string>
+    <string name="settings_ambient_rear">Задня</string>
+    <string name="settings_ambient_all">Усі</string>
+    <string name="settings_ambient_parked_notice">Налаштовуйте на стоянці. Експериментальна підтримка деяких інтерфейсів BYD; сумісність залежить від моделі та прошивки. Рівень 0 означає мінімум OEM, а не вимкнення.</string>
+    <string name="settings_ambient_checking">Перевірка…</string>
+    <string name="settings_ambient_unavailable">Перевірку без запису не пройдено: немає наявної авторизації ADB або відповідного інтерфейсу. Налаштування не збережено. Налаштуйте доступ окремо на стоянці; функція не вмикає ADB і не запитує авторизацію.</string>
+    <string name="settings_ambient_car_rhythm">Штатний музичний ритм машини</string>
+    <string name="settings_ambient_car_rhythm_description">Поки грає музика CarPlay, працює штатний музичний ритм підсвічування машини з кольорами й ефектами з її меню підсвічування, де має бути ввімкнений «Музичний ритм». DiPlay тим часом сам лампи не змінює. Перевіряється під час увімкнення. Мережевий ADB машини потрібен, лише якщо головний пристрій не дає DiPlay увімкнути ритм самостійно.</string>
+    <string name="settings_ambient_car_rhythm_unavailable">Штатний музичний ритм недоступний: DiPlay не може ввімкнути його самостійно, а мережевого доступу ADB для DiPlay або потрібного виклику аудіосервісу головного пристрою немає. Нічого не збережено.</string>
+    <string name="settings_ambient_car_rhythm_feed">Передавати дані музики в ритм автомобіля (старіші head unit)</string>
+    <string name="settings_ambient_car_rhythm_feed_description">На деяких головних пристроях (наприклад, Han 2023 року) ритм автомобіля запускається, але підсвічування залишається темним, бо автомобіль не будує власного спектра для музики CarPlay. Ця функція надсилає контролеру підсвічування 16 частотних смуг музики, що відтворюється, і власний ритм автомобіля, зокрема панель з боку пасажира, слідує за нею. Діє лише за ввімкненого вище ритму музики автомобіля і потребує мережевого ADB автомобіля.</string>
+    <string name="settings_ambient_album">Колір обкладинки альбому</string>
+    <string name="settings_ambient_album_description">Колір обкладинки приблизно зіставляється з доступними кольорами автомобіля. Для сірої, чорної або відсутньої обкладинки використовуються всі 31 колір; для переважно білої — білий або холодний білий.</string>
+    <string name="settings_ambient_day_brightness">Денна яскравість</string>
 </resources>
 
 

@@ -897,6 +897,143 @@
     <string name="permission_center_granted">On</string>
     <string name="permission_center_missing">Off</string>
     <string name="permission_center_action">Turn on</string>
+
+    <!-- Optional BYD ambient lighting. -->
+    <string name="ambient_title">Ambient lighting</string>
+    <string name="ambient_configuration">Ambient light settings</string>
+    <string name="ambient_static">Fixed</string>
+    <string name="ambient_energy">Sound energy</string>
+    <string name="ambient_beat">Beat</string>
+    <string name="ambient_tempo">Estimated BPM</string>
+    <string name="ambient_bass">Bass priority</string>
+    <string name="ambient_smart">Smart follow</string>
+    <string name="ambient_slow">Smooth</string>
+    <string name="ambient_standard">Standard</string>
+    <string name="ambient_fast">Fast</string>
+    <string name="ambient_enabled">On</string>
+    <string name="ambient_disabled">Off</string>
+    <string name="ambient_summary">%1$s · %2$s · %3$s · %4$d colors · brightness %5$d</string>
+    <string name="ambient_enable">Enable ambient light control</string>
+    <string name="ambient_enable_description">Turning this off attempts to restore the original lamp colors, brightness and area. Existing ADB authorization is required.</string>
+    <string name="ambient_music">Follow music</string>
+    <string name="ambient_music_description">When playing, follow the music or use fixed colors and brightness if disabled. Pausing or disconnecting holds all zones at the lowest level in either mode. Changes apply after saving.</string>
+    <string name="ambient_color_mode">Color changes</string>
+    <string name="ambient_speed">Brightness transition speed</string>
+    <string name="ambient_palette">OEM color numbers (multiple selections)</string>
+    <string name="ambient_palette_summary">Colors · %1$d selected</string>
+    <string name="ambient_select_all">Select all</string>
+    <string name="ambient_select_one">Select at least one color</string>
+    <string name="ambient_brightness">Maximum brightness</string>
+    <string name="ambient_minimum">0 (lowest level)</string>
+    <string name="ambient_area">Area</string>
+    <string name="ambient_front">Front</string>
+    <string name="ambient_rear">Rear</string>
+    <string name="ambient_all">All</string>
+    <string name="ambient_parked_notice">Configure while parked. Experimental support for selected BYD lamp interfaces; compatibility is not guaranteed for every model or firmware. Level 0 means the lowest OEM level, not power off.</string>
+    <string name="ambient_checking">Checking…</string>
+    <string name="ambient_unavailable">Read-only check failed: existing ADB authorization or a supported lamp interface is unavailable. No light settings were saved. Configure access separately while parked; this feature does not enable ADB or request authorization.</string>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    <string name="settings_ambient_title">Ambient lighting (experimental)</string>
+    <string name="settings_ambient_configuration">Ambient light settings</string>
+    <string name="settings_ambient_static">Fixed</string>
+    <string name="settings_ambient_energy">Sound energy</string>
+    <string name="settings_ambient_beat">Beat</string>
+    <string name="settings_ambient_tempo">Estimated BPM</string>
+    <string name="settings_ambient_bass">Bass priority</string>
+    <string name="settings_ambient_smart">Smart follow</string>
+    <string name="settings_ambient_slow">Smooth</string>
+    <string name="settings_ambient_standard">Standard</string>
+    <string name="settings_ambient_fast">Fast</string>
+    <string name="settings_ambient_enabled">On</string>
+    <string name="settings_ambient_disabled">Off</string>
+    <string name="settings_ambient_summary">%1$s · %2$s · %3$s · %4$d colors · brightness %5$d</string>
+    <string name="settings_ambient_enable">Enable ambient light control</string>
+    <string name="settings_ambient_enable_description">Turning this off attempts to restore the original lamp colors, brightness and area. Existing ADB authorization is required.</string>
+    <string name="settings_ambient_music">Follow music</string>
+    <string name="settings_ambient_music_description">When playing, follow the music or use fixed colors and brightness if disabled. What the lamps do when no music is playing is set separately below. Changes apply after saving.</string>
+    <string name="settings_ambient_color_mode">Color changes</string>
+    <string name="settings_ambient_speed">Brightness transition speed</string>
+    <string name="settings_ambient_behavior_title">What happens</string>
+    <string name="settings_ambient_behavior_off">Control is off. The car keeps its own lamp colors, brightness and area.</string>
+    <string name="settings_ambient_behavior_follow">Music playing · %1$s: the lamps follow the music, up to level %2$d.</string>
+    <string name="settings_ambient_behavior_fixed">Music playing · %1$s: the lamps stay on one fixed color at level %2$d.</string>
+    <string name="settings_ambient_behavior_idle">Paused, stopped or disconnected: every zone drops to the lowest level, which can switch the lamps off.</string>
+    <string name="settings_ambient_behavior_idle_steady">Paused, stopped or disconnected · %1$s: the lamps stay on the chosen color at level %2$d.</string>
+    <string name="settings_ambient_behavior_idle_car">No music for 15 seconds: the lamps go back to the car’s own settings, and DiPlay takes over again when music starts.</string>
+    <string name="settings_ambient_behavior_other_zone">The other zone is not changed while music plays.</string>
+    <string name="settings_ambient_behavior_lowest">Level 0: every zone stays at the lowest level, which can switch the lamps off.</string>
+    <string name="settings_ambient_idle">When no music is playing</string>
+    <string name="settings_ambient_idle_steady">Steady glow</string>
+    <string name="settings_ambient_idle_car">Car’s own lighting</string>
+    <string name="settings_ambient_idle_off">Lowest level (can be dark)</string>
+    <string name="settings_ambient_behavior_restore">Turn control off to hand the lamps back to the car’s own settings.</string>
+    <string name="settings_ambient_mode_energy_desc">Colors change with how loud the music is.</string>
+    <string name="settings_ambient_mode_beat_desc">Colors change on each beat.</string>
+    <string name="settings_ambient_mode_tempo_desc">Colors change at the estimated tempo (BPM).</string>
+    <string name="settings_ambient_mode_bass_desc">Colors change on bass hits.</string>
+    <string name="settings_ambient_mode_smart_desc">Colors change on bass hits and strong beats.</string>
+    <string name="settings_ambient_spectrum_note">This head unit follows the music spectrum: bass warms the color, treble cools it, and brightness follows the music.</string>
+    <string name="settings_ambient_colors_title">Colors</string>
+    <string name="settings_ambient_colors_hint_follow">Tap the colors the lamps may use. They change between your selection.</string>
+    <string name="settings_ambient_colors_hint_fixed">Tap the color to use. Fixed mode shows one color.</string>
+    <string name="settings_ambient_colors_hint_album">Colors come from the album cover. Turn off Follow album cover to pick colors yourself.</string>
+    <string name="settings_ambient_swatch">Color %1$d</string>
+    <string name="settings_ambient_swatch_selected">Color %1$d, selected</string>
+    <string name="settings_ambient_brightness_value">Level %1$d of 6</string>
+    <string name="settings_ambient_select_one">Select at least one color</string>
+    <string name="settings_ambient_brightness">Maximum brightness</string>
+    <string name="settings_ambient_night_brightness">Night brightness</string>
+    <string name="settings_ambient_minimum">0 (lowest level)</string>
+    <string name="settings_ambient_area">Area</string>
+    <string name="settings_ambient_front">Front</string>
+    <string name="settings_ambient_rear">Rear</string>
+    <string name="settings_ambient_all">All</string>
+    <string name="settings_ambient_parked_notice">Configure while parked. Experimental support for selected BYD lamp interfaces; compatibility is not guaranteed for every model or firmware. Level 0 means the lowest OEM level, not power off.</string>
+    <string name="settings_ambient_checking">Checking…</string>
+    <string name="settings_ambient_unavailable">Read-only check failed: existing ADB authorization or a supported lamp interface is unavailable. No light settings were saved. Configure access separately while parked; this feature does not enable ADB or request authorization.</string>
+    <string name="settings_ambient_car_rhythm">Car\'s own music rhythm</string>
+    <string name="settings_ambient_car_rhythm_description">While CarPlay music plays, the car\'s own ambient-light music rhythm runs, with the colours and effects set in the car\'s ambient-light menu, where its music rhythm must be on. DiPlay does not set the lamps itself meanwhile. Checked when switched on. Needs the car\'s network ADB only where the head unit does not let DiPlay start the rhythm itself.</string>
+    <string name="settings_ambient_car_rhythm_unavailable">The car\'s music rhythm is not available: DiPlay cannot start it itself, and DiPlay\'s network ADB access or the head unit\'s audio service call is missing. Nothing was saved.</string>
+    <string name="settings_ambient_car_rhythm_feed">Send music data to the car\'s rhythm (older head units)</string>
+    <string name="settings_ambient_car_rhythm_feed_description">On some head units (such as a 2023 Han) the car\'s rhythm starts but stays dark, because the car makes no spectrum of its own for CarPlay music. This sends the played music\'s 16 frequency bands to the car\'s lamp controller, so the car\'s own rhythm, including the passenger dash, follows it. Only has an effect when the car\'s own music rhythm above is on, and needs the car\'s network ADB.</string>
+    <string name="settings_ambient_album">Follow album cover</string>
+    <string name="settings_ambient_album_description">Use the cover’s color or nearby available car colors. Grey, black or missing covers use all 31 colors; mostly white covers can use white or cold white.</string>
+    <string name="settings_ambient_day_brightness">Day brightness</string>
 </resources>
 
 
