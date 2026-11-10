@@ -1571,9 +1571,25 @@ public class IccoaManager {
     // ==================================================================
 
     /** 启动（或重启）投屏链路。权限由调用方（Activity）负责。 */
+    /**
+     * 有线优先：只开 AOA 有线通道，不发 BLE 广播。
+     *
+     * <p>用户明确选「USB 连接」时置位。SDK 初始化照旧跑（AOA 需要它），但所有广播入口
+     * ——首次 {@code doAdvertise}、重播、5 秒兜底自救——都会跳过，避免手机被 BLE 抢先连成无线。
+     */
+    private volatile boolean usbOnly;
+
+    public void setUsbOnly(boolean value) {
+        usbOnly = value;
+        log(value ? "有线模式：只走 USB(AOA)，不广播" : "无线模式：BLE + Wi-Fi 广播可用");
+    }
+
+    public boolean isUsbOnly() {
+        return usbOnly;
+    }
+
     public void start() {
-        log("=== 启动（ICCOA CarWith · 低端车机加固版）===");
-        log("环境：Android " + android.os.Build.VERSION.RELEASE
+        log("=== 启动（ICCOA CarWith · 低端车机加固版）===");        log("环境：Android " + android.os.Build.VERSION.RELEASE
                 + " (API " + android.os.Build.VERSION.SDK_INT + ")"
                 + " ABI=" + java.util.Arrays.toString(android.os.Build.SUPPORTED_ABIS)
                 + " 机型=" + android.os.Build.MANUFACTURER + " " + android.os.Build.MODEL);
@@ -1600,6 +1616,11 @@ public class IccoaManager {
         if (sdkInitialized && adapter != null) {
             // 画布过期（停机期间转过屏幕 / 改过方向设置）时，helper 会拆 SDK 并完整重init。
             if (renegotiateIfStale("start() 画布变化")) return;
+            if (usbOnly) {
+                log("有线模式：SDK 已初始化，重新开启 USB 发现（不广播）");
+                enableUsbTransport();
+                return;
+            }
             log("重启：SDK 已初始化，仅重新广播");
             reAdvertise();
             return;
@@ -1685,6 +1706,10 @@ public class IccoaManager {
                     sdkReady = true;
                     sdkInitialized = true;   // ★ init-once 守门
                     enableUsbTransport();
+                    if (usbOnly) {
+                        log("有线模式：跳过 BLE 广播，等待手机走 AOA 接入");
+                        return;
+                    }
                     main.post(() -> safe("doAdvertise", IccoaManager.this::doAdvertise));
                     main.post(IccoaManager.this::scheduleAutoRefresh);   // ★ 启动配对码看门狗
                 }
@@ -1722,6 +1747,10 @@ public class IccoaManager {
      * {@link FallbackRescuePolicy}：只在 SDK 真的没就绪时才发这条传统广播。
      */
     private void startFallbackRescue(String reason) {
+        if (usbOnly) {
+            log("有线模式：不做 BLE 兜底广播（" + reason + "）");
+            return;
+        }
         FallbackRescueDecision decision = FallbackRescuePolicy.INSTANCE.decide(
                 sdkReady, advertiseAttempted, fallback.isRunning());
         if (decision == FallbackRescueDecision.SKIP_GATE_BLOCKED) {
@@ -1760,6 +1789,10 @@ public class IccoaManager {
      */
     private boolean reAdvertise() {
         if (adapter == null) return false;
+        if (usbOnly) {
+            log("有线模式：不重播 BLE 广播");
+            return true;
+        }
         try {
             adapter.registerCarConnectListener(connectListener);
             adapter.registerPhoneDataListener(phoneDataListener);

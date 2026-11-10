@@ -1780,11 +1780,15 @@ class DiPlayActivity : ComponentActivity(), AppAppearanceOwner {
         filteredSection(content, SettingsSection.ICCOA_CONNECTION,
             getString(R.string.connection), R.drawable.ic_dp_iccoa) { card ->
             card.addView(label(getString(R.string.settings_iccoa_connection_summary), 15, MUTED))
+            // Wireless and USB are alternatives: a plugged phone must not be able to win a BLE
+            // session first, so turning one on turns the other off.
             toggle(card, getString(R.string.settings_iccoa_wireless), "", IcocaSettings.wireless(this)) {
                 IcocaSettings.setWireless(this, it)
+                if (it) IcocaSettings.setUsb(this, false)
             }
             toggle(card, getString(R.string.settings_iccoa_usb), "", IcocaSettings.usb(this)) {
                 IcocaSettings.setUsb(this, it)
+                if (it) IcocaSettings.setWireless(this, false)
             }
             toggle(card, getString(R.string.settings_iccoa_ble), "", IcocaSettings.ble(this)) {
                 IcocaSettings.setBle(this, it)
@@ -4842,7 +4846,9 @@ class DiPlayActivity : ComponentActivity(), AppAppearanceOwner {
         PhoneLinkSettings.saveSource(this, ProjectionSource.ICCOA)
         // Keep a file record: a Pad testing against a phone is not on adb, so logcat alone loses it.
         LinkLog.startCapture(this)
-        iccoaStarted = iccoaSdkRuntimeAvailable() && runCatching { IcocaEngine.start(this) }.isSuccess
+        iccoaStarted = iccoaSdkRuntimeAvailable() && runCatching {
+            IcocaEngine.start(this, wiredOnly = IcocaSettings.usb(this) && !IcocaSettings.wireless(this))
+        }.isSuccess
         // A phone that was already plugged in never triggers an attach event, so ask for its USB
         // permission here; without it the SDK's AOA scan skips the device and the link goes wireless.
         LinkLog.append(this, "ICCOA selected: iccoaStarted=$iccoaStarted")

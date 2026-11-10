@@ -171,8 +171,14 @@ class IcocaBridge(context: Context) : IccoaManager.Listener {
     @Volatile
     private var started = false
 
-    /** Starts (or restarts) the ICCOA link: SDK init once, then BLE advertising. */
-    fun start() {
+    /**
+     * Starts (or restarts) the ICCOA link: SDK init once, then BLE advertising.
+     *
+     * [wiredOnly] keeps the SDK initialised (the AOA path needs it) but suppresses every BLE
+     * broadcast, so a plugged phone cannot be pulled into a wireless session first.
+     */
+    fun start(wiredOnly: Boolean = false) {
+        manager.setUsbOnly(wiredOnly)
         hotspotGate.startWatching()
         if (started) {
             AppLog.i("ICCOA: start() ignored — already started; restarting advertise")

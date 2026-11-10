@@ -27,11 +27,11 @@ object IcocaEngine {
      * The canvas size is reported here because the SDK negotiates it before any surface exists;
      * the projection page updates it again when it takes over.
      */
-    fun start(context: Context) {
+    fun start(context: Context, wiredOnly: Boolean = false) {
         val engine = bridge(context)
         val size = DeviceDisplay.realSizePx(context)
         if (size[0] > 0 && size[1] > 0) engine.setScreenSize(size[0], size[1])
-        engine.start()
+        engine.start(wiredOnly)
     }
 
     fun stop(context: Context) {
