@@ -1,7 +1,6 @@
 package com.diplay.home
 
 import android.app.Activity
-import android.app.AlertDialog
 import android.appwidget.AppWidgetHost
 import android.appwidget.AppWidgetManager
 import android.appwidget.AppWidgetProviderInfo
@@ -62,11 +61,7 @@ class WidgetBoard(private val activity: Activity, private val column: LinearLayo
             return
         }
         val labels = providers.map { "${appLabel(it)} · ${it.loadLabel(activity.packageManager)}" }.toTypedArray()
-        AlertDialog.Builder(activity)
-            .setTitle("Add a widget")
-            .setItems(labels) { _, index -> add(providers[index]) }
-            .setNegativeButton("Cancel", null)
-            .show()
+        HomeGlassDialog.choices(activity, "Add a widget", labels) { index -> add(providers[index]) }
     }
 
     private fun add(info: AppWidgetProviderInfo) {
@@ -86,14 +81,9 @@ class WidgetBoard(private val activity: Activity, private val column: LinearLayo
             // BYD has no consent screen; the owner allows binding once over adb.
             pendingId = null
             host.deleteAppWidgetId(id)
-            AlertDialog.Builder(activity)
-                .setTitle("Allow widgets")
-                .setMessage(
-                    "This head unit has no screen to allow widgets. Allow DiPlay Home once over ADB:\n\n" +
-                        "adb shell appwidget grantbind --package ${activity.packageName} --user 0",
-                )
-                .setPositiveButton("OK", null)
-                .show()
+            HomeGlassDialog.message(activity, "Allow widgets",
+                "This head unit has no screen to allow widgets. Allow DiPlay Home once over ADB:\n\n" +
+                    "adb shell appwidget grantbind --package ${activity.packageName} --user 0")
         }
     }
 

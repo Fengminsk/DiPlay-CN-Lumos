@@ -36,7 +36,7 @@ internal class DiPlayDialogBuilder(internal val source: Context) {
     internal var title: CharSequence? = null
     internal var message: CharSequence? = null
     internal var customView: View? = null
-    internal var opaqueGlass = false
+    internal var opaqueGlass = true
     internal var maxWidthDp = 760
     internal var fitIme = false
     internal var items: Array<out CharSequence>? = null
@@ -105,9 +105,12 @@ internal class DiPlayDialog internal constructor(
     private var imeLayoutListener: android.view.ViewTreeObserver.OnGlobalLayoutListener? = null
     private var showing = false
     val isShowing: Boolean get() = showing
+    internal val view: View? get() = overlay
 
     companion object {
         private val active = java.util.WeakHashMap<ComponentActivity, MutableList<DiPlayDialog>>()
+
+        internal fun topmost(activity: ComponentActivity): DiPlayDialog? = active[activity]?.lastOrNull()
 
         /** A page re-render replaces the activity content; put open in-page dialogs back on top. */
         internal fun reattach(activity: ComponentActivity) {
@@ -142,6 +145,11 @@ internal class DiPlayDialog internal constructor(
         return buttons.getOrPut(which) {
             val host = activity ?: return null
             Button(host).apply {
+                id = when (which) {
+                    AlertDialog.BUTTON_POSITIVE -> android.R.id.button1
+                    AlertDialog.BUTTON_NEGATIVE -> android.R.id.button2
+                    else -> android.R.id.button3
+                }
                 text = spec.label
                 isAllCaps = false
                 textSize = 15f

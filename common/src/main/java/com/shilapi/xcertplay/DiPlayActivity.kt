@@ -4,9 +4,6 @@ package com.shilapi.xcertplay
 
 import android.Manifest
 import android.app.AlertDialog
-import android.app.Dialog
-import android.app.TimePickerDialog
-import android.view.Window
 import android.bluetooth.BluetoothManager
 import android.content.Context
 import android.content.Intent
@@ -180,7 +177,7 @@ class DiPlayActivity : ComponentActivity(), AppAppearanceOwner {
     private var setupFromSettings = false
     private var settingsSectionFilter: Set<SettingsSection>? = null
     internal var ambientSupportCheck: (Context) -> java.util.concurrent.CompletableFuture<Boolean> = AmbientMusicController::checkSupport
-    private var clusterSafeAreaDialog: Dialog? = null
+    private var clusterSafeAreaDialog: DiPlayDialog? = null
     private var clusterContentRequestVersion = 0L
     private var pendingCarHotspotSetup = false
     private var hotspotJoinControls: HotspotJoinControls? = null
@@ -431,6 +428,10 @@ class DiPlayActivity : ComponentActivity(), AppAppearanceOwner {
         page = savedInstanceState?.getString("page") ?: intent.getStringExtra("page")
             ?: if (setupError == null && SetupGuide.shouldOpenOnLaunch(SetupGuide.seen(this),
                     DiPlayPreferences.phoneAddress(this) != null)) "setup" else "home"
+        if (page == "about") {
+            page = "settings"
+            settingsCategory = SettingsCategory.ABOUT
+        }
         render()
         carPlayStateJob = lifecycleScope.launch {
             CarPlayLiveSession.state.collect { state ->
@@ -475,7 +476,12 @@ class DiPlayActivity : ComponentActivity(), AppAppearanceOwner {
             AirPlayPersistence.loadLauncherReturnsToCarPlay(this)) {
             page = "home"; render(); openProjection(); return
         }
-        page = intent.getStringExtra("page") ?: "home"; render()
+        page = intent.getStringExtra("page") ?: "home"
+        if (page == "about") {
+            page = "settings"
+            settingsCategory = SettingsCategory.ABOUT
+        }
+        render()
         automaticVehicleValidationStarted = false
         scheduleAutomaticVehicleValidation()
         handleWirelessRecovery()
@@ -810,7 +816,7 @@ class DiPlayActivity : ComponentActivity(), AppAppearanceOwner {
             if (restoreCarPlayOverlay) showCarPlayOverlay(restoreCarPlayAutoOpen)
             return
         }
-        val skyChrome = page == "connection" || page == "setup" || page == "about"
+        val skyChrome = page == "connection" || page == "setup"
         val scroll = ScrollView(this).apply {
             if (skyChrome) background = DiPlaySkyDrawable(appNight) else setBackgroundColor(BG)
             isFillViewport = true
@@ -847,7 +853,6 @@ class DiPlayActivity : ComponentActivity(), AppAppearanceOwner {
                 "connection" -> connectionSetup(content)
                 "setup" -> setupGuide(content)
                 "settings" -> settingsCategoryContent(content)
-                "about" -> about(content)
                 else -> home(content)
             }
             scroll
@@ -937,10 +942,6 @@ class DiPlayActivity : ComponentActivity(), AppAppearanceOwner {
     private fun navigateBack() {
         val returnCategory = connectionSettingsReturnCategory
         when {
-            page == "about" -> {
-                page = "settings"
-                settingsCategory = SettingsCategory.OVERVIEW
-            }
             page == "setup" && setupStep > SetupGuide.STEP_CAR -> setupStep--
             page == "setup" -> {
                 closeSetupGuide()
@@ -1086,7 +1087,7 @@ class DiPlayActivity : ComponentActivity(), AppAppearanceOwner {
         right.addView(homeButton(getString(R.string.settings), false) { page = "settings"; render() }, matchButton(height = if (compact) 54 else 68))
         if (!compact) right.addView(label(getString(R.string.make_diplay_feel_right_for_your_car), 14, MUTED).apply { gravity = Gravity.CENTER; setPadding(0, dp(10), 0, dp(24)) })
         else right.addView(space(12))
-        right.addView(label(getString(R.string.home_public_preview, version()), 12, MUTED).apply { letterSpacing = .08f })
+        right.addView(label(version(), 12, MUTED).apply { letterSpacing = .08f })
         if (compact && resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE) {
             val compactRight = column().apply {
                 addView(space(8))
@@ -1426,13 +1427,10 @@ class DiPlayActivity : ComponentActivity(), AppAppearanceOwner {
     }
 
     private fun openSettingsCategory(category: SettingsCategory) {
-        if (category == SettingsCategory.ABOUT) page = "about"
-        else {
-            if (category != settingsCategory) {
-                railSlideFrom = SettingsCategory.entries.indexOf(settingsCategory)
-            }
-            settingsCategory = category
+        if (category != settingsCategory) {
+            railSlideFrom = SettingsCategory.entries.indexOf(settingsCategory)
         }
+        settingsCategory = category
         render()
     }
 
@@ -2675,33 +2673,24 @@ class DiPlayActivity : ComponentActivity(), AppAppearanceOwner {
     }
 
     private fun about(content: LinearLayout) {
-        content.addView(label(getString(R.string.diplay), 40, TEXT, true))
-        content.addView(label(getString(R.string.carplay_at_home_in_your_car), 20, MUTED).apply { setPadding(0, dp(8), 0, dp(24)) })
-        section(content, getString(R.string.about_public_preview_prefix, version())) { card ->
-            card.addView(label(getString(R.string.an_independent_carplay_receiver_for_android_head_units_wir), 17, TEXT))
+        settingsPageTitle(content, "DiPlay Lumos", getString(R.string.carplay_at_home_in_your_car))
+        section(content, "DiPlay Lumos · ${version()}") { card ->
+            card.addView(label(getString(R.string.settings_about_description), 16, MUTED))
         }
-        section(content, getString(R.string.cn_features_title)) { card ->
-            card.addView(label(getString(R.string.cn_features_body), 16, TEXT).apply {
-                setPadding(0, 0, 0, dp(8))
-            })
-        }
-        section(content, getString(R.string.cn_changelog_title)) { card ->
-            card.addView(label(cnChangelogText(), 15, MUTED))
+        content.addView(settingsSectionHeading(R.string.settings_release_history))
+        val history = runCatching {
+            val lumos = assets.open("LUMOS_CHANGELOG.md").bufferedReader().use { it.readText() }
+            val cn = assets.open("CN_OPTIMIZATIONS.md").bufferedReader().use { it.readText() }
+            DiPlayReleaseHistory.parse("$lumos\n$cn")
+        }.getOrDefault(emptyList())
+        history.forEach { entry ->
+            section(content, "${entry.version} · ${entry.date}") { card ->
+                card.addView(label(entry.highlights.joinToString("\n") { "• $it" }, 15, MUTED))
+            }
         }
         section(content, getString(R.string.made_possible_by_open_source)) { card ->
             card.addView(label(getString(R.string.receiver_based_on_xcertplay_licensed_under_gpl_3_0_diplay), 16, MUTED))
         }
-    }
-
-    private fun cnChangelogText(): String {
-        val raw = runCatching {
-            assets.open("CN_OPTIMIZATIONS.md").bufferedReader().use { it.readText() }
-        }.getOrNull().orEmpty()
-        return raw.lineSequence()
-            .map { it.trim().removePrefix("#").trim().replace("**", "").replace("`", "") }
-            .filter { it.isNotBlank() }
-            .joinToString("\n")
-            .ifBlank { getString(R.string.cn_changelog_missing) }
     }
 
     // An opted-in connection prepares the hotspot in the controller instead of stopping at this reminder.
@@ -4585,16 +4574,14 @@ class DiPlayActivity : ComponentActivity(), AppAppearanceOwner {
             setBackgroundColor(SURFACE)
             setRect(initial, 1920, 720)
         }
-        // A standalone dialog gives the weighted preview an exact available height.
-        // AlertDialog's wrap-content custom panel can collapse it to zero.
-        val dialog = appDialog().apply { requestWindowFeature(Window.FEATURE_NO_TITLE) }
         val panel = column().apply {
             setPadding(dp(16), dp(8), dp(16), dp(8))
-            setBackgroundColor(SURFACE)
         }
         panel.addView(label(getString(R.string.cluster_safe_area_edit), 18, TEXT, true))
         panel.addView(label(getString(R.string.cluster_safe_area_live_hint), 14, MUTED))
-        panel.addView(ClusterSafeAreaPreviewFrame(this, editor), LinearLayout.LayoutParams(-1, 0, 1f))
+        panel.addView(ClusterSafeAreaPreviewFrame(this, editor), LinearLayout.LayoutParams(-1,
+            (resources.displayMetrics.heightPixels * 0.50f).toInt()))
+        val dialog = appDialogBuilder().setView(panel).setMaxWidthDp(1280).create()
         val actions = row()
         actions.addView(button(getString(R.string.cancel), false) { dialog.dismiss() },
             LinearLayout.LayoutParams(0, dp(56), 1f))
@@ -4606,7 +4593,6 @@ class DiPlayActivity : ComponentActivity(), AppAppearanceOwner {
             reconnectIfRunning()
         }, LinearLayout.LayoutParams(0, dp(56), 1f))
         panel.addView(actions)
-        dialog.setContentView(panel, ViewGroup.LayoutParams(-1, -1))
         editor.onRectChanged = { ClusterActivityOutput.updateSafeAreaPreview(previewOwner, it) }
         clusterSafeAreaDialog = dialog
         dialog.setOnDismissListener {
@@ -4615,8 +4601,6 @@ class DiPlayActivity : ComponentActivity(), AppAppearanceOwner {
             if (clusterSafeAreaDialog === dialog) clusterSafeAreaDialog = null
         }
         dialog.show()
-        dialog.window?.setLayout((resources.displayMetrics.widthPixels * 0.9f).toInt(),
-            (resources.displayMetrics.heightPixels * 0.85f).toInt())
         ClusterActivityOutput.beginSafeAreaPreview(previewOwner, initial, this)
     }
 
@@ -4740,35 +4724,10 @@ class DiPlayActivity : ComponentActivity(), AppAppearanceOwner {
                     input.error = null
                 }
             }
-            showResolutionSettingsDialog(dialog, fields)
+            dialog.show()
         }
         parent.addView(control, matchButton(0, 60))
         parent.addView(space(12))
-    }
-
-    private fun showResolutionSettingsDialog(dialog: DiPlayDialog, fields: LinearLayout) {
-        dialog.show()
-        // AlertDialog replaces the custom view's parameters with MATCH_PARENT. Keep numeric
-        // content at its natural height, including on vendor dialog layouts with weighted panels.
-        fields.layoutParams = fields.layoutParams.apply { height = ViewGroup.LayoutParams.WRAP_CONTENT }
-        val decor = dialog.window?.decorView ?: return
-        var panel = fields.parent as? ViewGroup
-        while (panel != null && panel !== decor) {
-            val params = panel.layoutParams
-            if (params is LinearLayout.LayoutParams && params.weight > 0f) {
-                panel.layoutParams = params.apply {
-                    weight = 0f
-                    height = ViewGroup.LayoutParams.WRAP_CONTENT
-                }
-                break
-            }
-            panel = panel.parent as? ViewGroup
-        }
-        dialog.window?.let { window ->
-            window.setLayout(window.attributes.width, ViewGroup.LayoutParams.WRAP_CONTENT)
-        }
-        // Run another traversal after the platform has finished its initial button measurement.
-        decor.post { if (dialog.isShowing) decor.requestLayout() }
     }
 
     private fun nightDelaySettingControl(
@@ -4818,7 +4777,7 @@ class DiPlayActivity : ComponentActivity(), AppAppearanceOwner {
                     input.error = null
                 }
             }
-            showNightModeSettingsDialog(dialog, fields)
+            dialog.show()
         }
         parent.addView(control, matchButton(0, 60))
         parent.addView(space(12))
@@ -4867,35 +4826,10 @@ class DiPlayActivity : ComponentActivity(), AppAppearanceOwner {
                     input.error = null
                 }
             }
-            showNightModeSettingsDialog(dialog, fields)
+            dialog.show()
         }
         parent.addView(control, matchButton(0, 60))
         parent.addView(space(12))
-    }
-
-    private fun showNightModeSettingsDialog(dialog: DiPlayDialog, fields: LinearLayout) {
-        dialog.show()
-        // AlertDialog replaces the custom view's parameters with MATCH_PARENT. Keep numeric
-        // content at its natural height, including on vendor dialog layouts with weighted panels.
-        fields.layoutParams = fields.layoutParams.apply { height = ViewGroup.LayoutParams.WRAP_CONTENT }
-        val decor = dialog.window?.decorView ?: return
-        var panel = fields.parent as? ViewGroup
-        while (panel != null && panel !== decor) {
-            val params = panel.layoutParams
-            if (params is LinearLayout.LayoutParams && params.weight > 0f) {
-                panel.layoutParams = params.apply {
-                    weight = 0f
-                    height = ViewGroup.LayoutParams.WRAP_CONTENT
-                }
-                break
-            }
-            panel = panel.parent as? ViewGroup
-        }
-        dialog.window?.let { window ->
-            window.setLayout(window.attributes.width, ViewGroup.LayoutParams.WRAP_CONTENT)
-        }
-        // Run another traversal after the platform has finished its initial button measurement.
-        decor.post { if (dialog.isShowing) decor.requestLayout() }
     }
 
     /** Where CarPlay puts its dock; between the two fixed edges it moves at once, otherwise on reconnect. */
@@ -4991,19 +4925,26 @@ class DiPlayActivity : ComponentActivity(), AppAppearanceOwner {
         control.setOnClickListener {
             val current = AirPlayPersistence.loadCarPlayNightSchedule(this)
             val selected = if (start) current.startMinute else current.endMinute
-            TimePickerDialog(this, appDialogTheme(), { _, hour, minute ->
-                val updatedMinute = hour * 60 + minute
-                val other = if (start) current.endMinute else current.startMinute
-                if (updatedMinute == other) {
-                    toast(getString(R.string.carplay_night_schedule_same_time))
-                } else {
-                    val updated = if (start) current.copy(startMinute = updatedMinute)
-                        else current.copy(endMinute = updatedMinute)
-                    AirPlayPersistence.saveCarPlayNightSchedule(this, updated)
-                    control.text = labelFor(updatedMinute)
-                    handler.post(::checkForAppearanceChange)
+            val picker = android.widget.TimePicker(this).apply {
+                setIs24HourView(true)
+                hour = selected / 60
+                minute = selected % 60
+            }
+            appDialogBuilder().setTitle(title).setView(picker)
+                .setPositiveButton(R.string.save) { _, _ ->
+                    val updatedMinute = picker.hour * 60 + picker.minute
+                    val other = if (start) current.endMinute else current.startMinute
+                    if (updatedMinute == other) {
+                        toast(getString(R.string.carplay_night_schedule_same_time))
+                    } else {
+                        val updated = if (start) current.copy(startMinute = updatedMinute)
+                            else current.copy(endMinute = updatedMinute)
+                        AirPlayPersistence.saveCarPlayNightSchedule(this, updated)
+                        control.text = labelFor(updatedMinute)
+                        handler.post(::checkForAppearanceChange)
+                    }
                 }
-            }, selected / 60, selected % 60, true).show()
+                .setNegativeButton(R.string.cancel, null).show()
         }
         parent.addView(control, matchButton(0, 60))
         parent.addView(space(12))
@@ -6002,8 +5943,8 @@ class DiPlayActivity : ComponentActivity(), AppAppearanceOwner {
             refreshAmbient()
         }
         refreshAmbient()
-        val dialog = AlertDialog.Builder(this).setTitle(getString(R.string.settings_ambient_configuration))
-            .setView(ScrollView(this).apply { addView(body) })
+        val dialog = appDialogBuilder().setTitle(getString(R.string.settings_ambient_configuration))
+            .setView(body)
             .setPositiveButton(getString(R.string.save), null)
             .setNegativeButton(getString(R.string.cancel), null).create()
         dialog.setOnShowListener {
@@ -6058,7 +5999,7 @@ class DiPlayActivity : ComponentActivity(), AppAppearanceOwner {
     }
     private val glassChrome: Boolean
         get() = (page == "settings" && isExpandedSettingsLayout) ||
-            page == "connection" || page == "setup" || page == "about"
+            page == "connection" || page == "setup"
 
     private fun card() = column().apply {
         background = if (glassChrome) {

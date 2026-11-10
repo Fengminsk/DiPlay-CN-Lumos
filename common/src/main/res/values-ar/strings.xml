@@ -76,10 +76,8 @@
     <string name="status_attaching_ncm">جارٍ توصيل شبكة NCM/AirPlay</string>
     <string name="status_failed">فشل: %1$s</string>
     <string name="msg_car_hotspot_off">نقطة اتصال السيارة «%1$s» مُغلقة. شغّلها في إعدادات السيارة قبل الاتصال.</string>
-    <string name="home_public_preview">معاينة عامة  ·\u0020\u0020</string>
     <string name="choose_iphone_prefix">اختر iPhone ·\u0020</string>
     <string name="audio_saved_value">تم الحفظ: %1$d</string>
-    <string name="about_public_preview_prefix">معاينة عامة ·\u0020</string>
     <string name="msg_car_hotspot_connect">يتصل DiPlay عبر نقطة اتصال السيارة «%1$s». شغّلها في إعدادات السيارة ثم اتصل.</string>
     <string name="edit_saved_hotspot_prefix">تعديل نقطة الاتصال المحفوظة ·\u0020</string>
     <string name="cluster_adb_multi_device">إذا عرض ADB عدة أجهزة، استخدم adb -s &lt;car-device-ID&gt; shell appops set %1$s GET_USAGE_STATS allow. اعثر على المعرّف عبر adb devices.</string>
@@ -98,7 +96,7 @@
     <string name="a_familiar_drive">رحلة مألوفة.</string>
     <string name="a_previous_wi_fi_direct_connection_is_still_running_reset">ما زال اتصال Wi-Fi Direct السابق قيد التشغيل. أعد ضبطه للاتصال.</string>
     <string name="about">حول</string>
-    <string name="about_diplay">حول DiPlay</string>
+    <string name="about_diplay">حول DiPlay Lumos</string>
     <string name="active">نشط</string>
     <string name="advanced_audio_channel_mapping">تعيين متقدم لقنوات الصوت</string>
     <string name="airplay_icon">أيقونة AirPlay</string>
@@ -671,10 +669,6 @@
     <string name="bt_suspend_during_carplay">إيقاف بلوتوث السيارة أثناء CarPlay · يتطلب ADB</string>
     <string name="bt_suspend_during_carplay_description">يبقى الهاتف متصلًا بنظام التحدث الحر في السيارة، فرنين المكالمة يظهر على هاتف السيارة وعلى CarPlay معًا. عند التشغيل: يُوقف بلوتوث السيارة مؤقتًا عبر ADB طوال جلسة CarPlay فترد المكالمات على CarPlay فقط؛ ومع إيقاف البلوتوث تخرج مكالمات CarPlay من سماعة السيارة وميكروفونها. يُعاد تشغيله عند انتهاء الجلسة وقبل مصافحة الاتصال اللاسلكي التالية. لا يتأثر الاقتران. يسري التغيير عند الاتصال التالي.</string>
     <string name="check_for_updates">التحقق من التحديثات</string>
-    <string name="cn_changelog_missing">سجل تغييرات CN غير مرفق في هذا الإصدار.</string>
-    <string name="cn_changelog_title">سجل إصدارات CN</string>
-    <string name="cn_features_body">إضافات CN فوق DiPlay الرسمي: تحديث من داخل التطبيق (من 0.2.10-cn.8)، أربع قنوات تحديث، إصلاح تشغيل تلقائي عبر ADB، إيقاف بلوتوث السيارة بتأخير أثناء CarPlay، بطاقة انعطاف بحجم/شفافية ويوم/ليل وشريط الرحلة، الإبقاء على البطاقة بعد إعادة الاتصال، خريطة لوحة أصغر بتفاصيل أكثر، الصينية المبسطة عند عدم دعم لغة السيارة.</string>
-    <string name="cn_features_title">ما يضيفه CN</string>
     <string name="update_details_title">تحديث %1$s</string>
     <string name="update_notes_missing">لا توجد ملاحظات إصدار لهذه النسخة.</string>
     <string name="download_and_install">تنزيل وتثبيت</string>
@@ -881,6 +875,8 @@
     <string name="settings_ambient_album">اتباع غلاف الألبوم</string>
     <string name="settings_ambient_album_description">يُطابق لون الغلاف تقريبياً مع ألوان السيارة المتاحة. تستخدم الأغلفة الرمادية أو السوداء أو المفقودة جميع الألوان الـ31؛ وقد تستخدم الأغلفة البيضاء غالباً الأبيض أو الأبيض البارد.</string>
     <string name="settings_ambient_day_brightness">سطوع النهار</string>
+    <string name="settings_about_description">يوصل DiPlay ‏CarPlay وICCOA بوحدات السيارة التي تعمل بنظام Android. تعتمد الميزات المتاحة على السيارة والهاتف.</string>
+    <string name="settings_release_history">سجل الإصدارات</string>
 </resources>
 
 

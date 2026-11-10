@@ -75,10 +75,8 @@
     <string name="status_attaching_ncm">正在連線 NCM/AirPlay 網路</string>
     <string name="status_failed">失敗：%1$s</string>
     <string name="msg_car_hotspot_off">車機熱點「%1$s」尚未開啟。請在車機設定中開啟後再連線。</string>
-    <string name="home_public_preview">公開預覽 ·  </string>
     <string name="choose_iphone_prefix">選擇 iPhone · </string>
     <string name="audio_saved_value">已儲存：%1$d</string>
-    <string name="about_public_preview_prefix">公開預覽 · </string>
     <string name="msg_car_hotspot_connect">DiPlay 透過車機熱點「%1$s」連線。請在車機設定中開啟熱點後再連線。</string>
     <string name="edit_saved_hotspot_prefix">編輯已儲存的熱點 · </string>
     <string name="cluster_adb_multi_device">如果 ADB 列出多個裝置，請使用 adb -s &lt;car-device-ID&gt; shell appops set %1$s GET_USAGE_STATS allow。使用 adb devices 查詢 ID。</string>
@@ -91,7 +89,7 @@
     <string name="a_familiar_drive">熟悉的駕駛體驗。</string>
     <string name="a_previous_wi_fi_direct_connection_is_still_running_reset">先前的 Wi-Fi Direct 連線仍在執行。請重設後再連線。</string>
     <string name="about">關於</string>
-    <string name="about_diplay">關於 DiPlay</string>
+    <string name="about_diplay">關於 DiPlay Lumos</string>
     <string name="active">已啟用</string>
     <string name="advanced_audio_channel_mapping">進階音訊聲道對應</string>
     <string name="airplay_icon">AirPlay 圖示</string>
@@ -731,10 +729,6 @@
     <string name="bt_suspend_during_carplay">CarPlay 期間暫停車機藍牙 · 需要 ADB</string>
     <string name="bt_suspend_during_carplay_description">手機與車機保持免持連線時，來電會同時彈出車機藍牙電話和 CarPlay 電話。開啟後：CarPlay 連線期間透過 ADB 暫停車機藍牙，來電只在 CarPlay 回應；藍牙關閉期間，CarPlay 通話改走中控喇叭和車機麥克風，不再走電話免持。CarPlay 結束或下次無線連線交握前會自動恢復藍牙。配對不受影響。更改在下次連線時生效。</string>
     <string name="check_for_updates">檢查更新</string>
-    <string name="cn_changelog_missing">本包未附帶 CN 更新日誌。</string>
-    <string name="cn_changelog_title">CN 各版更新日誌</string>
-    <string name="cn_features_body">相對官方 DiPlay，CN 額外提供：應用內檢查更新（0.2.10-cn.8 起）、四通道更新、開機自啟 ADB 修復、CarPlay 期間延遲暫停藍牙、自訂轉向卡（大小/透明度滑桿、晝夜玻璃、行程資訊條、重連不清卡）、儀表板地圖「更小更全」檔、不支援的車機語言預設簡體中文。</string>
-    <string name="cn_features_title">CN 特性</string>
     <string name="update_details_title">更新 %1$s</string>
     <string name="update_notes_missing">該版本沒有發布說明。</string>
     <string name="download_and_install">下載並安裝</string>
@@ -941,6 +935,8 @@
     <string name="settings_ambient_album">跟隨專輯封面</string>
     <string name="settings_ambient_album_description">按封面取色並近似對應原車可用色號。灰黑或無封面時使用全部31色；大面積白色封面可使用白色或冷白。</string>
     <string name="settings_ambient_day_brightness">日間亮度</string>
+    <string name="settings_about_description">DiPlay 在 Android 車機上連接 CarPlay 和 ICCOA。可用功能取決於車機和手機。</string>
+    <string name="settings_release_history">版本更新</string>
 </resources>
 
 

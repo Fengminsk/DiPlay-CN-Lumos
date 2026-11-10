@@ -1,6 +1,5 @@
 package com.shilapi.xcertplay
 
-import android.app.AlertDialog
 import android.content.res.Configuration
 import android.graphics.Bitmap
 import android.graphics.Canvas
@@ -29,7 +28,6 @@ import org.robolectric.RuntimeEnvironment
 import org.robolectric.Shadows.shadowOf
 import org.robolectric.annotation.Config
 import org.robolectric.annotation.GraphicsMode
-import org.robolectric.shadows.ShadowAlertDialog
 import org.robolectric.util.ReflectionHelpers
 
 @RunWith(RobolectricTestRunner::class)
@@ -59,7 +57,7 @@ class AmbientAlbumUiScreenshotsTest {
             val opened = openDialog(widthDp, fontScale)
             try {
                 val dialog = opened.second
-                val decor = dialog.window!!.decorView
+                val decor = dialog.view!!
                 layout(decor, RuntimeEnvironment.getApplication().resources.displayMetrics.density, widthDp)
 
                 val scroll = albumSettingsScroll(decor, opened.first.getString(R.string.settings_ambient_album))
@@ -100,7 +98,7 @@ class AmbientAlbumUiScreenshotsTest {
             for (atBottom in listOf(false, true)) {
                 val opened = openDialog(widthDp, fontScale)
                 try {
-                    val decor = opened.second.window!!.decorView
+                    val decor = opened.second.view!!
                     layout(decor, RuntimeEnvironment.getApplication().resources.displayMetrics.density, widthDp)
                     val scroll = albumSettingsScroll(decor, opened.first.getString(R.string.settings_ambient_album))
                     val content = scroll.getChildAt(0)
@@ -117,7 +115,7 @@ class AmbientAlbumUiScreenshotsTest {
         }
     }
 
-    private fun openDialog(widthDp: Int, fontScale: Float): Pair<DiPlayActivity, AlertDialog> {
+    private fun openDialog(widthDp: Int, fontScale: Float): Pair<DiPlayActivity, DiPlayDialog> {
         RuntimeEnvironment.setQualifiers("en-w${widthDp}dp-h960dp-mdpi")
         val app = RuntimeEnvironment.getApplication()
         app.resources.updateConfiguration(
@@ -128,12 +126,12 @@ class AmbientAlbumUiScreenshotsTest {
             },
             app.resources.displayMetrics,
         )
-        val activity = Robolectric.buildActivity(DiPlayActivity::class.java).get()
+        val activity = Robolectric.buildActivity(DiPlayActivity::class.java).setup().visible().get()
         activity.setTheme(android.R.style.Theme_Material_NoActionBar)
         activity.ambientSupportCheck = { CompletableFuture.completedFuture(false) }
         ReflectionHelpers.callInstanceMethod<Unit>(activity, "showAmbientConfiguration")
         shadowOf(Looper.getMainLooper()).idle()
-        return activity to ShadowAlertDialog.getLatestAlertDialog()
+        return activity to DiPlayDialog.topmost(activity)!!
     }
 
     private fun layout(decor: View, density: Float, widthDp: Int) {

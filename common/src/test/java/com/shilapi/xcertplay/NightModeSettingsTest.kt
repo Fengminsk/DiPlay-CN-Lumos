@@ -1,7 +1,6 @@
 package com.shilapi.xcertplay
 
 import android.app.AlertDialog
-import android.app.TimePickerDialog
 import android.os.Looper
 import android.view.View
 import android.view.ViewGroup
@@ -10,6 +9,7 @@ import android.widget.EditText
 import android.widget.LinearLayout
 import android.widget.ScrollView
 import android.widget.TextView
+import android.widget.TimePicker
 import com.shilapi.xcertplay.host.R
 import org.junit.Assert.*
 import org.junit.After
@@ -228,11 +228,14 @@ class NightModeSettingsTest {
         }
     }
 
-    private fun timeDialog(title: Int, hour: Int, minute: Int): TimePickerDialog {
+    private fun timeDialog(title: Int, hour: Int, minute: Int): DiPlayDialog {
         button(title).performClick()
-        val dialog = ShadowAlertDialog.getLatestAlertDialog() as TimePickerDialog
+        val dialog = DiPlayDialog.topmost(activity)!!
         shadowOf(Looper.getMainLooper()).idle()
-        dialog.updateTime(hour, minute)
+        views(dialog.view!!).filterIsInstance<TimePicker>().single().apply {
+            this.hour = hour
+            this.minute = minute
+        }
         return dialog
     }
 

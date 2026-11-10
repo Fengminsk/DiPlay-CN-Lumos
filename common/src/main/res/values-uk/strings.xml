@@ -77,10 +77,8 @@
     <string name="status_attaching_ncm">Підключення мережі NCM/AirPlay</string>
     <string name="status_failed">Помилка: %1$s</string>
     <string name="msg_car_hotspot_off">Точку доступу автомобіля «%1$s» вимкнено. Увімкніть її в налаштуваннях автомобіля перед підключенням.</string>
-    <string name="home_public_preview">ПУБЛІЧНЕ ПРЕВ’Ю  ·\u0020\u0020</string>
     <string name="choose_iphone_prefix">Вибрати iPhone ·\u0020</string>
     <string name="audio_saved_value">Збережено: %1$d</string>
-    <string name="about_public_preview_prefix">Попередня версія ·\u0020</string>
     <string name="msg_car_hotspot_connect">DiPlay підключається через точку доступу автомобіля «%1$s». Увімкніть її в налаштуваннях автомобіля, а потім підключіться.</string>
     <string name="edit_saved_hotspot_prefix">Змінити збережену точку доступу ·\u0020</string>
     <string name="cluster_adb_multi_device">Якщо ADB показує кілька пристроїв, виконайте adb -s &lt;car-device-ID&gt; shell appops set %1$s GET_USAGE_STATS allow. Ідентифікатор можна знайти командою adb devices.</string>
@@ -101,7 +99,7 @@
     <string name="a_familiar_drive">Знайома подорож.</string>
     <string name="a_previous_wi_fi_direct_connection_is_still_running_reset">Попереднє з’єднання Wi-Fi Direct ще активне. Скиньте його, щоб підключитися.</string>
     <string name="about">Про застосунок</string>
-    <string name="about_diplay">Про DiPlay</string>
+    <string name="about_diplay">Про DiPlay Lumos</string>
     <string name="active">Активно</string>
     <string name="advanced_audio_channel_mapping">Розширене налаштування аудіоканалів</string>
     <string name="airplay_icon">Значок AirPlay</string>
@@ -683,10 +681,6 @@
     <string name="bt_suspend_during_carplay">Призупинити Bluetooth авто під час CarPlay · потрібен ADB</string>
     <string name="bt_suspend_during_carplay_description">Телефон тримає hands-free звʼязок з авто, тому вхідний дзвінок звучить і в телефоні авто, і в CarPlay. Після ввімкнення: Bluetooth авто призупиняється через ADB на час сеансу CarPlay — дзвінки йдуть лише в CarPlay; поки Bluetooth вимкнено, дзвінки CarPlay йдуть через динамік і мікрофон авто. Вмикається назад після сеансу і перед наступним бездротовим зʼєднанням. Пара не змінюється. Застосується з наступного підключення.</string>
     <string name="check_for_updates">Перевірити оновлення</string>
-    <string name="cn_changelog_missing">Журнал CN не включено в цю збірку.</string>
-    <string name="cn_changelog_title">Історія версій CN</string>
-    <string name="cn_features_body">Додатки CN поверх офіційного DiPlay: оновлення з програми (з 0.2.10-cn.8), чотири канали, ремонт автозапуску через ADB, відкладена пауза Bluetooth під час CarPlay, картка повороту з розміром/прозорістю, день/ніч і смугою маршруту, картка лишається після перепідключення, менша карта щитка з більшою деталізацією, спрощена китайська якщо мова авто не підтримується.</string>
-    <string name="cn_features_title">Що додає CN</string>
     <string name="update_details_title">Оновлення %1$s</string>
     <string name="update_notes_missing">Для цієї версії немає приміток.</string>
     <string name="download_and_install">Завантажити та встановити</string>
@@ -893,6 +887,8 @@
     <string name="settings_ambient_album">Колір обкладинки альбому</string>
     <string name="settings_ambient_album_description">Колір обкладинки приблизно зіставляється з доступними кольорами автомобіля. Для сірої, чорної або відсутньої обкладинки використовуються всі 31 колір; для переважно білої — білий або холодний білий.</string>
     <string name="settings_ambient_day_brightness">Денна яскравість</string>
+    <string name="settings_about_description">DiPlay підключає CarPlay та ICCOA на автомобільних пристроях Android. Доступні функції залежать від автомобіля й телефона.</string>
+    <string name="settings_release_history">Історія версій</string>
 </resources>
 
 

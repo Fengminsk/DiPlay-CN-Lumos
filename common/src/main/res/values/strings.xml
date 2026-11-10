@@ -76,10 +76,8 @@
     <string name="status_attaching_ncm">Attaching NCM/AirPlay network</string>
     <string name="status_failed">Failed: %1$s</string>
     <string name="msg_car_hotspot_off">The car hotspot “%1$s” is off. Turn it on in the car settings before connecting.</string>
-    <string name="home_public_preview">PUBLIC PREVIEW  ·\u0020\u0020</string>
     <string name="choose_iphone_prefix">Choose iPhone ·\u0020</string>
     <string name="audio_saved_value">Saved: %1$d</string>
-    <string name="about_public_preview_prefix">Public preview ·\u0020</string>
     <string name="msg_car_hotspot_connect">DiPlay connects through the car hotspot “%1$s”. Turn it on in the car settings, then connect.</string>
     <string name="edit_saved_hotspot_prefix">Edit saved hotspot ·\u0020</string>
     <string name="cluster_adb_multi_device">If ADB lists several devices, use adb -s &lt;car-device-ID&gt; shell appops set %1$s GET_USAGE_STATS allow. Find the ID with adb devices.</string>
@@ -100,7 +98,7 @@
     <string name="a_familiar_drive">A familiar drive.</string>
     <string name="a_previous_wi_fi_direct_connection_is_still_running_reset">A previous Wi-Fi Direct connection is still running. Reset it to connect.</string>
     <string name="about">About</string>
-    <string name="about_diplay">About DiPlay</string>
+    <string name="about_diplay">About DiPlay Lumos</string>
     <string name="active">Active</string>
     <string name="advanced_audio_channel_mapping">Advanced audio channel mapping</string>
     <string name="airplay_icon">AirPlay icon</string>
@@ -744,10 +742,6 @@
     <string name="bt_suspend_during_carplay">Pause car Bluetooth during CarPlay · needs ADB</string>
     <string name="bt_suspend_during_carplay_description">The phone keeps its hands-free link to the car, so a call rings on both the car Bluetooth phone and CarPlay. While CarPlay runs, pause the car Bluetooth over ADB so calls ring on CarPlay only; with Bluetooth off, CarPlay calls play on the cabin speaker and microphone instead of the phone SCO. Bluetooth turns back on when CarPlay ends and before the next wireless handshake. Pairing is never touched. Changes apply on the next connection.</string>
     <string name="check_for_updates">Check for updates</string>
-    <string name="cn_changelog_missing">CN changelog is not bundled in this build.</string>
-    <string name="cn_changelog_title">CN version history</string>
-    <string name="cn_features_body">CN extras on top of official DiPlay: in-app updates (from 0.2.10-cn.8), four update channels, boot auto-start ADB repair, delayed Bluetooth pause during CarPlay, custom turn card with size/opacity sliders, day/night glass, trip info strip, keep-the-card across reconnects, smaller dashboard map with more detail, Simplified Chinese fallback.</string>
-    <string name="cn_features_title">What CN adds</string>
     <string name="update_details_title">Update %1$s</string>
     <string name="update_notes_missing">No release notes were published for this version.</string>
     <string name="app_rename_title">App name (car app list)</string>
@@ -1034,6 +1028,8 @@
     <string name="settings_ambient_album">Follow album cover</string>
     <string name="settings_ambient_album_description">Use the cover’s color or nearby available car colors. Grey, black or missing covers use all 31 colors; mostly white covers can use white or cold white.</string>
     <string name="settings_ambient_day_brightness">Day brightness</string>
+    <string name="settings_about_description">DiPlay connects CarPlay and ICCOA on Android head units. Available features depend on the head unit and phone.</string>
+    <string name="settings_release_history">Version history</string>
 </resources>
 
 

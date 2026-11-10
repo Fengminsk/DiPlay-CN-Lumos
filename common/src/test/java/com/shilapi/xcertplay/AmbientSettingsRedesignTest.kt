@@ -22,7 +22,6 @@ import org.robolectric.RobolectricTestRunner
 import org.robolectric.RuntimeEnvironment
 import org.robolectric.Shadows.shadowOf
 import org.robolectric.annotation.Config
-import org.robolectric.shadows.ShadowAlertDialog
 import org.robolectric.shadows.ShadowToast
 import org.robolectric.util.ReflectionHelpers
 
@@ -175,7 +174,7 @@ class AmbientSettingsRedesignTest {
     @Test fun brightnessSliderUpdatesTheBehaviorSummary() {
         val dialog = open()
         enableSwitch(dialog).isChecked = true
-        val slider = descendants(dialog.window!!.decorView).filterIsInstance<SeekBar>().single()
+        val slider = descendants(dialog.view!!).filterIsInstance<SeekBar>().single()
         slider.progress = 4
         assertTrue(texts(dialog).contains(text(R.string.settings_ambient_brightness_value, 4)))
         assertTrue(texts(dialog).any { it.contains(text(R.string.settings_ambient_behavior_idle_steady, text(R.string.settings_ambient_all), 4)) })
@@ -187,12 +186,11 @@ class AmbientSettingsRedesignTest {
     @Test fun idleChoiceIsOfferedAndSaved() {
         val dialog = open()
         val title = text(R.string.settings_ambient_idle)
-        val button = descendants(dialog.window!!.decorView).filterIsInstance<TextView>()
+        val button = descendants(dialog.view!!).filterIsInstance<TextView>()
             .single { it.text.toString() == "$title · ${text(R.string.settings_ambient_idle_steady)}" }
         button.performClick()
         shadowOf(Looper.getMainLooper()).idle()
-        // The choice picker is an in-page glass dialog, while the ambient editor
-        // itself is still a platform AlertDialog.
+        // The choice picker must sit above the in-page ambient editor.
         val pickerViews = descendants(activity.window.decorView)
         pickerViews.filterIsInstance<TextView>().first {
             it.text.toString().trim().removePrefix("✓").trim() == text(R.string.settings_ambient_idle_car)
@@ -213,28 +211,28 @@ class AmbientSettingsRedesignTest {
         assertEquals(text(R.string.settings_ambient_select_one), ShadowToast.getTextOfLatestToast())
     }
 
-    private fun open(): AlertDialog {
+    private fun open(): DiPlayDialog {
         ReflectionHelpers.callInstanceMethod<Unit>(activity, "showAmbientConfiguration")
         shadowOf(Looper.getMainLooper()).idle()
-        return ShadowAlertDialog.getLatestAlertDialog()
+        return DiPlayDialog.topmost(activity)!!
     }
 
     private fun swatch(grid: ViewGroup, index: Int): View =
         descendants(grid).first { it.contentDescription?.toString()?.let { d -> d == text(R.string.settings_ambient_swatch, index) || d == text(R.string.settings_ambient_swatch_selected, index) } == true }
 
-    private fun swatches(dialog: AlertDialog): List<View> = descendants(dialog.window!!.decorView).filter {
+    private fun swatches(dialog: DiPlayDialog): List<View> = descendants(dialog.view!!).filter {
         it.contentDescription?.toString()?.let { d -> Regex("Color \\d+(, selected)?").matches(d) } == true
     }
 
-    private fun texts(dialog: AlertDialog): List<String> =
-        descendants(dialog.window!!.decorView).filterIsInstance<TextView>().map { it.text.toString() }
+    private fun texts(dialog: DiPlayDialog): List<String> =
+        descendants(dialog.view!!).filterIsInstance<TextView>().map { it.text.toString() }
 
-    private fun switchWith(dialog: AlertDialog, id: Int): Switch = descendants(dialog.window!!.decorView)
+    private fun switchWith(dialog: DiPlayDialog, id: Int): Switch = descendants(dialog.view!!)
         .filterIsInstance<Switch>().single { it.contentDescription == text(id) }
 
-    private fun enableSwitch(dialog: AlertDialog) = switchWith(dialog, R.string.settings_ambient_enable)
-    private fun musicSwitch(dialog: AlertDialog) = switchWith(dialog, R.string.settings_ambient_music)
-    private fun albumSwitch(dialog: AlertDialog) = switchWith(dialog, R.string.settings_ambient_album)
+    private fun enableSwitch(dialog: DiPlayDialog) = switchWith(dialog, R.string.settings_ambient_enable)
+    private fun musicSwitch(dialog: DiPlayDialog) = switchWith(dialog, R.string.settings_ambient_music)
+    private fun albumSwitch(dialog: DiPlayDialog) = switchWith(dialog, R.string.settings_ambient_album)
 
     private fun descendants(view: View): List<View> = buildList {
         add(view)

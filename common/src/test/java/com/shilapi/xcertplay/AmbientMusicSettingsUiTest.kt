@@ -17,7 +17,6 @@ import org.robolectric.Robolectric
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.RuntimeEnvironment
 import org.robolectric.Shadows.shadowOf
-import org.robolectric.shadows.ShadowAlertDialog
 import org.robolectric.shadows.ShadowToast
 import org.robolectric.util.ReflectionHelpers
 import org.robolectric.annotation.Config
@@ -56,7 +55,7 @@ class AmbientMusicSettingsUiTest {
         assertFalse(AmbientMusicSettings.load(activity).enabled)
     }
 
-    private fun albumSwitch(dialog: AlertDialog): Switch = descendants(dialog.window!!.decorView)
+    private fun albumSwitch(dialog: DiPlayDialog): Switch = descendants(dialog.view!!)
         .filterIsInstance<Switch>().single { it.contentDescription == activity.getString(R.string.settings_ambient_album) }
 
     @Test fun failedReadOnlyCheckLeavesControlDisabledAndExplainsWhy() {
@@ -69,7 +68,7 @@ class AmbientMusicSettingsUiTest {
         assertEquals(1, checks)
         assertFalse(AmbientMusicSettings.load(activity).enabled)
         assertTrue(dialog.isShowing)
-        assertEquals(activity.getString(R.string.ambient_unavailable), ShadowToast.getTextOfLatestToast())
+        assertEquals(activity.getString(R.string.settings_ambient_unavailable), ShadowToast.getTextOfLatestToast())
         assertTrue(dialog.getButton(AlertDialog.BUTTON_POSITIVE).isEnabled)
     }
 
@@ -129,14 +128,14 @@ class AmbientMusicSettingsUiTest {
             .single { it.contentDescription == activity.getString(R.string.settings_ambient_car_rhythm) }
     }
 
-    private fun open(): AlertDialog {
+    private fun open(): DiPlayDialog {
         ReflectionHelpers.callInstanceMethod<Unit>(activity, "showAmbientConfiguration")
         shadowOf(Looper.getMainLooper()).idle()
-        return ShadowAlertDialog.getLatestAlertDialog()
+        return DiPlayDialog.topmost(activity)!!
     }
 
-    private fun enableSwitch(dialog: AlertDialog): Switch = descendants(dialog.window!!.decorView)
-        .filterIsInstance<Switch>().single { it.contentDescription == activity.getString(R.string.ambient_enable) }
+    private fun enableSwitch(dialog: DiPlayDialog): Switch = descendants(dialog.view!!)
+        .filterIsInstance<Switch>().single { it.contentDescription == activity.getString(R.string.settings_ambient_enable) }
 
     private fun descendants(view: View): List<View> = buildList {
         add(view)
