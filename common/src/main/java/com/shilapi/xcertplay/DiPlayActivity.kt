@@ -671,7 +671,13 @@ class DiPlayActivity : ComponentActivity(), AppAppearanceOwner {
                 onCarHome = {
                     startActivity(Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_HOME))
                 },
-                onTransport = { wireless -> saveHomeWireless(wireless) },
+                onTransport = { wireless ->
+                saveHomeWireless(wireless)
+                // The home switch is the driver's "how does this connect" answer, so it decides the
+                // ICCOA transport too; the ICCOA category toggles mirror it.
+                IcocaSettings.setWireless(this, wireless)
+                IcocaSettings.setUsb(this, !wireless)
+            },
             )
             glassHome = glass
             status = glass.statusView

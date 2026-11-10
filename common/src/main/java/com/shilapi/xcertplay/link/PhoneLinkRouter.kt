@@ -105,8 +105,12 @@ object PhoneLinkRouter {
      */
     fun requestUsbAccessForAttachedPhones(context: Context) {
         val usb = context.getSystemService(Context.USB_SERVICE) as UsbManager
-        usb.deviceList.values
-            .firstOrNull { it.vendorId != UsbPhoneClassifier.APPLE_VENDOR_ID }
+        val attached = usb.deviceList.values.toList()
+        LinkLog.append(
+            context,
+            "usb devices now: " + attached.joinToString { "vid=0x${it.vendorId.toString(16)}" },
+        )
+        attached.firstOrNull { it.vendorId != UsbPhoneClassifier.APPLE_VENDOR_ID }
             ?.let { requestUsbAccess(context, it) }
     }
 
