@@ -66,6 +66,7 @@ import com.shilapi.xcertplay.link.PhoneLinkSettings
 import com.shilapi.xcertplay.link.ProjectionSource
 import com.shilapi.xcertplay.network.CarHotspotSettings
 import com.shilapi.xcertplay.network.CarHotspotTethering
+import com.shilapi.xcertplay.network.CarPlayVpnService
 import com.shilapi.xcertplay.network.WifiP2pChannels
 import com.shilapi.xcertplay.orchestration.WirelessHotspotMode
 import com.shilapi.xcertplay.settings.SettingsTheme
@@ -174,6 +175,11 @@ class DiPlayActivity : ComponentActivity(), AppAppearanceOwner {
     private var setupError: String? = null
     private var status: TextView? = null
     private var glassHome: DiPlayGlassHome? = null
+    private var carPlayOverlay: DiPlayCarPlayPairingOverlay? = null
+    private var carPlayStateJob: Job? = null
+    private var carPlayAutoOpen = false
+    private var carPlayPermissionRequestPending = false
+    private var carPlayMicrophoneAsked = false
     private var iccoaOverlay: DiPlayIccoaPairingOverlay? = null
     private var iccoaStarted = false
     private var resumeIccoaAfterWifiSettings = false
@@ -258,6 +264,13 @@ class DiPlayActivity : ComponentActivity(), AppAppearanceOwner {
     )
     private val notificationPermission = registerForActivityResult(ActivityResultContracts.RequestPermission()) {
         connect(notificationTransport)
+    }
+    private val carPlayPermissions = registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) {
+        continueCarPlayStart()
+    }
+    private val carPlayVpnConsent = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+        if (result.resultCode == RESULT_OK) startCarPlayService()
+        else carPlayOverlay?.render(CarPlayLiveSession.State(message = getString(R.string.vpn_consent_was_denied)))
     }
     private val tick = object : Runnable {
         override fun run() { refreshStatus(); updateHomePermissionBadge(); handler.postDelayed(this, 1000) }
@@ -372,7 +385,8 @@ class DiPlayActivity : ComponentActivity(), AppAppearanceOwner {
         CloudLogArchive.start(applicationContext)
         reviewStartupPermissions()
         // Back on the home page finishes this activity while the session runs on, so the icon lands here.
-        if (savedInstanceState == null && isLauncherIntent(intent) && CarPlayBackgroundSession.hasSession() &&
+        if (savedInstanceState == null && isLauncherIntent(intent) && CarPlayLiveSession.value().firstFrame &&
+            CarPlayBackgroundSession.hasSession() &&
             AirPlayPersistence.loadLauncherReturnsToCarPlay(this)) {
             openProjection(); finish(); return
         }
@@ -406,8 +420,20 @@ class DiPlayActivity : ComponentActivity(), AppAppearanceOwner {
             ?: if (setupError == null && SetupGuide.shouldOpenOnLaunch(SetupGuide.seen(this),
                     DiPlayPreferences.phoneAddress(this) != null)) "setup" else "home"
         render()
+        carPlayStateJob = lifecycleScope.launch {
+            CarPlayLiveSession.state.collect { state ->
+                carPlayOverlay?.render(state)
+                if (carPlayAutoOpen && state.phase == CarPlayLiveSession.Phase.Streaming && state.firstFrame &&
+                    CarPlayBackgroundSession.snapshot() != null && carPlayOverlay?.parent == null) {
+                    carPlayOverlay = null
+                    carPlayAutoOpen = false
+                    openProjection()
+                }
+            }
+        }
         scheduleAutomaticVehicleValidation()
         handleWirelessRecovery()
+        consumeCarPlayUsbIntent(intent)?.let { wireless -> handler.post { connect(wireless) } }
         if (consumeBluetoothAutoConnectIntent(intent)) {
             if (initialLaunch) {
                 initialLaunch = false
@@ -417,6 +443,7 @@ class DiPlayActivity : ComponentActivity(), AppAppearanceOwner {
         }
         onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
             override fun handleOnBackPressed() {
+                if (carPlayOverlay != null) { carPlayOverlay?.close(); return }
                 if (iccoaOverlay != null) { iccoaOverlay?.close(); return }
                 if (page != "home") navigateBack()
                 // Back on the home page only hides the app: a car app must return exactly where
@@ -431,7 +458,8 @@ class DiPlayActivity : ComponentActivity(), AppAppearanceOwner {
         connectionSettingsReturnCategory = null
         // CarPlay runs in its own task, so the launcher icon resumes this one. Settings opened from
         // CarPlay carry a "page" extra, which isLauncherIntent rejects.
-        if (isLauncherIntent(intent) && CarPlayBackgroundSession.hasSession() &&
+        if (isLauncherIntent(intent) && CarPlayLiveSession.value().firstFrame &&
+            CarPlayBackgroundSession.hasSession() &&
             AirPlayPersistence.loadLauncherReturnsToCarPlay(this)) {
             page = "home"; render(); openProjection(); return
         }
@@ -439,6 +467,7 @@ class DiPlayActivity : ComponentActivity(), AppAppearanceOwner {
         automaticVehicleValidationStarted = false
         scheduleAutomaticVehicleValidation()
         handleWirelessRecovery()
+        consumeCarPlayUsbIntent(intent)?.let { wireless -> handler.post { connect(wireless) } }
         if (consumeBluetoothAutoConnectIntent(intent)) {
             if (initialLaunch) {
                 initialLaunch = false
@@ -453,6 +482,24 @@ class DiPlayActivity : ComponentActivity(), AppAppearanceOwner {
         return requested && DiPlayPreferences.connectOnPhoneBluetooth(this) &&
             DiPlayPreferences.phoneAddress(this) != null && setupError == null &&
             !CarPlayBackgroundSession.hasSession()
+    }
+    private fun consumeCarPlayUsbIntent(intent: Intent): Boolean? {
+        val device = com.shilapi.xcertplay.link.PhoneLinkRouter.attachedDevice(intent)
+        val iphone = intent.getBooleanExtra(com.shilapi.xcertplay.link.PhoneLinkRouter.EXTRA_CARPLAY_USB_ATTACHED, false) ||
+            device?.vendorId == com.shilapi.xcertplay.transport.IphoneUsbMatcher.APPLE_VENDOR_ID
+        val mfiBridge = device?.vendorId == 0x1a86 && device.productId == 0x5512
+        intent.removeExtra(com.shilapi.xcertplay.link.PhoneLinkRouter.EXTRA_CARPLAY_USB_ATTACHED)
+        return when {
+            iphone && (!CarPlayBackgroundSession.hasSession() || AirPlayPersistence.loadWirelessEnabled(this)) -> false
+            iphone -> {
+                // A wired Service often remains alive while waiting for a replugged iPhone.
+                // Re-enter its connection card instead of silently ignoring the attach intent.
+                handler.post { showCarPlaySession() }
+                null
+            }
+            mfiBridge && !CarPlayBackgroundSession.hasSession() -> AirPlayPersistence.loadWirelessEnabled(this)
+            else -> null
+        }
     }
     override fun onSaveInstanceState(outState: Bundle) {
         outState.putString("page", page)
@@ -526,6 +573,10 @@ class DiPlayActivity : ComponentActivity(), AppAppearanceOwner {
         // Back from the car settings: refresh the car hotspot reminder on the home page.
         if (!initialLaunch && !adbSwitchChangePending && !pausedForAdbSwitchChange &&
             (page == "home" || page == "settings" || page == "connection" || page == "setup")) render()
+        if (page == "home" && CarPlayBackgroundSession.hasSession() &&
+            !CarPlayLiveSession.value().firstFrame && carPlayOverlay == null) {
+            showCarPlayOverlay(autoOpen = true)
+        }
         if (resumeIccoaAfterWifiSettings) {
             resumeIccoaAfterWifiSettings = false
             if (isIccoaWifiEnabled()) handler.post { openIccoaPairing() }
@@ -555,6 +606,10 @@ class DiPlayActivity : ComponentActivity(), AppAppearanceOwner {
     }
 
     override fun onDestroy() {
+        carPlayStateJob?.cancel()
+        carPlayStateJob = null
+        carPlayOverlay?.let { (it.parent as? ViewGroup)?.removeView(it) }
+        carPlayOverlay = null
         iccoaOverlay?.let { (it.parent as? ViewGroup)?.removeView(it) }
         iccoaOverlay = null
         iccoaStateJob?.cancel()
@@ -647,6 +702,9 @@ class DiPlayActivity : ComponentActivity(), AppAppearanceOwner {
     private fun render() = render(appearanceOnly = false)
 
     private fun render(appearanceOnly: Boolean, preferredFocusTag: Any? = null) {
+        val restoreCarPlayOverlay = carPlayOverlay != null
+        val restoreCarPlayAutoOpen = carPlayAutoOpen
+        if (restoreCarPlayOverlay) removeCarPlayOverlay()
         if (iccoaOverlay != null) removeIccoaOverlay()
         enforceInterfaceSize()
         refreshAppearance()
@@ -698,7 +756,7 @@ class DiPlayActivity : ComponentActivity(), AppAppearanceOwner {
                         val appContext = applicationContext
                         Thread { runCatching { IcocaEngine.stop(appContext) } }.apply { isDaemon = true }.start()
                     }
-                    if (CarPlayBackgroundSession.hasSession()) openProjection()
+                    if (CarPlayBackgroundSession.hasSession()) showCarPlaySession()
                     else if (!carplaySetupDone()) openCarplaySetupFromHome()
                     else connect(loadHomeWireless())
                 },
@@ -737,6 +795,7 @@ class DiPlayActivity : ComponentActivity(), AppAppearanceOwner {
             renderedPage = page
             renderedSettingsCategory = null
             refreshStatus()
+            if (restoreCarPlayOverlay) showCarPlayOverlay(restoreCarPlayAutoOpen)
             return
         }
         val skyChrome = page == "connection" || page == "setup" || page == "about"
@@ -802,6 +861,7 @@ class DiPlayActivity : ComponentActivity(), AppAppearanceOwner {
         renderedPage = page
         renderedSettingsCategory = settingsCategory.takeIf { page == "settings" }
         refreshStatus()
+        if (restoreCarPlayOverlay && page == "home") showCarPlayOverlay(restoreCarPlayAutoOpen)
         focusSnapshot?.let { snapshot ->
             root.doOnLayout {
                 descendants(root).firstOrNull { candidate ->
@@ -969,7 +1029,7 @@ class DiPlayActivity : ComponentActivity(), AppAppearanceOwner {
         status = label(getString(R.string.ready_when_you_are), 24, TEXT, true).apply { setPadding(0, dp(10), 0, dp(16)) }
         card.addView(status)
         connectButton = homeButton(getString(R.string.connect_phone), true) {
-            if (CarPlayBackgroundSession.hasSession()) openProjection()
+            if (CarPlayBackgroundSession.hasSession()) showCarPlaySession()
             else connect(true)
         }
         card.addView(connectButton, matchButton(height = if (compact) 54 else 68))
@@ -2138,8 +2198,10 @@ class DiPlayActivity : ComponentActivity(), AppAppearanceOwner {
             scheduleTimeControl(scheduleControls, start = false)
             card.addView(scheduleControls)
             card.addView(button(getString(R.string.picture_adjustments), false) {
-                startActivity(Intent(this, CarPlayHostActivity::class.java)
-                    .putExtra("picture_controls", true).addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT))
+                if (CarPlayLiveSession.value().firstFrame) {
+                    startActivity(Intent(this, CarPlayHostActivity::class.java)
+                        .putExtra("picture_controls", true).addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT))
+                } else connect(AirPlayPersistence.loadWirelessEnabled(this))
             }, matchButton(0, 56).apply { bottomMargin = dp(24) })
             if (AppRenamer.available(this)) {
                 choice(card, getString(R.string.app_rename_title), AppRenamer.labels(this),
@@ -4924,11 +4986,10 @@ class DiPlayActivity : ComponentActivity(), AppAppearanceOwner {
         parent.addView(space(12))
     }
 
-    private fun loadHomeWireless(): Boolean =
-        getSharedPreferences("diplay", MODE_PRIVATE).getBoolean("home_wireless", false)
+    private fun loadHomeWireless(): Boolean = DiPlayPreferences.lastUsedWireless(this)
 
     private fun saveHomeWireless(wireless: Boolean) {
-        getSharedPreferences("diplay", MODE_PRIVATE).edit().putBoolean("home_wireless", wireless).apply()
+        DiPlayPreferences.saveLastUsedWireless(this, wireless)
     }
 
     private fun iccoaRuntimePermissions(): List<String> = buildList {
@@ -5072,6 +5133,7 @@ class DiPlayActivity : ComponentActivity(), AppAppearanceOwner {
     }
 
     private fun connect(wireless: Boolean) {
+        if (carPlayOverlay != null && carPlayAutoOpen) return
         markCarplaySetupDone()
         startupHotspotCancelled = true
         if (wireless && pendingCarHotspotSetup) { toast(getString(R.string.save_your_hotspot_details_in_connection_setup_first)); page = "connection"; render(); return }
@@ -5095,31 +5157,137 @@ class DiPlayActivity : ComponentActivity(), AppAppearanceOwner {
             notificationPermission.launch(Manifest.permission.POST_NOTIFICATIONS)
             return
         }
-        val open = {
-            AirPlayPersistence.saveWirelessEnabled(this, wireless)
-            // The setup page closes first: the driver sees the home, then the CarPlay connection
-            // popup on top of a home snapshot while the real host connects. Only a live session
-            // takes over the screen with the full-bleed playback surface.
-            page = "home"
-            render()
-            // Mirror the ICCOA pairing: the two home cards give way first, then the CarPlay
-            // connection popup appears in the middle.
-            glassHome?.setPairingMode(true)
-            handler.postDelayed({
-                openProjection(glassHome?.snapshotForHost())
-                glassHome?.setPairingMode(false)
-            }, 800)
-        }
-        if (CarPlayBackgroundSession.hasSession()) CarPlayBackgroundSession.stop { runOnUiThread { open() } }
-        else open()
+        AirPlayPersistence.saveWirelessEnabled(this, wireless)
+        page = "home"
+        render()
+        // USB attach may arrive while the wireless session is still closing. Show the
+        // connection card at once; teardown and USB re-enumeration continue behind it.
+        showCarPlayOverlay(autoOpen = true)
+        if (CarPlayBackgroundSession.hasSession()) {
+            CarPlayLiveSession.reconnecting(getString(R.string.connecting_to_your_iphone))
+            CarPlayBackgroundSession.stop { runOnUiThread { continueCarPlayStart() } }
+        } else continueCarPlayStart()
     }
     private fun openProjection(homeSnapshot: android.graphics.Bitmap? = null) {
+        if (!CarPlayLiveSession.value().firstFrame || CarPlayBackgroundSession.snapshot() == null) {
+            showCarPlayOverlay(autoOpen = true)
+            return
+        }
         CarPlayHomeSnapshot.bitmap = homeSnapshot
         val intent = Intent(this, CarPlayHostActivity::class.java)
             .addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT or Intent.FLAG_ACTIVITY_NO_ANIMATION)
         startActivity(intent, android.app.ActivityOptions.makeCustomAnimation(this, 0, 0).toBundle())
         @Suppress("DEPRECATION")
         overridePendingTransition(0, 0)
+    }
+
+    private fun showCarPlaySession() {
+        if (CarPlayLiveSession.value().firstFrame) openProjection()
+        else showCarPlayOverlay(autoOpen = true)
+    }
+
+    private fun showCarPlayOverlay(autoOpen: Boolean) {
+        carPlayAutoOpen = autoOpen
+        if (carPlayOverlay?.parent != null) return
+        carPlayOverlay = null
+        val overlay = DiPlayCarPlayPairingOverlay(this,
+            onClose = { carPlayAutoOpen = false; removeCarPlayOverlay() },
+            onProjection = {
+                if (carPlayAutoOpen && CarPlayLiveSession.value().firstFrame &&
+                    CarPlayBackgroundSession.snapshot() != null) {
+                    carPlayAutoOpen = false
+                    openProjection(glassHome?.snapshotBlurred())
+                    // The card already filled the screen and faded to black. Keep that last
+                    // frame underneath the opening Activity until its black cover is drawn.
+                    handler.postDelayed({ removeCarPlayOverlay() }, 1_200L)
+                } else if (CarPlayBackgroundSession.hasSession()) {
+                    removeCarPlayOverlay()
+                    showCarPlayOverlay(autoOpen = carPlayAutoOpen)
+                } else removeCarPlayOverlay()
+            },
+            onResetWifi = {
+                carPlayAutoOpen = false
+                removeCarPlayOverlay()
+                confirmWirelessReset()
+            },
+            onDisconnect = {
+                carPlayAutoOpen = false
+                if (CarPlayBackgroundSession.hasSession()) {
+                    CarPlayBackgroundSession.stop { runOnUiThread { removeCarPlayOverlay(); refreshStatus() } }
+                } else {
+                    DiPlaySessionService.stop(this)
+                    removeCarPlayOverlay()
+                }
+            })
+        carPlayOverlay = overlay
+        glassHome?.setPairingMode(true)
+        addContentView(overlay, ViewGroup.LayoutParams(-1, -1))
+        var backdropFrame = 0
+        val backdropTick = object : Runnable {
+            override fun run() {
+                if (overlay.parent == null || backdropFrame > 23) return
+                glassHome?.snapshotBlurred()?.let(overlay::setBackdrop)
+                backdropFrame++
+                overlay.postDelayed(this, 33)
+            }
+        }
+        overlay.post(backdropTick)
+    }
+
+    private fun removeCarPlayOverlay() {
+        val overlay = carPlayOverlay ?: return
+        carPlayOverlay = null
+        glassHome?.setPairingMode(false)
+        (overlay.parent as? ViewGroup)?.removeView(overlay)
+    }
+
+    private fun requiredCarPlayPermissions(): List<String> = buildList {
+        if (AirPlayPersistence.loadLocationReportingEnabled(this@DiPlayActivity))
+            add(Manifest.permission.ACCESS_FINE_LOCATION)
+        if (AirPlayPersistence.loadWirelessEnabled(this@DiPlayActivity)) {
+            val existing = AirPlayPersistence.loadWirelessHotspotMode(this@DiPlayActivity) == WirelessHotspotMode.EXISTING_WIFI
+            if (Build.VERSION.SDK_INT >= 31) add(Manifest.permission.BLUETOOTH_CONNECT)
+            if (!existing) {
+                if (Build.VERSION.SDK_INT >= 33) add(Manifest.permission.NEARBY_WIFI_DEVICES)
+                else {
+                    add(Manifest.permission.ACCESS_COARSE_LOCATION)
+                    add(Manifest.permission.ACCESS_FINE_LOCATION)
+                }
+            }
+        }
+    }.distinct()
+
+    private fun continueCarPlayStart() {
+        val missing = requiredCarPlayPermissions().filter { checkSelfPermission(it) != PackageManager.PERMISSION_GRANTED }
+        if (missing.isNotEmpty()) {
+            // A second callback after denial must not launch the same request in a loop.
+            if (carPlayPermissionRequestPending) {
+                carPlayPermissionRequestPending = false
+                carPlayOverlay?.render(CarPlayLiveSession.State(message = getString(R.string.iccoa_permission_needed)))
+            } else {
+                carPlayPermissionRequestPending = true
+                carPlayPermissions.launch(missing.toTypedArray())
+            }
+            return
+        }
+        carPlayPermissionRequestPending = false
+        if (!carPlayMicrophoneAsked && checkSelfPermission(Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
+            carPlayMicrophoneAsked = true
+            carPlayPermissions.launch(arrayOf(Manifest.permission.RECORD_AUDIO))
+            return
+        }
+        if (!AirPlayPersistence.loadWirelessEnabled(this)) {
+            val consent = CarPlayVpnService.prepare(this)
+            if (consent != null) { carPlayVpnConsent.launch(consent); return }
+        }
+        startCarPlayService()
+    }
+
+    private fun startCarPlayService() {
+        val size = window.decorView
+        val width = size.width.takeIf { it > 0 } ?: resources.displayMetrics.widthPixels
+        val height = size.height.takeIf { it > 0 } ?: resources.displayMetrics.heightPixels
+        DiPlaySessionService.start(this, width, height)
     }
     private fun choosePhone() {
         if (Build.VERSION.SDK_INT >= 31 && checkSelfPermission(Manifest.permission.BLUETOOTH_CONNECT) != PackageManager.PERMISSION_GRANTED) {

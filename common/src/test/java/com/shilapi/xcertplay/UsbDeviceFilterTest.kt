@@ -54,7 +54,7 @@ class UsbDeviceFilterTest {
     private fun matchesAttachFilter(
         vendorId: Int,
         productId: Int,
-        activityClass: Class<out Activity> = CarPlayHostActivity::class.java,
+        activityClass: Class<out Activity> = DiPlayActivity::class.java,
     ): Boolean {
         val context = RuntimeEnvironment.getApplication()
         val activity = context.packageManager.getActivityInfo(

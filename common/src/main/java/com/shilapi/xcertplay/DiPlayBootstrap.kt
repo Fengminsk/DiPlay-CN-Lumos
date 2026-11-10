@@ -74,8 +74,13 @@ internal object DiPlayPreferences {
     fun saveDefaultConnectionMode(context: Context, mode: DefaultConnectionMode) {
         prefs(context).edit().putString("default_connection_mode", mode.key).apply()
     }
+    fun lastUsedWireless(context: Context): Boolean =
+        prefs(context).getBoolean("home_wireless", AirPlayPersistence.loadWirelessEnabled(context))
+    fun saveLastUsedWireless(context: Context, wireless: Boolean) {
+        prefs(context).edit().putBoolean("home_wireless", wireless).apply()
+    }
     fun autoConnectWireless(context: Context) =
-        defaultConnectionMode(context).wireless(AirPlayPersistence.loadWirelessEnabled(context))
+        defaultConnectionMode(context).wireless(lastUsedWireless(context))
     fun autoConnect(context: Context) = prefs(context).getBoolean("auto_connect", false)
     fun saveAutoConnect(context: Context, value: Boolean) {
         prefs(context).edit().putBoolean("auto_connect", value).apply()

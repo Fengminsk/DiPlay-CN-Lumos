@@ -7,10 +7,8 @@ import kotlinx.coroutines.flow.asStateFlow
 /**
  * Live CarPlay session state, readable from anywhere in the process.
  *
- * This is the first piece of moving the connection out of [CarPlayHostActivity]: the screen that
- * shows "preparing CarPlay" must not be the screen that owns the connection, otherwise the popup
- * and the session die together. Today the host still owns the controller and publishes here; the
- * next step moves ownership into the foreground service and leaves the host as a surface only.
+ * Published by [DiPlaySessionService]. Home observes connection progress and opens the projection
+ * screen only after a frame has been rendered to the service's offscreen decoder surface.
  */
 internal object CarPlayLiveSession {
 
@@ -36,6 +34,7 @@ internal object CarPlayLiveSession {
         val message: String = "",
         /** True once a frame has been rendered; reset when a new link starts. */
         val firstFrame: Boolean = false,
+        val wifiResetRequired: Boolean = false,
     )
 
     private val mutable = MutableStateFlow(State())
@@ -54,15 +53,20 @@ internal object CarPlayLiveSession {
         mutable.value = current.copy(phase = Phase.Connecting, message = message)
     }
 
+    fun reconnecting(message: String, wifiResetRequired: Boolean = false) {
+        mutable.value = State(Phase.Connecting, message, wifiResetRequired = wifiResetRequired)
+    }
+
     fun connected() {
         val current = mutable.value
         if (current.phase == Phase.Streaming) return
         mutable.value = current.copy(phase = Phase.Connected)
     }
 
-    fun streaming() {
+    fun streaming(message: String = "") {
         if (mutable.value.phase == Phase.Streaming) return
-        mutable.value = mutable.value.copy(phase = Phase.Streaming, firstFrame = true)
+        mutable.value = mutable.value.copy(phase = Phase.Streaming,
+            message = message.ifBlank { mutable.value.message }, firstFrame = true)
     }
 
     fun idle() {

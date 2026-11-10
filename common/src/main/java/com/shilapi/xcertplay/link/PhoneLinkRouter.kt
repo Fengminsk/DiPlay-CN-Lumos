@@ -6,7 +6,9 @@ import android.hardware.usb.UsbDevice
 import android.hardware.usb.UsbManager
 import android.util.Log
 import androidx.core.content.IntentCompat
-import com.shilapi.xcertplay.CarPlayHostActivity
+import com.shilapi.xcertplay.AirPlayPersistence
+import com.shilapi.xcertplay.CarPlayBackgroundSession
+import com.shilapi.xcertplay.DiPlayActivity
 import com.shilapi.xcertplay.IcocaSettings
 import com.shilapi.xcertplay.icoca.IcocaEngine
 
@@ -18,6 +20,8 @@ import com.shilapi.xcertplay.icoca.IcocaEngine
  * saved choice.
  */
 object PhoneLinkRouter {
+
+    const val EXTRA_CARPLAY_USB_ATTACHED = "carplay_usb_attached"
 
     private const val TAG = "DiPlay/PhoneLink"
 
@@ -62,10 +66,12 @@ object PhoneLinkRouter {
                 "kind=$kind source=$source action=$action",
         )
         when (action) {
-            LinkAction.START_CARPLAY -> context.startActivity(
-                Intent(context, CarPlayHostActivity::class.java)
-                    .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK),
-            )
+            LinkAction.START_CARPLAY -> if (!CarPlayBackgroundSession.hasSession() ||
+                AirPlayPersistence.loadWirelessEnabled(context)) {
+                context.startActivity(Intent(context, DiPlayActivity::class.java)
+                    .putExtra(EXTRA_CARPLAY_USB_ATTACHED, true)
+                    .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP))
+            }
 
             LinkAction.START_ICCOA -> {
                 LinkLog.startCapture(context)

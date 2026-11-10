@@ -53,7 +53,7 @@ internal class DiPlayGlassHome(
     val statusView = TextView(context).apply {
         gravity = Gravity.CENTER
         maxLines = 2
-        setTextColor(if (night) 0xFFB9C7DB.toInt() else 0xFF5E7089.toInt())
+        setTextColor(if (night) 0xFFCAD7E8.toInt() else 0xFF5E7089.toInt())
         typeface = Typeface.create("sans-serif", Typeface.NORMAL)
         ellipsize = android.text.TextUtils.TruncateAt.END
         importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_YES
@@ -194,7 +194,7 @@ internal class DiPlayGlassHome(
         contentDescription = context.getString(description)
         background = RippleDrawable(
             ColorStateList.valueOf(0x33FFFFFF),
-            DiPlayLiquidGlassDrawable(dp(64f), night, control = true),
+            DiPlayLiquidGlassDrawable(dp(64f), night, control = true, circle = true),
             null,
         )
         outlineProvider = roundedOutline(0.5f)
@@ -359,7 +359,7 @@ internal class DiPlayGlassHome(
         if (night) {
             fill.shader = LinearGradient(
                 rect.left, rect.top, rect.left, rect.bottom,
-                intArrayOf(0x33FFFFFF, 0x1A7896CD, 0x22FFFFFF),
+                intArrayOf(0x302E4A70, 0x36405F86, 0x28283E5F),
                 floatArrayOf(0f, 0.5f, 1f),
                 Shader.TileMode.CLAMP,
             )
@@ -368,7 +368,7 @@ internal class DiPlayGlassHome(
                 rect.left + rect.width() * 0.16f,
                 rect.top - rect.height() * 0.06f,
                 rect.width() * 0.60f,
-                0x29FFFFFF,
+                0x1CFFFFFF,
                 Color.TRANSPARENT,
                 Shader.TileMode.CLAMP,
             )
@@ -377,14 +377,14 @@ internal class DiPlayGlassHome(
                 rect.left + rect.width() * 0.86f,
                 rect.top + rect.height() * 1.04f,
                 rect.width() * 0.50f,
-                0x29FFB076,
+                0x14FFB076,
                 Color.TRANSPARENT,
                 Shader.TileMode.CLAMP,
             )
             canvas.drawRect(rect, fill)
             fill.shader = LinearGradient(
                 rect.left, rect.top, rect.left, rect.top + rect.height() * 0.42f,
-                intArrayOf(0x1FFFFFFF, 0x00FFFFFF),
+                intArrayOf(0x16FFFFFF, 0x00FFFFFF),
                 null,
                 Shader.TileMode.CLAMP,
             )

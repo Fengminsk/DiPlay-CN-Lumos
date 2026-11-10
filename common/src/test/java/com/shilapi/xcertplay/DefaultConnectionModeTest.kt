@@ -88,6 +88,24 @@ class DefaultConnectionModeTest {
         }
     }
 
+    @Test fun lastUsedTransportPersistsIndependentlyOfTheCurrentConnectionState() {
+        DiPlayPreferences.saveDefaultConnectionMode(app, DefaultConnectionMode.LAST_USED)
+        DiPlayPreferences.saveLastUsedWireless(app, true)
+        AirPlayPersistence.saveWirelessEnabled(app, false)
+        assertTrue(DiPlayPreferences.lastUsedWireless(app))
+        assertTrue(DiPlayPreferences.autoConnectWireless(app))
+
+        DiPlayPreferences.saveLastUsedWireless(app, false)
+        AirPlayPersistence.saveWirelessEnabled(app, true)
+        assertFalse(DiPlayPreferences.lastUsedWireless(app))
+        assertFalse(DiPlayPreferences.autoConnectWireless(app))
+
+        DiPlayPreferences.saveDefaultConnectionMode(app, DefaultConnectionMode.WIRELESS)
+        assertTrue(DiPlayPreferences.autoConnectWireless(app))
+        DiPlayPreferences.saveDefaultConnectionMode(app, DefaultConnectionMode.USB)
+        assertFalse(DiPlayPreferences.autoConnectWireless(app))
+    }
+
     @Test fun fixedDefaultSurvivesManualTransportChangesWithoutChangingAutoConnectOrPhone() {
         DiPlayPreferences.savePhone(app, "00:11:22:33:44:55", "Test iPhone")
         val expectedModes = mapOf(

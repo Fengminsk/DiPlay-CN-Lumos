@@ -334,6 +334,10 @@ class CarPlayController(
             uiListener?.onSessionEnded(session)
         }
 
+        override fun onVideoFrameRendered(session: AirPlaySession) {
+            if (!closed && activeSession === session) uiListener?.onVideoFrameRendered(session)
+        }
+
         override fun onTransportError(message: String) {
             debugLog("AirPlay transport error: $message")
             uiListener?.onTransportError(message)

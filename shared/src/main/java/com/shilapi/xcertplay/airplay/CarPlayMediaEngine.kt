@@ -120,7 +120,9 @@ class CarPlayMediaEngine(
         Log.i(TAG, "airplay screen key connectionID=${unsignedPlistDecimal(stream["streamConnectionID"])}")
         val screen = ScreenStream(key, session::logDebug)
         sink.setVideoDiagnosticHandler(type) {
-            if (it == "first frame rendered") session.videoFrameRendered()
+            // The alternate cluster stream may decode before the main display. Only the main
+            // frame can release Home's pairing card into the full-screen projection.
+            if (type == STREAM_TYPE_MAIN_SCREEN && it == "first frame rendered") session.videoFrameRendered()
             session.logDebug("Video: $it")
         }
         sink.setVideoRecoveryHandler(type) {

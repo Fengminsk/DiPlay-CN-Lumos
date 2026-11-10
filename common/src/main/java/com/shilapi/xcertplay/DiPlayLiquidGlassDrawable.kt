@@ -28,6 +28,7 @@ internal class DiPlayLiquidGlassDrawable(
     private val control: Boolean = false,
     private val tinted: Boolean = false,
     private val opaque: Boolean = false,
+    private val circle: Boolean = false,
 ) : Drawable() {
 
     var cornerRadius: Float = cornerRadius
@@ -50,7 +51,8 @@ internal class DiPlayLiquidGlassDrawable(
         val b = RectF(bounds)
         if (b.isEmpty) return
         val radius = min(cornerRadius, min(b.width(), b.height()) / 2f)
-        val shape = continuousCornerPath(b, radius)
+        val shape = if (circle) Path().apply { addOval(b, Path.Direction.CW) }
+            else continuousCornerPath(b, radius)
         paint.color = Color.WHITE
 
         paint.shader = if (opaque && dark) {
@@ -59,6 +61,13 @@ internal class DiPlayLiquidGlassDrawable(
         } else if (opaque) {
             LinearGradient(b.left, b.top, b.right, b.bottom,
                 intArrayOf(0xFFFFFFFF.toInt(), 0xFFF4F8FF.toInt()), null, Shader.TileMode.CLAMP)
+        } else if (control && tinted && dark) {
+            LinearGradient(
+                b.left, b.top, b.right, b.bottom,
+                intArrayOf(0xE54A6E9C.toInt(), 0xE3345785.toInt(), 0xE525416D.toInt()),
+                floatArrayOf(0f, 0.5f, 1f),
+                Shader.TileMode.CLAMP,
+            )
         } else if (control && tinted) {
             LinearGradient(
                 b.left, b.top, b.right, b.bottom,
@@ -69,7 +78,7 @@ internal class DiPlayLiquidGlassDrawable(
         } else if (control && dark) {
             LinearGradient(
                 b.left, b.top, b.right, b.bottom,
-                intArrayOf(0xB86B84A7.toInt(), 0xA8426089.toInt(), 0x98213D66.toInt()),
+                intArrayOf(0xDE354C6A.toInt(), 0xDC2A405E.toInt(), 0xDA203450.toInt()),
                 floatArrayOf(0f, 0.52f, 1f),
                 Shader.TileMode.CLAMP,
             )
@@ -83,7 +92,7 @@ internal class DiPlayLiquidGlassDrawable(
         } else if (dark) {
             LinearGradient(
                 b.left, b.top, b.right, b.bottom,
-                intArrayOf(0xC8AACDF5.toInt(), 0xB89CC2F0.toInt(), 0xA882AAE6.toInt()),
+                intArrayOf(0xE0263A54.toInt(), 0xDC23344D.toInt(), 0xD81B2B43.toInt()),
                 floatArrayOf(0f, 0.55f, 1f),
                 Shader.TileMode.CLAMP,
             )
@@ -101,7 +110,8 @@ internal class DiPlayLiquidGlassDrawable(
             b.left + b.width() * 0.18f + dragOffsetX * 0.18f,
             b.top,
             b.width() * 0.66f,
-            if (control) 0xA6FFFFFF.toInt() else if (dark) 0x80FFFFFF.toInt() else 0x66FFFFFF,
+            if (dark && tinted) 0x32FFFFFF else if (dark && control) 0x26FFFFFF
+            else if (dark) 0x1CFFFFFF else if (control) 0xA6FFFFFF.toInt() else 0x66FFFFFF,
             Color.TRANSPARENT,
             Shader.TileMode.CLAMP,
         )
@@ -111,7 +121,7 @@ internal class DiPlayLiquidGlassDrawable(
             b.right - b.width() * 0.10f,
             b.bottom,
             b.width() * 0.52f,
-            if (control) 0x36FFC496 else if (dark) 0x42FFC496 else 0x1FFFC496,
+            if (dark) 0x16FFC496 else if (control) 0x36FFC496 else 0x1FFFC496,
             Color.TRANSPARENT,
             Shader.TileMode.CLAMP,
         )
@@ -125,15 +135,15 @@ internal class DiPlayLiquidGlassDrawable(
 
         paint.shader = null
         paint.style = Paint.Style.STROKE
-        paint.color = if (control) 0x30FFFFFF else 0x1CFFFFFF
+        paint.color = if (dark) 0x18FFFFFF else if (control) 0x30FFFFFF else 0x1CFFFFFF
         paint.strokeWidth = if (control) 5f else 10f
         canvas.drawPath(shape, paint)
-        paint.color = if (control && dark) 0xA6FFFFFF.toInt() else if (dark) 0x8CFFFFFF.toInt() else 0xCCFFFFFF.toInt()
-        paint.strokeWidth = if (control) 2f else 3.0f
+        paint.color = if (dark) 0x70FFFFFF else 0xCCFFFFFF.toInt()
+        paint.strokeWidth = if (control) 1.5f else 2f
         canvas.drawPath(shape, paint)
-        paint.color = 0x66FFFFFF
+        paint.color = if (dark) 0x36FFFFFF else 0x66FFFFFF
         paint.strokeWidth = 1.2f
-        canvas.drawLine(
+        if (!circle) canvas.drawLine(
             b.left + b.width() * 0.20f,
             b.top + 1.6f,
             b.right - b.width() * 0.20f,
