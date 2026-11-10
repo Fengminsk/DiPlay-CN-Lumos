@@ -34,8 +34,12 @@ object UsbPermissionBroker {
     /** Prompts allowed per process for one vendor/product pair (AOA re-enumeration needs two). */
     private const val MAX_PROMPTS_PER_DEVICE = 3
 
+    /** Absolute cap per process: a phone that keeps re-enumerating must not trap the driver. */
+    private const val MAX_PROMPTS_TOTAL = 4
+
     private val waiting = ConcurrentHashMap<String, MutableList<(Boolean) -> Unit>>()
     private val prompts = ConcurrentHashMap<String, Int>()
+    private var totalPrompts = 0
 
     @Volatile
     private var receiver: BroadcastReceiver? = null
@@ -61,11 +65,12 @@ object UsbPermissionBroker {
                 return
             }
             val promptsUsed = prompts[key] ?: 0
-            if (promptsUsed >= MAX_PROMPTS_PER_DEVICE) {
+            if (promptsUsed >= MAX_PROMPTS_PER_DEVICE || totalPrompts >= MAX_PROMPTS_TOTAL) {
                 onResult(false)
                 return
             }
             prompts[key] = promptsUsed + 1
+            totalPrompts++
             waiting[key] = mutableListOf(onResult)
         }
         ensureReceiver(app)

@@ -4864,9 +4864,7 @@ class DiPlayActivity : ComponentActivity(), AppAppearanceOwner {
         LinkLog.append(this, "ICCOA selected: wired=$wired")
         // Wired needs the USB grant *before* the SDK scans: the SDK reads the serial number before
         // checking permission and a SecurityException kills its scan thread for good.
-        PhoneLinkRouter.startIccoa(this, wiredOnly = wired) {
-            iccoaStarted = true
-        }
+        PhoneLinkRouter.startIccoa(this, wiredOnly = wired, askPermission = true) { iccoaStarted = true }
         val overlay = DiPlayIccoaPairingOverlay(
             context = this,
             night = appNight,

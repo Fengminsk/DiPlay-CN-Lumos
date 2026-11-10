@@ -69,7 +69,7 @@ object PhoneLinkRouter {
 
             LinkAction.START_ICCOA -> {
                 LinkLog.startCapture(context)
-                startIccoa(context, wiredOnly = IcocaSettings.usb(context)) {}
+                startIccoa(context, wiredOnly = IcocaSettings.usb(context), askPermission = false)
             }
 
             LinkAction.IGNORE -> if (PhoneLinkPolicy.needsUsbAccess(kind, source)) {
@@ -90,13 +90,18 @@ object PhoneLinkRouter {
      * and returns, so a grant that arrives afterwards can never revive it — the engine has to be
      * started with the permission already in hand.
      */
-    fun startIccoa(context: Context, wiredOnly: Boolean, onStarted: () -> Unit) {
+    fun startIccoa(
+        context: Context,
+        wiredOnly: Boolean,
+        askPermission: Boolean = false,
+        onStarted: () -> Unit = {},
+    ) {
         // Always start: the SDK must be initialised for AOA, and the scan thread has to exist before
         // the grant arrives — a grant only restarts a thread that already died, it cannot create one
         // on its own. Permission is requested in parallel and re-arms the scan when it lands.
         IcocaEngine.start(context, wiredOnly)
         onStarted()
-        if (!wiredOnly) return
+        if (!wiredOnly || !askPermission) return
         val usb = context.getSystemService(Context.USB_SERVICE) as UsbManager
         val device = usb.deviceList.values
             .firstOrNull { it.vendorId != UsbPhoneClassifier.APPLE_VENDOR_ID }
