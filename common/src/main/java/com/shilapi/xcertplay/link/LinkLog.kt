@@ -14,8 +14,10 @@ import java.util.Locale
  * evidence. This keeps a rolling file that the diagnostic report picks up, and captures the SDK's
  * own AOA lines (which never reach our code) by reading our own UID's logcat.
  *
- * Only the SDK tags below are captured: our own logging already goes through [append], and reading
- * it back from logcat as well would duplicate every line.
+ * The SDK's tag is not what the class names suggest: `EasyLog` starts with the `easylog_` prefix,
+ * but `UCarAdapter`'s static initialiser calls `EasyLog.setPrefix("UCar_")`, so every SDK line
+ * reads `UCar_AOAHostSetup`, `UCar_ShareLinkService`, … . Matching is therefore by prefix and by
+ * tag fragment, never by exact tag.
  */
 object LinkLog {
 
@@ -23,17 +25,18 @@ object LinkLog {
     private const val MAX_BYTES = 256 * 1024
     private const val FILE_NAME = "iccoa-link.log"
 
+    /** Any line whose tag contains one of these belongs to the ICCOA stack. */
+    private val sdkMarkers = listOf(
+        "UCar_", "easylog_", "UCarProtocol", "AOAHostSetup", "AOAConnectManager",
+        "AOAAccessoryReceiver", "ShareLinkService", "BluetoothLeService",
+        "WifiApService", "WifiP2pService",
+    )
+
     private val stamp = SimpleDateFormat("MM-dd HH:mm:ss.SSS", Locale.US)
     private val lock = Any()
 
     @Volatile
     private var capture: Thread? = null
-
-    private val sdkTags = arrayOf(
-        "AOAHostSetup:V", "AOAConnectManager:V", "AOAAccessoryReceiver:V",
-        "ShareLinkService:V", "UCarConnectProxy:V", "UCarAdapter:V", "UCarProtocol:V",
-        "BluetoothLeService:V", "WifiP2pService:V", "WifiApService:V",
-    )
 
     fun append(context: Context, line: String) {
         Log.i(TAG, line)
@@ -65,13 +68,14 @@ object LinkLog {
             val app = context.applicationContext
             capture = Thread({
                 try {
-                    val command = mutableListOf("logcat", "-v", "threadtime")
-                    command += "-s"
-                    command += sdkTags
-                    val process = ProcessBuilder(command).redirectErrorStream(true).start()
+                    val process = ProcessBuilder("logcat", "-v", "threadtime")
+                        .redirectErrorStream(true)
+                        .start()
                     append(app, "SDK log capture started")
                     process.inputStream.bufferedReader().forEachLine { raw ->
-                        if (raw.isNotBlank() && !raw.startsWith("---")) append(app, raw.trimEnd())
+                        if (raw.isNotBlank() && sdkMarkers.any { raw.contains(it) }) {
+                            append(app, raw.trimEnd())
+                        }
                     }
                 } catch (t: Throwable) {
                     append(app, "SDK log capture failed: ${t.javaClass.simpleName}: ${t.message}")
