@@ -10,4 +10,12 @@
     <string name="settings_cloud_log_secret_key">SecretKey</string>
     <string name="settings_cloud_log_secret_hint">密钥留空可保留已保存的值。启用开关前不会上传。</string>
     <string name="settings_cloud_log_invalid">COS 配置无效，请检查桶名、Endpoint、SecretId 和 SecretKey。</string>
+    <string name="settings_cloud_log_usb_folder">U 盘配置目录 · %1$s</string>
+    <string name="settings_cloud_log_usb_none">未选择</string>
+    <string name="settings_cloud_log_usb_selected">已选择</string>
+    <string name="settings_cloud_log_usb_description">在 U 盘根目录放入 diplay-cos.json（其他 .json 也可以）。插入 U 盘或打开本页时自动读取；文件本身不会打开上传开关。</string>
+    <string name="settings_cloud_log_usb_imported">已从 U 盘导入 COS 配置</string>
+    <string name="settings_cloud_log_usb_unchanged">U 盘中的配置已经在使用</string>
+    <string name="settings_cloud_log_usb_missing">所选目录中没有 COS 配置 JSON</string>
+    <string name="settings_cloud_log_no_file_picker">本机没有可用的文件选择器，请改用内置配置。</string>
 </resources>

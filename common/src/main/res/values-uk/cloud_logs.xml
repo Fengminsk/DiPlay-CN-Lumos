@@ -10,4 +10,12 @@
     <string name="settings_cloud_log_secret_key">SecretKey</string>
     <string name="settings_cloud_log_secret_hint">Залиште поля ключів порожніми, щоб зберегти попередні значення. Перед увімкненням нічого не надсилається.</string>
     <string name="settings_cloud_log_invalid">Неправильна конфігурація COS. Перевірте бакет, адресу, SecretId і SecretKey.</string>
+    <string name="settings_cloud_log_usb_folder">Тека налаштувань USB · %1$s</string>
+    <string name="settings_cloud_log_usb_none">Не вибрано</string>
+    <string name="settings_cloud_log_usb_selected">Вибрано</string>
+    <string name="settings_cloud_log_usb_description">Покладіть diplay-cos.json (підійде й будь-який інший .json) у корінь носія. DiPlay читає його під час підключення носія або відкриття цього екрана. Сам файл не вмикає вивантаження.</string>
+    <string name="settings_cloud_log_usb_imported">Налаштування COS імпортовано з USB</string>
+    <string name="settings_cloud_log_usb_unchanged">Налаштування з USB уже використовуються</string>
+    <string name="settings_cloud_log_usb_missing">У вибраній теці немає JSON із налаштуваннями COS</string>
+    <string name="settings_cloud_log_no_file_picker">На цьому пристрої немає засобу вибору файлів. Використайте налаштування, вбудоване в застосунок.</string>
 </resources>

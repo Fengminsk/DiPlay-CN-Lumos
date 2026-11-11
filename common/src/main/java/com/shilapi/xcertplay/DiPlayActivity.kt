@@ -360,6 +360,13 @@ class DiPlayActivity : ComponentActivity(), AppAppearanceOwner {
     private val cosConfigPicker = registerForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
         if (uri != null) importCosLogConfig(uri)
     }
+    // The drive's folder is chosen once; the grant is persisted so later plugs need no interaction.
+    private val cosUsbFolderPicker = registerForActivityResult(ActivityResultContracts.OpenDocumentTree()) { folder ->
+        if (folder == null) return@registerForActivityResult
+        CosUsbConfig.saveFolder(this, folder)
+        importFromUsb()
+    }
+    private var cosUsbWatch: java.io.Closeable? = null
 
     private var languagePreferenceAtCreate = AppLocale.SYSTEM
 
@@ -392,6 +399,9 @@ class DiPlayActivity : ComponentActivity(), AppAppearanceOwner {
         IcocaProjectionHost.attach(this)
         phoneLinkUsb = runCatching { com.shilapi.xcertplay.link.PhoneLinkUsb.attach(this) }.getOrNull()
         CloudLogArchive.start(applicationContext)
+        // A drive left plugged in must apply here too, not only when a mount broadcast arrives.
+        cosUsbWatch = runCatching { CosUsbConfig.watch(this) { onUsbConfigImported() } }.getOrNull()
+        CosUsbConfig.refresh(this) { if (it == CosUsbConfig.Result.IMPORTED) onUsbConfigImported() }
         reviewStartupPermissions()
         // Back on the home page finishes this activity while the session runs on, so the icon lands here.
         if (savedInstanceState == null && isLauncherIntent(intent) && CarPlayLiveSession.value().firstFrame &&
@@ -635,6 +645,8 @@ class DiPlayActivity : ComponentActivity(), AppAppearanceOwner {
         // The engine deliberately outlives this screen. Opening settings, going home or rotating
         // must not drop a running session; only an explicit disconnect or a protocol switch does.
         glassHome?.setPairingMode(false)
+        cosUsbWatch?.close()
+        cosUsbWatch = null
         phoneLinkUsb?.close()
         phoneLinkUsb = null
         appearanceObserverRemoval?.invoke()
@@ -1621,6 +1633,26 @@ class DiPlayActivity : ComponentActivity(), AppAppearanceOwner {
         }.onFailure { showCosConfigError() }
     }
 
+    private fun importFromUsb() {
+        CosUsbConfig.refresh(this) { result ->
+            if (isFinishing || isDestroyed) return@refresh
+            toast(getString(when (result) {
+                CosUsbConfig.Result.IMPORTED -> R.string.settings_cloud_log_usb_imported
+                CosUsbConfig.Result.UNCHANGED -> R.string.settings_cloud_log_usb_unchanged
+                CosUsbConfig.Result.MISSING, CosUsbConfig.Result.NO_FOLDER -> R.string.settings_cloud_log_usb_missing
+            }))
+            // Redraw regardless: the folder row now shows the drive that was just chosen.
+            render()
+        }
+    }
+
+    // The mount can land while the driver is on another page: report it, but only redraw this card.
+    private fun onUsbConfigImported() {
+        if (isFinishing || isDestroyed) return
+        toast(getString(R.string.settings_cloud_log_usb_imported))
+        if (page == "settings" && settingsCategory == SettingsCategory.DIAGNOSTICS) render()
+    }
+
     private fun showCosLogConfigDialog() {
         val current = CosLogSettings.load(this)
         val dialogContext = appDialogContext()
@@ -1664,6 +1696,11 @@ class DiPlayActivity : ComponentActivity(), AppAppearanceOwner {
         appDialogBuilder().setTitle(R.string.settings_cloud_log_configure)
             .setMessage(R.string.settings_cloud_log_invalid)
             .setPositiveButton(android.R.string.ok, null).show()
+    }
+
+    // Some head units ship without a document picker; opening one then throws instead of returning.
+    private fun showNoFilePicker() {
+        toast(getString(R.string.settings_cloud_log_no_file_picker))
     }
 
     internal data class SettingsSearchResult(val title: String, val category: SettingsCategory)
@@ -2071,8 +2108,17 @@ class DiPlayActivity : ComponentActivity(), AppAppearanceOwner {
             val cloudConfig = CosLogSettings.load(this)
             card.addView(button(getString(R.string.settings_cloud_log_configure), false) { showCosLogConfigDialog() }, matchButton(10, 60))
             card.addView(button(getString(R.string.settings_cloud_log_import), false) {
-                cosConfigPicker.launch(arrayOf("application/json", "text/*"))
+                runCatching { cosConfigPicker.launch(arrayOf("application/json", "text/*")) }
+                    .onFailure { showNoFilePicker() }
             }, matchButton(10, 60))
+            val usbFolderChosen = CosUsbConfig.savedFolder(this) != null
+            card.addView(button(getString(R.string.settings_cloud_log_usb_folder, getString(
+                if (usbFolderChosen) R.string.settings_cloud_log_usb_selected else R.string.settings_cloud_log_usb_none
+            )), false) {
+                runCatching { cosUsbFolderPicker.launch(null) }.onFailure { showNoFilePicker() }
+            }, matchButton(10, 60))
+            card.addView(label(getString(R.string.settings_cloud_log_usb_description), 14, MUTED)
+                .apply { setPadding(0, dp(12), 0, 0) })
             toggle(card, getString(R.string.settings_cloud_log_upload), getString(R.string.settings_cloud_log_upload_description),
                 cloudConfig?.enabled == true, cloudConfig != null) { enabled ->
                 cloudConfig?.let { CosLogSettings.save(this, it.copy(enabled = enabled)) }
@@ -5033,7 +5079,8 @@ class DiPlayActivity : ComponentActivity(), AppAppearanceOwner {
         LinkLog.append(this, "ICCOA selected: wired=$wired")
         // Wired needs the USB grant *before* the SDK scans: the SDK reads the serial number before
         // checking permission and a SecurityException kills its scan thread for good.
-        PhoneLinkRouter.startIccoa(this, wiredOnly = wired, askPermission = true) { iccoaStarted = true }
+        PhoneLinkRouter.startIccoa(this, wiredOnly = wired, askPermission = true,
+            retryIfStarted = true) { iccoaStarted = true }
         val overlay = DiPlayIccoaPairingOverlay(
             context = this,
             night = appNight,
@@ -5098,6 +5145,7 @@ class DiPlayActivity : ComponentActivity(), AppAppearanceOwner {
 
     private fun connect(wireless: Boolean) {
         if (carPlayOverlay != null && carPlayAutoOpen) return
+        CarPlayConnectionTrace.append(this, "tap wireless=$wireless requestedFps=${AirPlayPersistence.loadFps(this)}")
         markCarplaySetupDone()
         startupHotspotCancelled = true
         if (wireless && pendingCarHotspotSetup) { toast(getString(R.string.save_your_hotspot_details_in_connection_setup_first)); page = "connection"; render(); return }

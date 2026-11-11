@@ -10,4 +10,12 @@
     <string name="settings_cloud_log_secret_key">SecretKey</string>
     <string name="settings_cloud_log_secret_hint">Leave credentials blank to keep saved values. Cloud upload is off until you enable it.</string>
     <string name="settings_cloud_log_invalid">Invalid COS configuration. Check bucket, endpoint, SecretId and SecretKey.</string>
+    <string name="settings_cloud_log_usb_folder">USB config folder · %1$s</string>
+    <string name="settings_cloud_log_usb_none">Not selected</string>
+    <string name="settings_cloud_log_usb_selected">Selected</string>
+    <string name="settings_cloud_log_usb_description">Put diplay-cos.json (any other .json works too) in the root of the drive. DiPlay reads it when the drive is plugged in or this screen opens. The file never switches upload on.</string>
+    <string name="settings_cloud_log_usb_imported">COS settings imported from USB</string>
+    <string name="settings_cloud_log_usb_unchanged">The USB configuration is already in use</string>
+    <string name="settings_cloud_log_usb_missing">No COS JSON found in the selected folder</string>
+    <string name="settings_cloud_log_no_file_picker">This head unit has no file picker. Use a configuration built into the app instead.</string>
 </resources>

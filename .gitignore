@@ -50,3 +50,6 @@ __pycache__/
 # Local CarPlay accessory identity; never commit
 .local-mfi/
 
+# Local default COS log configuration baked into private builds; never commit
+.local-cos/
+

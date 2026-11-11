@@ -10,4 +10,12 @@
     <string name="settings_cloud_log_secret_key">SecretKey</string>
     <string name="settings_cloud_log_secret_hint">Deja las claves vacías para conservar los valores guardados. La subida permanece desactivada hasta que la actives.</string>
     <string name="settings_cloud_log_invalid">Configuración COS no válida. Revisa depósito, endpoint, SecretId y SecretKey.</string>
+    <string name="settings_cloud_log_usb_folder">Carpeta de configuración USB · %1$s</string>
+    <string name="settings_cloud_log_usb_none">Sin seleccionar</string>
+    <string name="settings_cloud_log_usb_selected">Seleccionada</string>
+    <string name="settings_cloud_log_usb_description">Coloca diplay-cos.json (también vale cualquier otro .json) en la raíz de la unidad. DiPlay lo lee al conectar la unidad o abrir esta pantalla. El archivo nunca activa la subida.</string>
+    <string name="settings_cloud_log_usb_imported">Configuración COS importada desde USB</string>
+    <string name="settings_cloud_log_usb_unchanged">La configuración del USB ya está en uso</string>
+    <string name="settings_cloud_log_usb_missing">No se encontró ningún JSON de COS en la carpeta seleccionada</string>
+    <string name="settings_cloud_log_no_file_picker">Esta unidad no tiene selector de archivos. Usa una configuración incluida en la aplicación.</string>
 </resources>

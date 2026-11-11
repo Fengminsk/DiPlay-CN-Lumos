@@ -10,4 +10,12 @@
     <string name="settings_cloud_log_secret_key">SecretKey</string>
     <string name="settings_cloud_log_secret_hint">金鑰留空可保留已儲存的值。啟用開關前不會上傳。</string>
     <string name="settings_cloud_log_invalid">COS 設定無效，請檢查儲存桶、Endpoint、SecretId 和 SecretKey。</string>
+    <string name="settings_cloud_log_usb_folder">隨身碟設定目錄 · %1$s</string>
+    <string name="settings_cloud_log_usb_none">未選擇</string>
+    <string name="settings_cloud_log_usb_selected">已選擇</string>
+    <string name="settings_cloud_log_usb_description">在隨身碟根目錄放入 diplay-cos.json（其他 .json 也可以）。插入隨身碟或開啟本頁時自動讀取；檔案本身不會開啟上傳開關。</string>
+    <string name="settings_cloud_log_usb_imported">已從隨身碟匯入 COS 設定</string>
+    <string name="settings_cloud_log_usb_unchanged">隨身碟中的設定已在使用</string>
+    <string name="settings_cloud_log_usb_missing">所選目錄中沒有 COS 設定 JSON</string>
+    <string name="settings_cloud_log_no_file_picker">本機沒有可用的檔案選擇器，請改用內建設定。</string>
 </resources>

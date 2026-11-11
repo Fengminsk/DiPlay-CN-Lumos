@@ -58,6 +58,7 @@ class DiPlaySessionService : Service() {
     override fun onCreate() { super.onCreate(); instance = this }
     override fun onBind(intent: Intent?): IBinder? = null
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        CarPlayConnectionTrace.append(this, "service command=${intent?.action ?: "none"}")
         if (intent?.action == ACTION_STOP) {
             stopSession()
             return START_NOT_STICKY
@@ -121,11 +122,13 @@ class DiPlaySessionService : Service() {
         if (stopping || tearingDown || controller != null) return
         val current = ++generation
         CarPlayLiveSession.preparing()
+        CarPlayConnectionTrace.append(this, "start generation=$current wireless=${AirPlayPersistence.loadWirelessEnabled(this)} requestedFps=${AirPlayPersistence.loadFps(this)}")
         try {
             DiPlayBootstrap.ensure(this, AirPlayPersistence.loadMfiTarget(this))
             sessionWireless = AirPlayPersistence.loadWirelessEnabled(this)
             val configuration = CarPlaySessionConfig.create(this, width, height)
             val airPlay = configuration.airPlay
+            CarPlayConnectionTrace.append(this, "configured generation=$current fps=${airPlay.main.fps} size=${airPlay.main.widthPixels}x${airPlay.main.heightPixels}")
             val offscreen = FirstFrameOutput(airPlay.main.widthPixels, airPlay.main.heightPixels)
             output = offscreen
             val renderer = AndroidMediaSink(
@@ -184,6 +187,7 @@ class DiPlaySessionService : Service() {
             next.start()
         } catch (error: Throwable) {
             Log.e(TAG, "CarPlay session could not start", error)
+            CarPlayConnectionTrace.append(this, "start failed generation=$current type=${error.javaClass.simpleName}")
             CarPlayLiveSession.reconnecting("Connection failed: ${error.message ?: error.javaClass.simpleName}")
             scheduleReconnect("startup failed", WirelessStartupFailure.FIRST_TCP_TIMEOUT)
         }
@@ -198,6 +202,7 @@ class DiPlaySessionService : Service() {
                 reconnectAttempts = 0
                 CarPlayLiveSession.connected()
                 Log.i(TAG, "AirPlay session active generation=$current")
+                CarPlayConnectionTrace.append(this@DiPlaySessionService, "AirPlay active generation=$current")
                 uiListener?.onSessionActive(session)
             }
         }
@@ -207,6 +212,7 @@ class DiPlaySessionService : Service() {
                 CarPlayLiveSession.streaming(getString(R.string.carplay_connected))
                 DiPlayPreferences.saveLastUsedWireless(this@DiPlaySessionService, sessionWireless)
                 Log.i(TAG, "first decoded frame rendered generation=$current")
+                CarPlayConnectionTrace.append(this@DiPlaySessionService, "first frame generation=$current")
                 if (retryBudget.firstFrame(session, SystemClock.elapsedRealtime())) {
                     main.postDelayed({
                         if (current == generation && activeSession === session &&
@@ -226,6 +232,7 @@ class DiPlaySessionService : Service() {
                 retryBudget.disconnected()
                 CarPlayLiveSession.reconnecting("CarPlay disconnected; reconnecting")
                 Log.i(TAG, "AirPlay session ended generation=$current")
+                CarPlayConnectionTrace.append(this@DiPlaySessionService, "AirPlay ended generation=$current")
                 uiListener?.onSessionEnded(session)
                 scheduleReconnect("AirPlay session ended")
             }
@@ -238,7 +245,12 @@ class DiPlaySessionService : Service() {
                 scheduleReconnect(message)
             }
         }
-        override fun onDebugLog(message: String) { uiListener?.onDebugLog(message) }
+        override fun onDebugLog(message: String) {
+            if (message.startsWith(CarPlayController.CONNECTION_DIAGNOSTIC_PREFIX)) {
+                CarPlayConnectionTrace.append(this@DiPlaySessionService, message)
+            }
+            uiListener?.onDebugLog(message)
+        }
         override fun onCommand(session: AirPlaySession, type: String, params: Map<String, Any?>) {
             uiListener?.onCommand(session, type, params)
         }
@@ -254,6 +266,8 @@ class DiPlaySessionService : Service() {
             if (current != generation || stopping) return@post
             lastStatus = status
             Log.i(TAG, "status=${status.javaClass.simpleName} generation=$current")
+            CarPlayConnectionTrace.append(this, "status=${status.javaClass.simpleName} generation=$current" +
+                if (status is CarPlayStatus.Failed) " failure=${status.startupFailure}" else "")
             uiStatus?.invoke(status)
             if (status is CarPlayStatus.Failed) {
                 val message = when {
@@ -324,6 +338,7 @@ class DiPlaySessionService : Service() {
     private fun restartSession(reason: String) {
         if (stopping) return
         Log.i(TAG, "Restarting CarPlay: $reason")
+        CarPlayConnectionTrace.append(this, "restart reason=$reason")
         val old = controller
         val oldSink = sink
         val oldOutput = output
@@ -357,6 +372,7 @@ class DiPlaySessionService : Service() {
 
     private fun stopSession(completion: () -> Unit = {}) {
         if (stopping) { completion(); return }
+        CarPlayConnectionTrace.append(this, "stop generation=$generation")
         stopping = true
         tearingDown = true
         ++generation

@@ -74,6 +74,16 @@ class PhoneLinkPolicyTest {
     }
 
     @Test
+    fun soleChargingOnlyVendorInterfaceCanBeProbedAfterAnExplicitWiredTap() {
+        assertTrue(UsbPhoneClassifier.possibleChargingOnlyAndroid(
+            signature(0x22d9, 0x1234, Triple(0xff, 0, 0))))
+        assertFalse(UsbPhoneClassifier.possibleChargingOnlyAndroid(
+            signature(0x0781, 0x5567, Triple(0x08, 0x06, 0x50))))
+        assertFalse(UsbPhoneClassifier.possibleChargingOnlyAndroid(
+            signature(UsbPhoneClassifier.APPLE_VENDOR_ID, 0x12a8, Triple(0xff, 0, 0))))
+    }
+
+    @Test
     fun anIphoneAlwaysStartsCarPlay() {
         assertEquals(LinkAction.START_CARPLAY, PhoneLinkPolicy.decide(PhoneKind.IPHONE))
     }
@@ -94,5 +104,28 @@ class PhoneLinkPolicyTest {
         assertTrue(PhoneLinkPolicy.needsUsbAccess(PhoneKind.ANDROID, ProjectionSource.ICCOA))
         assertFalse(PhoneLinkPolicy.needsUsbAccess(PhoneKind.IPHONE, ProjectionSource.CARPLAY))
         assertFalse(PhoneLinkPolicy.needsUsbAccess(PhoneKind.IPHONE, ProjectionSource.ICCOA))
+    }
+
+    @Test
+    fun aFailedWiredAttemptCanSwitchToWirelessWithoutRestartingTheApp() {
+        assertTrue(PhoneLinkRouter.shouldStartIccoa(
+            started = true, connected = false, currentWiredOnly = true,
+            requestedWiredOnly = false, explicitRetry = true))
+        assertTrue(PhoneLinkRouter.shouldStartIccoa(
+            started = true, connected = false, currentWiredOnly = false,
+            requestedWiredOnly = true, explicitRetry = true))
+        assertTrue(PhoneLinkRouter.shouldStartIccoa(
+            started = true, connected = false, currentWiredOnly = false,
+            requestedWiredOnly = false, explicitRetry = true))
+    }
+
+    @Test
+    fun aRepeatedUsbAttachDoesNotRestartAnActiveIccoaSession() {
+        assertFalse(PhoneLinkRouter.shouldStartIccoa(
+            started = true, connected = true, currentWiredOnly = false,
+            requestedWiredOnly = true, explicitRetry = false))
+        assertFalse(PhoneLinkRouter.shouldStartIccoa(
+            started = true, connected = false, currentWiredOnly = true,
+            requestedWiredOnly = true, explicitRetry = false))
     }
 }

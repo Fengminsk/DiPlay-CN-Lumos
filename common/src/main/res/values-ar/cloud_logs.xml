@@ -10,4 +10,12 @@
     <string name="settings_cloud_log_secret_key">SecretKey</string>
     <string name="settings_cloud_log_secret_hint">اترك حقول المفاتيح فارغة للإبقاء على القيم المحفوظة. لن يبدأ الرفع حتى تفعّله.</string>
     <string name="settings_cloud_log_invalid">إعداد COS غير صالح. تحقق من الحاوية ونقطة النهاية وSecretId وSecretKey.</string>
+    <string name="settings_cloud_log_usb_folder">مجلد إعدادات USB · %1$s</string>
+    <string name="settings_cloud_log_usb_none">غير محدد</string>
+    <string name="settings_cloud_log_usb_selected">محدد</string>
+    <string name="settings_cloud_log_usb_description">ضع diplay-cos.json (أي ملف .json آخر يعمل أيضًا) في جذر محرك الأقراص. يقرأه DiPlay عند توصيل المحرك أو فتح هذه الشاشة. الملف نفسه لا يفعّل الرفع.</string>
+    <string name="settings_cloud_log_usb_imported">تم استيراد إعدادات COS من USB</string>
+    <string name="settings_cloud_log_usb_unchanged">إعدادات USB قيد الاستخدام بالفعل</string>
+    <string name="settings_cloud_log_usb_missing">لا يوجد ملف JSON لإعدادات COS في المجلد المحدد</string>
+    <string name="settings_cloud_log_no_file_picker">لا يوجد منتقي ملفات على هذه الوحدة. استخدم إعدادًا مضمنًا في التطبيق.</string>
 </resources>

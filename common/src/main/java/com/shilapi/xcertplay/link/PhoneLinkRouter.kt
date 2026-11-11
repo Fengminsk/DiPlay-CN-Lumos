@@ -10,6 +10,7 @@ import com.shilapi.xcertplay.AirPlayPersistence
 import com.shilapi.xcertplay.CarPlayBackgroundSession
 import com.shilapi.xcertplay.DiPlayActivity
 import com.shilapi.xcertplay.IcocaSettings
+import com.andrerinas.openheadunit.connection.IcocaBridge
 import com.shilapi.xcertplay.icoca.IcocaEngine
 
 /**
@@ -104,25 +105,46 @@ object PhoneLinkRouter {
         context: Context,
         wiredOnly: Boolean,
         askPermission: Boolean = false,
+        retryIfStarted: Boolean = false,
         onStarted: () -> Unit = {},
     ) {
         val start = {
-            if (!IcocaEngine.isStarted(context)) {
+            val engine = IcocaEngine.bridge(context)
+            val active = engine.state.value.phase == IcocaBridge.Phase.Connected
+            // An earlier wired attempt leaves the process-wide SDK in USB-only mode. A later
+            // wireless tap must re-enter start() so it clears that mode and starts BLE advertising.
+            if (shouldStartIccoa(engine.isStarted, active, engine.manager.isUsbOnly,
+                    wiredOnly, retryIfStarted)) {
                 IcocaEngine.start(context, wiredOnly)
             }
             onStarted()
         }
-        if (!IcocaSettings.usb(context) || !askPermission) {
+        if (!wiredOnly || !askPermission) {
             start()
             return
         }
         val usb = context.getSystemService(Context.USB_SERVICE) as UsbManager
-        val device = usb.deviceList.values
+        val attached = usb.deviceList.values.toList()
+        LinkLog.append(context, "wired: USB devices=" + attached.joinToString { device ->
+            val interfaces = runCatching {
+                (0 until device.interfaceCount).joinToString("/") { index ->
+                    device.getInterface(index).let { "${it.interfaceClass}:${it.interfaceSubclass}:${it.interfaceProtocol}" }
+                }
+            }.getOrDefault("unavailable")
+            "${device.vendorId.toString(16)}:${device.productId.toString(16)}[$interfaces]"
+        })
+        val device = attached
             .firstOrNull { UsbPhoneClassifier.classify(signature(it)) == PhoneKind.ANDROID }
+            ?: attached.singleOrNull()?.takeIf {
+                UsbPhoneClassifier.possibleChargingOnlyAndroid(signature(it))
+            }
         if (device == null) {
             LinkLog.append(context, "wired: no phone attached yet, waiting for the attach event")
             start()
             return
+        }
+        if (UsbPhoneClassifier.classify(signature(device)) == PhoneKind.UNKNOWN) {
+            LinkLog.append(context, "wired: trying sole vendor-specific device in charging-only mode")
         }
         if (UsbPermissionBroker.has(context, device)) {
             LinkLog.append(context, "wired: permission already held")
@@ -135,6 +157,10 @@ object PhoneLinkRouter {
         UsbPermissionBroker.request(context, device) { granted ->
             LinkLog.append(context, "wired: permission granted=$granted")
             if (granted) {
+                if (!IcocaSettings.usb(context) || IcocaSettings.wireless(context)) {
+                    LinkLog.append(context, "wired: permission arrived after transport changed; ignoring old request")
+                    return@request
+                }
                 val alreadyStarted = IcocaEngine.isStarted(context)
                 start()
                 if (alreadyStarted) IcocaEngine.refreshUsb(context)
@@ -179,4 +205,8 @@ object PhoneLinkRouter {
     /** Convenience for intent-driven call sites. */
     fun onUsbIntent(context: Context, intent: Intent?): LinkAction? =
         attachedDevice(intent)?.let { onUsbAttached(context, it) }
+
+    internal fun shouldStartIccoa(started: Boolean, connected: Boolean, currentWiredOnly: Boolean,
+                                  requestedWiredOnly: Boolean, explicitRetry: Boolean): Boolean =
+        !started || !connected && (currentWiredOnly != requestedWiredOnly || explicitRetry)
 }

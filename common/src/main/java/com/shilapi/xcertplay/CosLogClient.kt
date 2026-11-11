@@ -11,13 +11,13 @@ import javax.net.ssl.HttpsURLConnection
 
 /** Minimal COS XML API PUT client, adapted from CarsBridge's CosUploadClient. */
 internal class CosLogClient(private val settings: CosLogSettings) {
-    fun put(key: String, body: ByteArray) {
+    fun put(key: String, body: ByteArray, contentType: String) {
         require(settings.valid())
-        require(key.matches(Regex("Logs/[A-Za-z0-9_.]+/[A-Za-z0-9_./-]+\\.log\\.gz")))
+        require(key.matches(Regex("Logs/[A-Za-z0-9_.]+/[A-Za-z0-9_./-]+\\.log")))
         val host = "${settings.bucket}.${settings.endpoint}"
         val path = "/$key"
         val md5 = Base64.encodeToString(MessageDigest.getInstance("MD5").digest(body), Base64.NO_WRAP)
-        val headers = sortedMapOf("content-md5" to md5, "content-type" to "application/gzip", "host" to host)
+        val headers = sortedMapOf("content-md5" to md5, "content-type" to contentType, "host" to host)
         val now = System.currentTimeMillis() / 1000
         val period = "${now - 60};${now + 900}"
         val authorization = authorize(settings.secretId, settings.secretKey, path, headers, period)
@@ -29,7 +29,7 @@ internal class CosLogClient(private val settings: CosLogSettings) {
             connection.readTimeout = 20_000
             connection.doOutput = true
             connection.setFixedLengthStreamingMode(body.size)
-            connection.setRequestProperty("Content-Type", "application/gzip")
+            connection.setRequestProperty("Content-Type", contentType)
             connection.setRequestProperty("Content-MD5", md5)
             connection.setRequestProperty("Authorization", authorization)
             connection.outputStream.use { it.write(body) }

@@ -30,7 +30,17 @@ internal data class CosLogSettings(
             }
         }
 
-        fun load(context: Context): CosLogSettings? = runCatching {
+        fun load(context: Context): CosLogSettings? = saved(context) ?: bakedDefault(context)
+
+        // A private build can bake one configuration into the APK. It seeds the on-device setting
+        // once; afterwards the driver's own value wins, including switching upload off.
+        private fun bakedDefault(context: Context): CosLogSettings? = runCatching {
+            val text = context.assets.open("cos-log-default.json").bufferedReader(Charsets.UTF_8)
+                .use { it.readText() }
+            fromJson(text, JSONObject(text).optBoolean("enabled", false)).also { save(context, it) }
+        }.getOrNull()
+
+        private fun saved(context: Context): CosLogSettings? = runCatching {
             val file = AtomicFile(File(context.noBackupFilesDir, "cos-log-settings.json"))
             if (!file.baseFile.exists()) null
             else {

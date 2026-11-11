@@ -37,7 +37,7 @@ class DiPlayReleaseHistoryTest {
         val lumos = assets.open("LUMOS_CHANGELOG.md").bufferedReader().use { it.readText() }
         val cn = assets.open("CN_OPTIMIZATIONS.md").bufferedReader().use { it.readText() }
         val entries = DiPlayReleaseHistory.parse("$lumos\n$cn")
-        assertEquals("Lumos · 采纳 CN 新版修复", entries.first().version)
+        assertEquals("Lumos · 0.2.15-cn.7-lumos.1", entries.first().version)
         assertEquals("0.2.15-cn.7", entries.first { it.version.startsWith("0.") }.version)
         assertEquals("0.2.7-cn.1", entries.last().version)
     }

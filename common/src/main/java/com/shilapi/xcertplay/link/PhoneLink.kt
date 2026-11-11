@@ -72,6 +72,12 @@ object UsbPhoneClassifier {
         return PhoneKind.UNKNOWN
     }
 
+    /** Only for an explicit wired ICCOA tap when this is the sole attached USB device. */
+    fun possibleChargingOnlyAndroid(signature: UsbPhoneSignature): Boolean =
+        signature.vendorId != APPLE_VENDOR_ID &&
+            classify(signature) == PhoneKind.UNKNOWN &&
+            signature.interfaces.any { it.interfaceClass == CLASS_VENDOR_SPECIFIC }
+
     private fun UsbPhoneSignature.UsbInterfaceSignature.isAdb(): Boolean =
         interfaceClass == CLASS_VENDOR_SPECIFIC && subClass == ADB_SUBCLASS && protocol == ADB_PROTOCOL
 }

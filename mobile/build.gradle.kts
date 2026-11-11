@@ -12,9 +12,28 @@ plugins {
     alias(libs.plugins.kotlin.compose)
 }
 
-// Optional local-only input. CI and ordinary source builds contain no accessory identity.
+// Runtime identity input. The explicit environment directory wins; otherwise the checkout's own
+// local runtime identity is used, so an ordinary local build is standalone instead of silently
+// losing CarPlay. GitHub CI has neither and stays source-only, which is the documented default.
 val localAuthenticationAssets = providers.environmentVariable("DIPLAY_AUTH_ASSETS_DIR")
     .orNull?.let { file(it).canonicalFile }
+    ?: rootProject.file(".local-mfi").takeIf { it.isDirectory }?.canonicalFile
+
+// Optional default COS log configuration. An explicit DIPLAY_COS_CONFIG wins; otherwise the ignored
+// .local-cos/diplay-cos.json is baked into the APK as an asset, so a private build needs no USB file.
+// The asset is extractable from the APK: ship only a least-privilege key this way.
+val localCosConfig = providers.environmentVariable("DIPLAY_COS_CONFIG")
+    .orNull?.let { file(it).canonicalFile }
+    ?: rootProject.file(".local-cos/diplay-cos.json").takeIf { it.isFile }?.canonicalFile
+
+val cosDefaultAssets = layout.buildDirectory.dir("generated/cosDefaults")
+val copyCosDefaultConfig = tasks.register<Sync>("copyCosDefaultConfig") {
+    group = "build"
+    description = "Bake the local default COS log configuration into the APK assets."
+    localCosConfig?.let { from(it) }
+    rename { "cos-log-default.json" }
+    into(cosDefaultAssets)
+}
 
 android {
     namespace = "com.shilapi.xcertplay"
@@ -26,13 +45,14 @@ android {
         applicationId = "com.shihab.diplay.cn"
         minSdk = 25
         targetSdk = 37
-        versionCode = 98
-        versionName = "0.2.15-cn.7"
+        versionCode = 99
+        versionName = "0.2.15-cn.7-lumos.1"
 
     }
 
 
     localAuthenticationAssets?.let { sourceSets.getByName("main").assets.srcDir(it) }
+    sourceSets.getByName("main").assets.srcDir(cosDefaultAssets.get().asFile)
 
     signingConfigs {
         create("release") {
@@ -100,6 +120,8 @@ val credentialAssets = files(android.sourceSets.flatMap { source ->
 val rejectBundledCredentials by tasks.registering {
     group = "verification"
     description = "Reject unexpected credential files in APK assets."
+    // The baked COS default lives in a generated asset directory this check inspects.
+    dependsOn(copyCosDefaultConfig)
     val filesToCheck = credentialAssets
     val allowed = localAuthenticationAssets?.let { dir ->
         listOf("identity.pk8", "certificate.p7b").map { dir.resolve("offline-mfi/$it").canonicalFile }.toSet()
@@ -111,7 +133,7 @@ val rejectBundledCredentials by tasks.registering {
         check(unexpected.isEmpty()) { "Unexpected credential files in APK assets" }
     }
 }
-tasks.named("preBuild") { dependsOn(rejectBundledCredentials) }
+tasks.named("preBuild") { dependsOn(rejectBundledCredentials, copyCosDefaultConfig) }
 
 // Car-test packages must be standalone. Keep ordinary source/CI builds identity-free.
 val verifyStandaloneAuthentication by tasks.registering {
@@ -120,7 +142,8 @@ val verifyStandaloneAuthentication by tasks.registering {
     val directory = localAuthenticationAssets
     doLast {
         check(directory != null) {
-            "Standalone car builds require DIPLAY_AUTH_ASSETS_DIR; assembleDebug alone is source-only."
+            "No runtime identity for a standalone APK: set DIPLAY_AUTH_ASSETS_DIR or put " +
+                "offline-mfi/identity.pk8 and offline-mfi/certificate.p7b in .local-mfi/."
         }
         check(listOf("identity.pk8", "certificate.p7b").all {
             directory.resolve("offline-mfi/$it").let { file -> file.isFile && file.length() > 0 }
@@ -137,6 +160,13 @@ tasks.register("assembleStandaloneRelease") {
     group = "build"
     description = "Build a standalone release APK with explicitly provisioned authentication."
     dependsOn(verifyStandaloneAuthentication, "assembleRelease")
+}
+
+// A release package is what reaches a car, so it must never be built without the runtime identity.
+// DIPLAY_ALLOW_SOURCE_ONLY=1 is the explicit opt-out for tooling that only needs a source artifact.
+if (providers.environmentVariable("DIPLAY_ALLOW_SOURCE_ONLY").orNull != "1") {
+    tasks.matching { it.name == "assembleRelease" }
+        .configureEach { dependsOn(verifyStandaloneAuthentication) }
 }
 
 // =============================================================================================

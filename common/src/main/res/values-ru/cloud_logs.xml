@@ -10,4 +10,12 @@
     <string name="settings_cloud_log_secret_key">SecretKey</string>
     <string name="settings_cloud_log_secret_hint">Оставьте ключи пустыми, чтобы сохранить прежние значения. Загрузка начнётся после включения.</string>
     <string name="settings_cloud_log_invalid">Неверная конфигурация COS. Проверьте бакет, адрес, SecretId и SecretKey.</string>
+    <string name="settings_cloud_log_usb_folder">Папка настроек USB · %1$s</string>
+    <string name="settings_cloud_log_usb_none">Не выбрана</string>
+    <string name="settings_cloud_log_usb_selected">Выбрана</string>
+    <string name="settings_cloud_log_usb_description">Положите diplay-cos.json (подойдёт и любой другой .json) в корень накопителя. DiPlay читает его при подключении накопителя или открытии этого экрана. Сам файл не включает загрузку.</string>
+    <string name="settings_cloud_log_usb_imported">Настройки COS импортированы с USB</string>
+    <string name="settings_cloud_log_usb_unchanged">Настройки с USB уже используются</string>
+    <string name="settings_cloud_log_usb_missing">В выбранной папке нет JSON с настройками COS</string>
+    <string name="settings_cloud_log_no_file_picker">На этом устройстве нет выбора файлов. Используйте настройку, встроенную в приложение.</string>
 </resources>
