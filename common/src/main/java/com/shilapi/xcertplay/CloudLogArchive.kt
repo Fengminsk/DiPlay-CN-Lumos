@@ -2,6 +2,7 @@ package com.shilapi.xcertplay
 
 import android.content.Context
 import android.util.Log
+import com.shilapi.xcertplay.link.LinkLog
 import java.io.File
 import java.io.RandomAccessFile
 import java.text.SimpleDateFormat
@@ -22,7 +23,9 @@ internal object CloudLogArchive {
     private const val PREFS = "cloud_log_offsets"
     private const val KEY_OFFSET = "offset"
     private const val SOURCE = "diplay.log"
-    private val sources = listOf(SOURCE, "iccoa-link.log", CarPlayConnectionTrace.FILE_NAME)
+    internal val sources = listOf(
+        SOURCE, "iccoa-link.log", LinkLog.AOA_PROBE_FILE_NAME, CarPlayConnectionTrace.FILE_NAME,
+    )
     // One minute's slice is normally a few KB; the cap only bounds a long offline backlog per retry.
     private const val MAX_SEGMENT_BYTES = 256 * 1024
     private const val INTERVAL_SECONDS = 60L

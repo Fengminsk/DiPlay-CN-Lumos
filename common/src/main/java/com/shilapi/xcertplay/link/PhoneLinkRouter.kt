@@ -108,7 +108,7 @@ object PhoneLinkRouter {
         retryIfStarted: Boolean = false,
         onStarted: () -> Unit = {},
     ) {
-        val start = {
+        val startEngine = {
             val engine = IcocaEngine.bridge(context)
             val active = engine.state.value.phase == IcocaBridge.Phase.Connected
             // An earlier wired attempt leaves the process-wide SDK in USB-only mode. A later
@@ -117,10 +117,10 @@ object PhoneLinkRouter {
                     wiredOnly, retryIfStarted)) {
                 IcocaEngine.start(context, wiredOnly)
             }
-            onStarted()
         }
         if (!wiredOnly || !askPermission) {
-            start()
+            startEngine()
+            onStarted()
             return
         }
         val usb = context.getSystemService(Context.USB_SERVICE) as UsbManager
@@ -140,30 +140,59 @@ object PhoneLinkRouter {
             }
         if (device == null) {
             LinkLog.append(context, "wired: no phone attached yet, waiting for the attach event")
-            start()
+            // A fresh SDK scan here races the USB permission dialog on the next attach and also
+            // prevents an exclusive preflight. The attach broadcast will grant and start it.
+            if (IcocaEngine.isStarted(context)) {
+                startEngine()
+                onStarted()
+            } else {
+                LinkLog.append(context, "wired: SDK start deferred until USB attach and AOA probe")
+            }
             return
         }
         if (UsbPhoneClassifier.classify(signature(device)) == PhoneKind.UNKNOWN) {
             LinkLog.append(context, "wired: trying sole vendor-specific device in charging-only mode")
         }
+        val startAfterGrant = {
+            if (!IcocaSettings.usb(context) || IcocaSettings.wireless(context)) {
+                LinkLog.append(context, "wired: transport changed before AOA probe completed; ignoring old request")
+            } else if (IcocaEngine.isStarted(context)) {
+                LinkLog.appendProbe(context, "AOA probe: skipped; ICCOA SDK already active")
+                startEngine()
+                IcocaEngine.refreshUsb(context)
+                onStarted()
+            } else {
+                IccoaAoaProbe.beforeSdk(context, device) { startSdk ->
+                    if (!IcocaSettings.usb(context) || IcocaSettings.wireless(context)) {
+                        LinkLog.appendProbe(context, "AOA probe: transport changed before SDK start")
+                        return@beforeSdk
+                    }
+                    if (startSdk) {
+                        val stillAttached = usb.deviceList.values.any { it.deviceId == device.deviceId }
+                        if (!stillAttached) {
+                            LinkLog.appendProbe(context, "AOA probe: device detached before SDK start")
+                            return@beforeSdk
+                        }
+                        if (IcocaEngine.isStarted(context)) {
+                            LinkLog.appendProbe(context, "AOA probe: SDK became active during probe; keeping its state")
+                        } else {
+                            startEngine()
+                        }
+                    }
+                    onStarted()
+                }
+            }
+        }
         if (UsbPermissionBroker.has(context, device)) {
             LinkLog.append(context, "wired: permission already held")
-            val alreadyStarted = IcocaEngine.isStarted(context)
-            start()
-            if (alreadyStarted) IcocaEngine.refreshUsb(context)
+            startAfterGrant()
             return
         }
         LinkLog.append(context, "wired: asking for USB permission")
         UsbPermissionBroker.request(context, device) { granted ->
             LinkLog.append(context, "wired: permission granted=$granted")
             if (granted) {
-                if (!IcocaSettings.usb(context) || IcocaSettings.wireless(context)) {
-                    LinkLog.append(context, "wired: permission arrived after transport changed; ignoring old request")
-                    return@request
-                }
-                val alreadyStarted = IcocaEngine.isStarted(context)
-                start()
-                if (alreadyStarted) IcocaEngine.refreshUsb(context)
+                startAfterGrant()
             }
         }
     }

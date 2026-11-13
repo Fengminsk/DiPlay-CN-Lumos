@@ -146,4 +146,16 @@ class DiagnosticRedactorTest {
         for (line in lines) assertEquals(line, line, DiagnosticRedactor.redact(line))
         assertNull(DiagnosticRedactor.redact("airplay rx POST /pair-verify body=secret"))
     }
+
+    @Test fun usbHandshakeAndCallMarkersSurviveCloudRedaction() {
+        val lines = listOf(
+            "AOA probe: GET_PROTOCOL attempt=2 result=2 version=2 elapsedMs=5 present=true permission=true bus=2717:ff48",
+            "AOA probe: SEND_STRING index=2 attempt=1 result=-1 expected=15 elapsedMs=4 present=true permission=true bus=2717:ff48",
+            "AOA SDK stage=description-failed occurrences=16",
+            "usb bus reason=transport-error state=5ac:12a8#1017/permission=true elapsedMs=123456",
+            "USBMUX session failure reason=Android returned no USBMUX read request cause=none",
+            "call media generation=3 uplink started=true type=100 speaker=false elapsedMs=123456",
+        )
+        for (line in lines) assertEquals(line, DiagnosticRedactor.redact(line))
+    }
 }

@@ -348,6 +348,7 @@ class Iap2UsbSession internal constructor(
         if (data.isEmpty()) return@synchronized
         val transferred = connection.bulkTransfer(outEndpoint, data, data.size, timeoutMillis)
         if (transferred != data.size) {
+            runCatching { onDiagnostic("USBMUX write failure transferred=$transferred requested=${data.size}") }
             throw IphoneUsbException.DeviceUnavailable(
                 "USBMUX write transferred $transferred of ${data.size} bytes",
             )
@@ -452,6 +453,9 @@ class Iap2UsbSession internal constructor(
 
     private fun failSession(message: String, cause: Throwable? = null): IphoneUsbException.DeviceUnavailable {
         val error = IphoneUsbException.DeviceUnavailable(message, cause)
+        runCatching {
+            onDiagnostic("USBMUX session failure reason=$message cause=${cause?.javaClass?.simpleName ?: "none"}")
+        }
         synchronized(stateLock) {
             if (failure == null) failure = error
         }

@@ -139,6 +139,19 @@ class TelephonyMicrophoneTest {
         assertFalse(microphone.joinToString("\n").contains("head="))
     }
 
+    @Test fun callDiagnosticRecordsOnlyCallStreamTransitions() {
+        sink.close()
+        val events = CopyOnWriteArrayList<String>()
+        sink = AndroidMediaSink(context = context, onCallDiagnostic = events::add)
+        sink.onMicrophoneStarted(telephony, config("telephony"))
+        awaitCapture()
+        sink.onMicrophoneStopped(telephony)
+        assertTrue(events.any { it == "uplink requested type=100" })
+        assertTrue(events.any { it.startsWith("uplink started=true type=100") })
+        assertTrue(events.any { it == "uplink stopped type=100" })
+        assertFalse(events.any { it.contains("sample=") || it.contains("address=") })
+    }
+
     @Test fun diagnosticCallbackFailureDoesNotStopSpeechRecognitionCapture() {
         sink.close()
         sink = AndroidMediaSink(context = context, onAudioDiagnostic = { throw IllegalStateException("diagnostic callback failed") })

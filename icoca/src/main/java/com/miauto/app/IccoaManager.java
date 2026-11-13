@@ -1695,32 +1695,32 @@ public class IccoaManager {
         initSdk(config);
     }
 
-    /**
-     * 原生库自检 —— 只读，不改行为，纯粹为了让老车机上的失败原因一眼可见。
-     *
-     * <p>SDK 的解码器 {@code libovmsink.so} 与 USB 通道 {@code libusbio.so} **只编了 arm64-v8a**。
-     * 32 位车机上这两个库不存在，SDK 初始化会失败，而失败点在 SDK 内部线程里、异常可能被吞掉，
-     * 车机上就只看到「App 正常打开、配对码不出现、手机扫不到」。这里提前把结论写进日志。
-     */
+    /** Check both extracted and APK-loaded native libraries without assuming extraction is on. */
     private void logNativeLibCheck() {
         try {
             String nativeDir = appCtx.getApplicationInfo().nativeLibraryDir;
             java.io.File dir = nativeDir == null ? null : new java.io.File(nativeDir);
             String[] names = dir == null ? null : dir.list();
-            int count = names == null ? 0 : names.length;
-            boolean sink = false, usbio = false;
+            boolean extractedSink = false, extractedUsb = false;
             if (names != null) {
                 for (String n : names) {
-                    if ("libovmsink.so".equals(n)) sink = true;
-                    else if ("libusbio.so".equals(n)) usbio = true;
+                    if ("libovmsink.so".equals(n)) extractedSink = true;
+                    else if ("libusbio.so".equals(n)) extractedUsb = true;
                 }
             }
-            log("原生库自检：nativeLibraryDir 内 " + count + " 个 .so，"
-                    + "libovmsink.so=" + (sink ? "有" : "缺") + " libusbio.so=" + (usbio ? "有" : "缺"));
-            if (!sink) {
-                log("✗✗ 缺 libovmsink.so —— 本机装载的是 32 位/非 arm64 包（或安装时被裁掉了 arm64 原生库）。"
-                        + "SDK 初始化必然失败，投屏走不通；BLE 发现仍可靠兜底广播。");
+            boolean apkSink = false, apkUsb = false;
+            String source = appCtx.getApplicationInfo().sourceDir;
+            if (source != null) {
+                try (java.util.zip.ZipFile apk = new java.util.zip.ZipFile(source)) {
+                    apkSink = apk.getEntry("lib/arm64-v8a/libovmsink.so") != null;
+                    apkUsb = apk.getEntry("lib/arm64-v8a/libusbio.so") != null;
+                }
             }
+            log("原生库自检：进程64位=" + android.os.Process.is64Bit()
+                    + " 提取目录 ovmsink=" + extractedSink + " usbio=" + extractedUsb
+                    + " APK arm64 ovmsink=" + apkSink + " usbio=" + apkUsb);
+            if ((!extractedSink && !apkSink) || (!extractedUsb && !apkUsb))
+                log("原生库自检：未在提取目录或主 APK 中找到完整 arm64 库；若使用拆分安装包，需检查 split APK");
         } catch (Throwable t) {
             log("原生库自检异常（忽略）: " + t);
         }

@@ -182,6 +182,8 @@ class AndroidMediaSink(
     onScreenStreamActiveChanged: ((Int, Boolean) -> Unit)? = null,
     private val mediaBufferMillis: Int = MediaAudioBuffer.DEFAULT_MILLIS,
     private val onAudioDiagnostic: (String) -> Unit = {},
+    /** Call stream transitions only; never forwards audio samples or caller information. */
+    private val onCallDiagnostic: (String) -> Unit = {},
     /** True while any music ("media") audio stream is running; called from media threads. */
     private val onMediaAudioChanged: (Boolean) -> Unit = {},
     /** Opt-in call echo cancellation, replacing a controllable platform canceller while available. */
@@ -474,6 +476,7 @@ class AndroidMediaSink(
 
     override fun onAudioStarted(id: AudioStreamId, format: AudioFormat, firstSample: Int) {
         audioRenderer(id, format).start()
+        if (format.audioType == TELEPHONY_AUDIO_TYPE) callDiagnostic("downlink started type=${id.type}")
         if (format.audioType == "media") updateMediaAudio(id, true)
     }
 
@@ -482,6 +485,7 @@ class AndroidMediaSink(
     }
 
     override fun onAudioStopped(id: AudioStreamId) {
+        if (id.audioType == TELEPHONY_AUDIO_TYPE) callDiagnostic("downlink stopped type=${id.type}")
         synchronized(this) {
             audioRenderers.remove(id)?.close()
             callEchoReferences.remove(id)
@@ -500,6 +504,7 @@ class AndroidMediaSink(
 
     override fun onMicrophoneStarted(id: AudioStreamId, config: MicrophoneConfig) {
         // This callback runs on the downlink thread; microphone failures must not stop playback.
+        if (config.audioType == TELEPHONY_AUDIO_TYPE) callDiagnostic("uplink requested type=${id.type}")
         try {
             val speakerphoneCall = config.audioType == "telephony" &&
                 appContext != null && BydBluetoothSuspend.isSuspendedByUs(appContext)
@@ -509,11 +514,14 @@ class AndroidMediaSink(
                     speakerphoneCall = speakerphoneCall,
                     echoReference = if (config.audioType == TELEPHONY_AUDIO_TYPE) callEchoReferences[id] else null)
             }
-            if (!uplink.start()) {
+            val started = uplink.start()
+            if (config.audioType == TELEPHONY_AUDIO_TYPE) callDiagnostic("uplink started=$started type=${id.type} speaker=$speakerphoneCall")
+            if (!started) {
                 microphoneUplinks.remove(id, uplink)
                 restoreAudioMode(id)
             }
         } catch (error: Exception) {
+            if (config.audioType == TELEPHONY_AUDIO_TYPE) callDiagnostic("uplink failed type=${id.type} error=${error.javaClass.simpleName}")
             Log.e("xcertplay-usb", "microphone start failed stream=$id", error)
             MicrophoneCaptureStats.reportStartFailure(config, error, onAudioDiagnostic)
             onMicrophoneStopped(id)
@@ -521,10 +529,17 @@ class AndroidMediaSink(
     }
 
     override fun onMicrophoneStopped(id: AudioStreamId) {
+        if (id.audioType == TELEPHONY_AUDIO_TYPE) callDiagnostic("uplink stopped type=${id.type}")
         try {
             microphoneUplinks.remove(id)?.close()
         } finally {
             restoreAudioMode(id)
+        }
+    }
+
+    private fun callDiagnostic(message: String) {
+        try { onCallDiagnostic(message) } catch (_: Exception) {
+            // A diagnostic callback must not interrupt audio or the connection.
         }
     }
 

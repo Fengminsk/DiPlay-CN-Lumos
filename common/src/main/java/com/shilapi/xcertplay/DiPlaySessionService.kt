@@ -45,6 +45,8 @@ class DiPlaySessionService : Service() {
     private var output: FirstFrameOutput? = null
     private var activeSession: AirPlaySession? = null
     private var sessionWireless = true
+    private var usbBusTrace: UsbBusTrace? = null
+    private var firstFrameGeneration = 0
     @Volatile private var uiListener: AirPlaySessionListener? = null
     @Volatile private var uiStatus: ((CarPlayStatus) -> Unit)? = null
     private var lastStatus: CarPlayStatus? = null
@@ -55,7 +57,15 @@ class DiPlaySessionService : Service() {
     private var tearingDown = false
     private var startAfterTeardown = false
 
-    override fun onCreate() { super.onCreate(); instance = this }
+    override fun onCreate() {
+        super.onCreate()
+        instance = this
+        CloudLogArchive.start(applicationContext)
+        usbBusTrace = runCatching { UsbBusTrace(this) }.getOrElse {
+            CarPlayConnectionTrace.append(this, "usb monitor unavailable type=${it.javaClass.simpleName}")
+            null
+        }
+    }
     override fun onBind(intent: Intent?): IBinder? = null
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         CarPlayConnectionTrace.append(this, "service command=${intent?.action ?: "none"}")
@@ -123,6 +133,7 @@ class DiPlaySessionService : Service() {
         val current = ++generation
         CarPlayLiveSession.preparing()
         CarPlayConnectionTrace.append(this, "start generation=$current wireless=${AirPlayPersistence.loadWirelessEnabled(this)} requestedFps=${AirPlayPersistence.loadFps(this)}")
+        usbBusTrace?.snapshot("session-start")
         try {
             DiPlayBootstrap.ensure(this, AirPlayPersistence.loadMfiTarget(this))
             sessionWireless = AirPlayPersistence.loadWirelessEnabled(this)
@@ -146,6 +157,9 @@ class DiPlaySessionService : Service() {
                 navigationStreamType = AirPlayPersistence.loadNavigationStreamType(this),
                 mediaBufferMillis = AirPlayPersistence.loadMediaBufferMillis(this),
                 onAudioDiagnostic = { Log.d(TAG, it) },
+                onCallDiagnostic = {
+                    CarPlayConnectionTrace.append(this, "call media generation=$current $it elapsedMs=${SystemClock.elapsedRealtime()}")
+                },
                 onMediaAudioChanged = CarPlayMediaKeys::onMediaAudioChanged,
                 callEchoCancellation = AirPlayPersistence.loadCallEchoCancellation(this),
                 callVoiceFilter = AirPlayPersistence.loadCallVoiceFilter(this),
@@ -203,6 +217,7 @@ class DiPlaySessionService : Service() {
                 CarPlayLiveSession.connected()
                 Log.i(TAG, "AirPlay session active generation=$current")
                 CarPlayConnectionTrace.append(this@DiPlaySessionService, "AirPlay active generation=$current")
+                usbBusTrace?.snapshot("airplay-active")
                 uiListener?.onSessionActive(session)
             }
         }
@@ -212,6 +227,7 @@ class DiPlaySessionService : Service() {
                 CarPlayLiveSession.streaming(getString(R.string.carplay_connected))
                 DiPlayPreferences.saveLastUsedWireless(this@DiPlaySessionService, sessionWireless)
                 Log.i(TAG, "first decoded frame rendered generation=$current")
+                firstFrameGeneration = current
                 CarPlayConnectionTrace.append(this@DiPlaySessionService, "first frame generation=$current")
                 if (retryBudget.firstFrame(session, SystemClock.elapsedRealtime())) {
                     main.postDelayed({
@@ -233,6 +249,7 @@ class DiPlaySessionService : Service() {
                 CarPlayLiveSession.reconnecting("CarPlay disconnected; reconnecting")
                 Log.i(TAG, "AirPlay session ended generation=$current")
                 CarPlayConnectionTrace.append(this@DiPlaySessionService, "AirPlay ended generation=$current")
+                usbBusTrace?.snapshot("airplay-ended")
                 uiListener?.onSessionEnded(session)
                 scheduleReconnect("AirPlay session ended")
             }
@@ -240,6 +257,9 @@ class DiPlaySessionService : Service() {
         override fun onTransportError(message: String) {
             main.post {
                 if (current != generation || stopping) return@post
+                CarPlayConnectionTrace.append(this@DiPlaySessionService,
+                    "transport error generation=$current elapsedMs=${SystemClock.elapsedRealtime()}")
+                usbBusTrace?.snapshot("transport-error")
                 CarPlayLiveSession.reconnecting("Connection interrupted; reconnecting")
                 uiListener?.onTransportError(message)
                 scheduleReconnect(message)
@@ -268,6 +288,19 @@ class DiPlaySessionService : Service() {
             Log.i(TAG, "status=${status.javaClass.simpleName} generation=$current")
             CarPlayConnectionTrace.append(this, "status=${status.javaClass.simpleName} generation=$current" +
                 if (status is CarPlayStatus.Failed) " failure=${status.startupFailure}" else "")
+            if (!sessionWireless && (status is CarPlayStatus.Failed ||
+                    status == CarPlayStatus.WaitingForIphone || status == CarPlayStatus.RunningControl)) {
+                usbBusTrace?.snapshot("status-${status.javaClass.simpleName}")
+            }
+            if (!sessionWireless && status == CarPlayStatus.RunningControl) {
+                main.postDelayed({
+                    if (current == generation && !stopping && firstFrameGeneration != current) {
+                        CarPlayConnectionTrace.append(this,
+                            "first frame pending 20s after control generation=$current status=${lastStatus?.javaClass?.simpleName}")
+                        usbBusTrace?.snapshot("frame-pending")
+                    }
+                }, 20_000L)
+            }
             uiStatus?.invoke(status)
             if (status is CarPlayStatus.Failed) {
                 val message = when {
@@ -440,6 +473,8 @@ class DiPlaySessionService : Service() {
     }
     override fun onDestroy() {
         if (!stopping) stopSession()
+        usbBusTrace?.close()
+        usbBusTrace = null
         if (instance === this) instance = null
         super.onDestroy()
     }
