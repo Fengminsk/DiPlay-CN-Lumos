@@ -2341,6 +2341,12 @@ class DiPlayActivity : ComponentActivity(), AppAppearanceOwner {
                 AirPlayPersistence.saveSmoothVideo(this, it)
                 reconnectIfRunning()
             }
+            toggle(card, getString(R.string.settings_low_latency_decoder),
+                getString(R.string.settings_low_latency_decoder_description),
+                AirPlayPersistence.loadLowLatencyDecoder(this)) {
+                AirPlayPersistence.saveLowLatencyDecoder(this, it)
+                markReconnectNeeded()
+            }
             toggle(card, getString(R.string.call_echo_cancellation), getString(R.string.call_echo_cancellation_description),
                 AirPlayPersistence.loadCallEchoCancellation(this)) {
                 AirPlayPersistence.saveCallEchoCancellation(this, it)

@@ -653,7 +653,8 @@ class AndroidMediaSink(
         // Only the main screen goes to the host's SurfaceView; mirrors and the cluster keep their path.
         pacingDelayNanos = if (type == MAIN_SCREEN_TYPE && statsLabel == null) videoPacingDelayMillis * 1_000_000L else 0L,
         operatingRate = videoOperatingRate(type, statsLabel, mainVideoFrameRate),
-        framesAtOnce = type == MAIN_SCREEN_TYPE && statsLabel == null && videoPacingDelayMillis > 0,
+        framesAtOnce = type == MAIN_SCREEN_TYPE && statsLabel == null &&
+            (videoPacingDelayMillis > 0 || vendorLowLatencyDecoder),
     ).also { if (startImmediately) it.start() }
 
     @Synchronized

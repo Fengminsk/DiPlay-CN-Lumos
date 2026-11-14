@@ -945,6 +945,8 @@
     <string name="settings_navigation_prompt_audio_focus_description">During each CarPlay navigation prompt, DiPlay requests temporary audio focus that lets other sound duck, and releases it after the prompt. Try this if prompts are silent until music plays, or if music should get quieter during prompts. The head unit’s own audio may get quieter or pause during prompts. Applies at the next CarPlay connection.</string>
     <string name="settings_media_over_bluetooth">Music over the car\'s Bluetooth, navigation via CarPlay (experimental)</string>
     <string name="settings_media_over_bluetooth_description">DiPlay offers the iPhone no music audio, so music should stream over the iPhone\'s Bluetooth connection with the car, while navigation prompts, alerts, calls and Siri keep using CarPlay audio. Keep the iPhone paired with the car and choose Bluetooth as the car\'s audio source. If music pauses or plays on the iPhone instead, turn this off. Reconnects CarPlay.</string>
+    <string name="settings_low_latency_decoder">Low-latency decoding (experimental)</string>
+    <string name="settings_low_latency_decoder_description">Asks Qualcomm video decoders to output each frame as soon as it is decoded instead of holding the next ones. Can lower the delay by tens of milliseconds. Turn it off if the picture shows artifacts or freezes. Applies at the next connection.</string>
 </resources>
 
 

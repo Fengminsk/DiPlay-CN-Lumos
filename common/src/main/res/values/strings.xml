@@ -1038,6 +1038,8 @@
     <string name="settings_call_at_call_rate_description">Offer calls as PCM at the call\'s own rate (8, 16, 24 or 32 kHz) instead of 48 kHz Opus, as the stock CarPlay receiver does. Takes effect at the next connection. If a call has no sound, turn this off.</string>
     <string name="settings_navigation_prompt_audio_focus">Navigation prompts ask for audio focus</string>
     <string name="settings_navigation_prompt_audio_focus_description">During each CarPlay navigation prompt, DiPlay requests temporary audio focus that lets other sound duck, and releases it after the prompt. Try this if prompts are silent until music plays, or if music should get quieter during prompts. The head unit’s own audio may get quieter or pause during prompts. Applies at the next CarPlay connection.</string>
+    <string name="settings_low_latency_decoder">Low-latency decoding (experimental)</string>
+    <string name="settings_low_latency_decoder_description">Asks Qualcomm video decoders to output each frame as soon as it is decoded instead of holding the next ones. Can lower the delay by tens of milliseconds. Turn it off if the picture shows artifacts or freezes. Applies at the next connection.</string>
 </resources>
 
 
