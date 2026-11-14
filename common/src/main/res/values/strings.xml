@@ -1032,6 +1032,8 @@
     <string name="settings_release_history">Version history</string>
     <string name="settings_glass_home">Lumos glass home (experimental)</string>
     <string name="settings_glass_home_description">Replaces this home card with the liquid-glass surface: CarPlay and ICCOA tiles, a transport switch and the settings and permissions entries. Applies at once.</string>
+    <string name="settings_call_at_call_rate">Calls at the call\'s own rate (experimental)</string>
+    <string name="settings_call_at_call_rate_description">Offer calls as PCM at the call\'s own rate (8, 16, 24 or 32 kHz) instead of 48 kHz Opus, as the stock CarPlay receiver does. Takes effect at the next connection. If a call has no sound, turn this off.</string>
 </resources>
 
 
