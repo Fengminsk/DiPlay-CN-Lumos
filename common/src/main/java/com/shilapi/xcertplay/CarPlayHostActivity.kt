@@ -4826,7 +4826,9 @@ class CarPlayHostActivity : ComponentActivity() {
             .putExtra("page", page).addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT))
         @Suppress("DEPRECATION")
         overridePendingTransition(0, 0)
-        finish()
+        // Keep a live host in the back stack: returning to CarPlay then reuses its Surface and
+        // decoder instead of creating a new host and waiting for a keyframe.
+        if (!CarPlayBackgroundSession.hasSession()) finish()
     }
 
     /** Keep a timed-out sink visible to surface teardown until its codecs have actually been released. */
