@@ -36,23 +36,28 @@ internal object CloudLogArchive {
     }
     @Volatile private var context: Context? = null
     @Volatile private var loggedState = false
+    // Separate from the object monitor: the worker holds that while it waits on a COS upload.
+    private val startLock = Any()
 
-    @Synchronized fun start(appContext: Context) {
+    fun start(appContext: Context) {
         if (context != null) return
-        val app = appContext.applicationContext
-        context = app
-        // Releases before this one queued gzip files; they belong to a retired format.
-        runCatching {
-            File(app.noBackupFilesDir, "cloud-log-outbox").listFiles()
-                ?.filter { it.name.endsWith(".log.gz") }?.forEach { it.delete() }
+        synchronized(startLock) {
+            if (context != null) return
+            val app = appContext.applicationContext
+            context = app
+            // Releases before this one queued gzip files; they belong to a retired format.
+            runCatching {
+                File(app.noBackupFilesDir, "cloud-log-outbox").listFiles()
+                    ?.filter { it.name.endsWith(".log.gz") }?.forEach { it.delete() }
+            }
+            // The first run after an upgrade starts at the current end instead of replaying history.
+            val prefs = app.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+            val source = File(File(app.filesDir, "logs"), SOURCE)
+            if (!prefs.contains(KEY_OFFSET) && source.isFile) {
+                prefs.edit().putLong(KEY_OFFSET, source.length()).commit()
+            }
+            worker.scheduleWithFixedDelay({ flushSafely() }, 0, INTERVAL_SECONDS, TimeUnit.SECONDS)
         }
-        // The first run after an upgrade starts at the current end instead of replaying history.
-        val prefs = app.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
-        val source = File(File(app.filesDir, "logs"), SOURCE)
-        if (!prefs.contains(KEY_OFFSET) && source.isFile) {
-            prefs.edit().putLong(KEY_OFFSET, source.length()).commit()
-        }
-        worker.scheduleWithFixedDelay({ flushSafely() }, 0, INTERVAL_SECONDS, TimeUnit.SECONDS)
     }
 
     fun configurationChanged() { if (context != null) worker.execute { flushSafely() } }
