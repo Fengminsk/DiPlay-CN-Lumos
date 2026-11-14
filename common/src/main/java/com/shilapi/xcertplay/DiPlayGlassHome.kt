@@ -17,7 +17,6 @@ import android.graphics.Typeface
 import android.graphics.drawable.Drawable
 import android.graphics.drawable.GradientDrawable
 import android.graphics.drawable.RippleDrawable
-import android.util.TypedValue
 import android.view.Gravity
 import android.view.MotionEvent
 import android.view.View
@@ -35,7 +34,7 @@ import kotlin.math.min
 import kotlin.math.roundToInt
 
 /**
- * The approved 1280 × 720 glass home. The stage scales uniformly and is centred inside the
+ * The approved 1280 脳 720 glass home. The stage scales uniformly and is centred inside the
  * window; the sky fills the whole window. Colours follow [night].
  */
 internal class DiPlayGlassHome(
@@ -259,7 +258,7 @@ internal class DiPlayGlassHome(
             (13f * scale).roundToInt(), (13f * scale).roundToInt())
         gearButton.setPadding((13f * scale).roundToInt(), (13f * scale).roundToInt(),
             (13f * scale).roundToInt(), (13f * scale).roundToInt())
-        statusView.setTextSize(TypedValue.COMPLEX_UNIT_PX, 15f * scale)
+        statusView.paint.textSize = 15f * scale
         carTile.elevation = 0f
         iccoaTile.elevation = 0f
         carTile.cameraDistance = 1400f * scale * resources.displayMetrics.density
@@ -515,7 +514,7 @@ internal class DiPlayGlassHome(
                 }
                 val inset = if (markRes != null) (icon * 0.25f).roundToInt() else 0
                 iconBox.setPadding(inset, inset, inset, inset)
-                labelView.setTextSize(TypedValue.COMPLEX_UNIT_PX, width * 32f / 297f)
+                labelView.paint.textSize = width * 32f / 297f
             }
             super.onMeasure(widthMeasureSpec, heightMeasureSpec)
         }

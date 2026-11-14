@@ -2,6 +2,21 @@
 
 Instructions for coding agents that work on DiPlay.
 
+## Lumos upstream policy (mandatory)
+
+`Lumos` is the product branch. `upstream-cn` (DiPlay-CN) is a source of features and
+bug fixes only. Never merge, rebase or fast-forward upstream into `Lumos`, and never
+replace the Lumos UI, the ICCOA engine or the build identity with upstream files.
+
+- Fetch upstream read-only: `git fetch upstream-cn`.
+- Port one specific feature or bug-fix commit at a time (`cherry-pick` or a manual patch).
+- Do not port wholesale UI files: `common/.../DiPlayActivity.kt`, the Lumos home /
+  Compose theme / settings layout, the `icoca/` module, or the Lumos version, signing,
+  COS and authentication wiring in `mobile/build.gradle.kts`.
+- Keep the `0.2.15-cn.x-lumos.y` version line; never adopt an upstream version number.
+- Build and verify on the pad before installing on the car.
+- Record every port and its upstream commit in `docs/LUMOS_UPSTREAM_POLICY.md`.
+
 ## Checks
 
 Run the CI command from `.github/workflows/android.yml` before you report a change as done:

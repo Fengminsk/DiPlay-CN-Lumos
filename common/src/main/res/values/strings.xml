@@ -1030,6 +1030,8 @@
     <string name="settings_ambient_day_brightness">Day brightness</string>
     <string name="settings_about_description">DiPlay Lumos connects CarPlay and ICCOA on Android head units. Available features depend on the head unit and phone.</string>
     <string name="settings_release_history">Version history</string>
+    <string name="settings_glass_home">Lumos glass home (experimental)</string>
+    <string name="settings_glass_home_description">Replaces this home card with the liquid-glass surface: CarPlay and ICCOA tiles, a transport switch and the settings and permissions entries. Applies at once.</string>
 </resources>
 
 

@@ -18,6 +18,11 @@ internal data class CosLogSettings(
         secretId.isNotBlank() && secretKey.isNotBlank() &&
         !secretId.contains('\n') && !secretKey.contains('\n')
 
+    /** True when both configurations address the same bucket with the same key. */
+    fun sameCredentialsAs(other: CosLogSettings): Boolean =
+        bucket == other.bucket && endpoint == other.endpoint &&
+            secretId == other.secretId && secretKey == other.secretKey
+
     companion object {
         fun fromJson(text: String, enabled: Boolean = false): CosLogSettings {
             val json = JSONObject(text)
@@ -30,14 +35,31 @@ internal data class CosLogSettings(
             }
         }
 
-        fun load(context: Context): CosLogSettings? = saved(context) ?: bakedDefault(context)
+        fun load(context: Context): CosLogSettings? {
+            val saved = saved(context)
+            val baked = bakedRead(context)
+            if (saved == null) {
+                baked?.let { save(context, it) }
+                return baked
+            }
+            // A baked private configuration is an operator-provided analysis build. A release before
+            // this one persisted the same credentials as disabled, which would silence uploads; treat
+            // the identical credentials as enabled once. A different, driver-entered configuration and
+            // any later change keep their own value.
+            if (baked != null && !saved.enabled && saved.sameCredentialsAs(baked)) {
+                val migrated = saved.copy(enabled = true)
+                save(context, migrated)
+                return migrated
+            }
+            return saved
+        }
 
         // A private build can bake one configuration into the APK. It seeds the on-device setting
         // once; afterwards the driver's own value wins, including switching upload off.
-        private fun bakedDefault(context: Context): CosLogSettings? = runCatching {
+        private fun bakedRead(context: Context): CosLogSettings? = runCatching {
             val text = context.assets.open("cos-log-default.json").bufferedReader(Charsets.UTF_8)
                 .use { it.readText() }
-            fromJson(text, JSONObject(text).optBoolean("enabled", false)).also { save(context, it) }
+            fromJson(text, JSONObject(text).optBoolean("enabled", true))
         }.getOrNull()
 
         private fun saved(context: Context): CosLogSettings? = runCatching {

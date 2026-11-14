@@ -773,7 +773,7 @@ class DiPlayActivity : ComponentActivity(), AppAppearanceOwner {
             "settings" -> !SettingsLayoutPreferences.isActive(this)
             else -> true
         }
-        if (page == "home" && !compact) {
+        if (page == "home" && !compact && GlassHomeSettings.enabled(this)) {
             val glass = DiPlayGlassHome(
                 context = this,
                 night = appNight,
@@ -2300,6 +2300,12 @@ class DiPlayActivity : ComponentActivity(), AppAppearanceOwner {
         }
         filteredSection(content, SettingsSection.EXPERIMENTAL_DISPLAY,
             getString(R.string.settings_experimental_display), R.drawable.ic_dp_display) { card ->
+            toggle(card, getString(R.string.settings_glass_home),
+                getString(R.string.settings_glass_home_description),
+                GlassHomeSettings.enabled(this)) { enabled ->
+                GlassHomeSettings.setEnabled(this, enabled)
+                render()
+            }
             toggle(card, getString(R.string.split_screen_areas), getString(R.string.split_screen_areas_description),
                 SplitScreenSettings.enabled(this)) {
                 SplitScreenSettings.setEnabled(this, it)

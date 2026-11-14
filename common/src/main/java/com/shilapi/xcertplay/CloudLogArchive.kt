@@ -35,6 +35,7 @@ internal object CloudLogArchive {
         Thread(task, "diplay-cloud-logs").apply { isDaemon = true }
     }
     @Volatile private var context: Context? = null
+    @Volatile private var loggedState = false
 
     @Synchronized fun start(appContext: Context) {
         if (context != null) return
@@ -61,6 +62,7 @@ internal object CloudLogArchive {
         try {
             val config = CosLogSettings.load(app)
             if (config == null || !config.enabled) {
+                if (!loggedState) { loggedState = true; Log.i(TAG, if (config == null) "upload unconfigured" else "upload disabled") }
                 // Upload is off: move the offset forward so re-enabling never sends what was
                 // written while the driver had switched it off.
                 skipWhileDisabled(app)
@@ -68,7 +70,10 @@ internal object CloudLogArchive {
             }
             for (source in sources) {
                 // A corrupt or temporarily busy file must not block the other connection logs.
-                try { uploadNextSlice(app, config, source) } catch (_: Exception) { }
+                if (!loggedState) { loggedState = true; Log.i(TAG, "upload enabled bucket=${config.bucket}") }
+                try { uploadNextSlice(app, config, source) } catch (error: Exception) {
+                    Log.w(TAG, "upload failed for $source: ${error.javaClass.simpleName}")
+                }
             }
         } catch (_: Exception) {
             // Network and file errors must never expose credentials, signed requests, or log content.

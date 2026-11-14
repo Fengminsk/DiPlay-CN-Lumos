@@ -877,6 +877,8 @@
     <string name="settings_ambient_day_brightness">Дневная яркость</string>
     <string name="settings_about_description">DiPlay Lumos подключает CarPlay и ICCOA на автомобильных устройствах Android. Доступные функции зависят от автомобиля и телефона.</string>
     <string name="settings_release_history">История версий</string>
+    <string name="settings_glass_home">Lumos glass home (experimental)</string>
+    <string name="settings_glass_home_description">Replaces this home card with the liquid-glass surface: CarPlay and ICCOA tiles, a transport switch and the settings and permissions entries. Applies at once.</string>
 </resources>
 
 

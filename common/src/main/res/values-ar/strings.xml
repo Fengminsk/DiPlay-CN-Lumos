@@ -877,6 +877,8 @@
     <string name="settings_ambient_day_brightness">سطوع النهار</string>
     <string name="settings_about_description">يوصل DiPlay Lumos ‏CarPlay وICCOA بوحدات السيارة التي تعمل بنظام Android. تعتمد الميزات المتاحة على السيارة والهاتف.</string>
     <string name="settings_release_history">سجل الإصدارات</string>
+    <string name="settings_glass_home">Lumos glass home (experimental)</string>
+    <string name="settings_glass_home_description">Replaces this home card with the liquid-glass surface: CarPlay and ICCOA tiles, a transport switch and the settings and permissions entries. Applies at once.</string>
 </resources>
 
 
