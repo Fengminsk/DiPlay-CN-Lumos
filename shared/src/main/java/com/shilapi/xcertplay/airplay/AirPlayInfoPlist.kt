@@ -53,7 +53,7 @@ object AirPlayInfoPlist {
             // The buffered flag goes through the same gate as the feature: with music on the
             // car's Bluetooth neither the unbuffered nor the buffered media format is offered.
             info["audioFormats"] = audioFormats(config.entertainmentSampleRate, config.microphone, config.bufferedAudioOutputEnabled, config.microphoneOpus,
-                config.mediaOverBluetooth)
+                config.mediaOverBluetooth, config.callAtCallRate)
         }
         info["extendedFeatures"] = listOf("vocoderInfo", "enhancedRequestCarUI")
         info["displays"] = displays
@@ -127,6 +127,7 @@ object AirPlayInfoPlist {
         mainBuffered: Boolean = false,
         microphoneOpus: Boolean = true,
         mediaOverBluetooth: Boolean = false,
+        callAtCallRate: Boolean = false,
     ): List<Map<String, Any?>> {
         fun format(type: Int, audioType: String, outputFormats: Int, inputFormats: Int? = null): Map<String, Any?> {
             val entry = linkedMapOf<String, Any?>(
