@@ -299,15 +299,85 @@ internal class DiPlayGlassHome(
     /** A dim, frosted copy of the home for the pairing layer's backdrop. */
     fun snapshotBlurred(): Bitmap? {
         if (width <= 0 || height <= 0) return null
-        val smallWidth = max(1, width / 20)
-        val smallHeight = max(1, height / 20)
+        // 1/6 keeps the shapes readable; a 1/20 copy turned into large mosaic blocks when the
+        // overlay stretched it back to the full screen.
+        val smallWidth = max(1, width / 6)
+        val smallHeight = max(1, height / 6)
         return runCatching {
             val small = Bitmap.createBitmap(smallWidth, smallHeight, Bitmap.Config.ARGB_8888)
             val canvas = Canvas(small)
             canvas.scale(smallWidth / width.toFloat(), smallHeight / height.toFloat())
             draw(canvas)
-            small
+            val blurred = blurBitmap(small, radius = 6, passes = 3)
+            if (blurred !== small) small.recycle()
+            blurred
         }.getOrNull()
+    }
+
+    /** Box blur for the pairing backdrop; small bitmaps keep this cheap on the UI thread. */
+    private fun blurBitmap(source: Bitmap, radius: Int, passes: Int): Bitmap {
+        val w = source.width
+        val h = source.height
+        if (radius <= 0 || w < 2 || h < 2) return source
+        var src = IntArray(w * h)
+        source.getPixels(src, 0, w, 0, 0, w, h)
+        val tmp = IntArray(w * h)
+        repeat(passes) {
+            blurHorizontal(src, tmp, w, h, radius)
+            blurVertical(tmp, src, w, h, radius)
+        }
+        return Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888).apply {
+            setPixels(src, 0, w, 0, 0, w, h)
+        }
+    }
+
+    private fun blurHorizontal(src: IntArray, dst: IntArray, w: Int, h: Int, r: Int) {
+        val div = r * 2 + 1
+        for (y in 0 until h) {
+            val row = y * w
+            var a = 0; var red = 0; var green = 0; var blue = 0
+            for (i in -r..r) {
+                val p = src[row + i.coerceIn(0, w - 1)]
+                a += (p ushr 24) and 0xff
+                red += (p ushr 16) and 0xff
+                green += (p ushr 8) and 0xff
+                blue += p and 0xff
+            }
+            for (x in 0 until w) {
+                dst[row + x] = ((a / div) shl 24) or ((red / div) shl 16) or
+                    ((green / div) shl 8) or (blue / div)
+                val add = src[row + (x + r + 1).coerceAtMost(w - 1)]
+                val remove = src[row + (x - r).coerceAtLeast(0)]
+                a += ((add ushr 24) and 0xff) - ((remove ushr 24) and 0xff)
+                red += ((add ushr 16) and 0xff) - ((remove ushr 16) and 0xff)
+                green += ((add ushr 8) and 0xff) - ((remove ushr 8) and 0xff)
+                blue += (add and 0xff) - (remove and 0xff)
+            }
+        }
+    }
+
+    private fun blurVertical(src: IntArray, dst: IntArray, w: Int, h: Int, r: Int) {
+        val div = r * 2 + 1
+        for (x in 0 until w) {
+            var a = 0; var red = 0; var green = 0; var blue = 0
+            for (i in -r..r) {
+                val p = src[i.coerceIn(0, h - 1) * w + x]
+                a += (p ushr 24) and 0xff
+                red += (p ushr 16) and 0xff
+                green += (p ushr 8) and 0xff
+                blue += p and 0xff
+            }
+            for (y in 0 until h) {
+                dst[y * w + x] = ((a / div) shl 24) or ((red / div) shl 16) or
+                    ((green / div) shl 8) or (blue / div)
+                val add = src[(y + r + 1).coerceAtMost(h - 1) * w + x]
+                val remove = src[(y - r).coerceAtLeast(0) * w + x]
+                a += ((add ushr 24) and 0xff) - ((remove ushr 24) and 0xff)
+                red += ((add ushr 16) and 0xff) - ((remove ushr 16) and 0xff)
+                green += ((add ushr 8) and 0xff) - ((remove ushr 8) and 0xff)
+                blue += (add and 0xff) - (remove and 0xff)
+            }
+        }
     }
 
     /** A recognisable quarter-size copy of the home, used as the CarPlay connection backdrop. */

@@ -123,6 +123,7 @@ internal class DiPlayCarPlayPairingOverlay(
 
     fun setBackdrop(bitmap: android.graphics.Bitmap) {
         backdrop.setImageBitmap(bitmap)
+        (backdrop.drawable as? android.graphics.drawable.BitmapDrawable)?.isFilterBitmap = true
         backdrop.animate().alpha(1f).setDuration(250).start()
     }
 
