@@ -280,10 +280,11 @@ object AmbientMusicController {
         val playing = playbackState?.second == true && phonePlayback.current() != false
         if (playing) idleSinceMillis = null
         else if (idleSinceMillis == null) idleSinceMillis = nowMillis
+        val effectiveBrightness = if (isNightNow()) values.nightBrightness else values.brightness
         val target = AmbientMusicActivityPolicy.target(
             enabled = values.enabled,
             music = values.music,
-            brightness = values.brightness,
+            brightness = effectiveBrightness,
             rendererActive = rendererActive,
             playing = playing,
             idle = values.idle,
@@ -298,8 +299,8 @@ object AmbientMusicController {
         val rms = energy.rms
         val brightness = when (target) {
             AmbientMusicTarget.LOWEST -> 1
-            AmbientMusicTarget.FOLLOW_PLAYBACK -> brightnessEnvelope.level(rms, nowMillis, values.brightness)
-            else -> values.brightness
+            AmbientMusicTarget.FOLLOW_PLAYBACK -> brightnessEnvelope.level(rms, nowMillis, effectiveBrightness)
+            else -> effectiveBrightness
         }
         val area = if (target == AmbientMusicTarget.LOWEST) 3 else values.area
         val color = if (target == AmbientMusicTarget.FOLLOW_PLAYBACK && values.colorCycle)

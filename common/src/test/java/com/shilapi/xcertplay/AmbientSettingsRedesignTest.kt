@@ -171,16 +171,28 @@ class AmbientSettingsRedesignTest {
         assertEquals(listOf(1), saved.selectedColors)
     }
 
-    @Test fun brightnessSliderUpdatesTheBehaviorSummary() {
+    @Test fun brightnessSlidersUpdateTheBehaviorSummary() {
         val dialog = open()
         enableSwitch(dialog).isChecked = true
-        val slider = descendants(dialog.view!!).filterIsInstance<SeekBar>().single()
-        slider.progress = 4
+        val sliders = descendants(dialog.view!!).filterIsInstance<SeekBar>()
+        assertEquals(2, sliders.size)
+        val day = sliders[0]
+        day.progress = 4
         assertTrue(texts(dialog).contains(text(R.string.settings_ambient_brightness_value, 4)))
         assertTrue(texts(dialog).any { it.contains(text(R.string.settings_ambient_behavior_idle_steady, text(R.string.settings_ambient_all), 4)) })
-        slider.progress = 0
+        day.progress = 0
         assertTrue(texts(dialog).any { it.contains(text(R.string.settings_ambient_behavior_lowest)) })
         assertFalse(texts(dialog).any { it.contains(text(R.string.settings_ambient_behavior_idle_steady, text(R.string.settings_ambient_all), 0)) })
+    }
+
+    @Test fun nightBrightnessSliderIsShownAndSaved() {
+        val dialog = open()
+        val sliders = descendants(dialog.view!!).filterIsInstance<SeekBar>()
+        assertEquals(2, sliders.size)
+        sliders[1].progress = 2
+        dialog.getButton(AlertDialog.BUTTON_POSITIVE).performClick()
+        shadowOf(Looper.getMainLooper()).idle()
+        assertEquals(2, AmbientMusicSettings.load(activity).nightBrightness)
     }
 
     @Test fun idleChoiceIsOfferedAndSaved() {

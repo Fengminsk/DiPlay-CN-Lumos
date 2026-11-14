@@ -5951,8 +5951,7 @@ class DiPlayActivity : ComponentActivity(), AppAppearanceOwner {
             body.addView(grid)
             body.addView(space(12))
         }
-        val dayBrightnessTitle = getString(if (ecarxLamps) R.string.settings_ambient_day_brightness
-            else R.string.settings_ambient_brightness)
+        val dayBrightnessTitle = getString(R.string.settings_ambient_day_brightness)
         body.addView(label(dayBrightnessTitle, 16, ACCENT, bold = true))
         val brightnessValue = label(ambientBrightnessText(draft.brightness), 14, MUTED)
         body.addView(brightnessValue)
@@ -5972,28 +5971,26 @@ class DiPlayActivity : ComponentActivity(), AppAppearanceOwner {
                 override fun onStopTrackingTouch(bar: SeekBar) = Unit
             })
         }, LinearLayout.LayoutParams(-1, dp(48)))
-        if (ecarxLamps) {
-            body.addView(space(4))
-            body.addView(label(getString(R.string.settings_ambient_night_brightness), 16, ACCENT, bold = true))
-            val nightValue = label(ambientBrightnessText(draft.nightBrightness), 14, MUTED)
-            body.addView(nightValue)
-            body.addView(SeekBar(this).apply {
-                max = 6
-                progress = draft.nightBrightness
-                contentDescription = getString(R.string.settings_ambient_night_brightness)
-                progressTintList = android.content.res.ColorStateList.valueOf(ACCENT)
-                thumbTintList = android.content.res.ColorStateList.valueOf(ACCENT)
-                setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
-                    override fun onProgressChanged(bar: SeekBar, level: Int, fromUser: Boolean) {
-                        draft = draft.copy(nightBrightness = level)
-                        nightValue.text = ambientBrightnessText(level)
-                        refreshAmbient()
-                    }
-                    override fun onStartTrackingTouch(bar: SeekBar) = Unit
-                    override fun onStopTrackingTouch(bar: SeekBar) = Unit
-                })
-            }, LinearLayout.LayoutParams(-1, dp(48)))
-        }
+        body.addView(space(4))
+        body.addView(label(getString(R.string.settings_ambient_night_brightness), 16, ACCENT, bold = true))
+        val nightValue = label(ambientBrightnessText(draft.nightBrightness), 14, MUTED)
+        body.addView(nightValue)
+        body.addView(SeekBar(this).apply {
+            max = 6
+            progress = draft.nightBrightness
+            contentDescription = getString(R.string.settings_ambient_night_brightness)
+            progressTintList = android.content.res.ColorStateList.valueOf(ACCENT)
+            thumbTintList = android.content.res.ColorStateList.valueOf(ACCENT)
+            setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
+                override fun onProgressChanged(bar: SeekBar, level: Int, fromUser: Boolean) {
+                    draft = draft.copy(nightBrightness = level)
+                    nightValue.text = ambientBrightnessText(level)
+                    refreshAmbient()
+                }
+                override fun onStartTrackingTouch(bar: SeekBar) = Unit
+                override fun onStopTrackingTouch(bar: SeekBar) = Unit
+            })
+        }, LinearLayout.LayoutParams(-1, dp(48)))
         body.addView(space(12))
         choice(body, getString(R.string.settings_ambient_area), listOf(getString(R.string.settings_ambient_front), getString(R.string.settings_ambient_rear), getString(R.string.settings_ambient_all)), draft.area - 1, reconnects = false) {
             draft = draft.copy(area = it + 1)
