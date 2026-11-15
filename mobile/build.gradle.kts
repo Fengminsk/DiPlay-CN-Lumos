@@ -1,4 +1,4 @@
-import java.io.BufferedOutputStream
+﻿import java.io.BufferedOutputStream
 import java.io.File
 import java.io.FileInputStream
 import java.io.FileOutputStream
@@ -45,8 +45,8 @@ android {
         applicationId = "com.shihab.diplay.cn"
         minSdk = 25
         targetSdk = 37
-        versionCode = 126
-        versionName = "0.2.15-cn.7-lumos.28-diagnostics"
+        versionCode = 128
+        versionName = "0.2.15-cn.7-lumos.30-diagnostics"
 
     }
 
@@ -229,16 +229,16 @@ val injectIccoaDex by tasks.registering {
     doLast {
         val dexBytes = dexFile.readBytes()
         requireNotNull(buildToolsDir) {
-            "找不到可用的 build-tools：设置 ANDROID_HOME 或在 local.properties 写 sdk.dir"
+            "鎵句笉鍒板彲鐢ㄧ殑 build-tools锛氳缃?ANDROID_HOME 鎴栧湪 local.properties 鍐?sdk.dir"
         }
-        val zipalign = requireNotNull(zipalignFile) { "build-tools 里没有 zipalign" }
-        val apksignerJar = requireNotNull(apksignerFile) { "build-tools 里没有 lib/apksigner.jar" }
+        val zipalign = requireNotNull(zipalignFile) { "build-tools 閲屾病鏈?zipalign" }
+        val apksignerJar = requireNotNull(apksignerFile) { "build-tools 閲屾病鏈?lib/apksigner.jar" }
 
         fun runTool(command: List<String>) {
             val process = ProcessBuilder(command).redirectErrorStream(true).start()
             val output = process.inputStream.bufferedReader().readText()
             val code = process.waitFor()
-            check(code == 0) { "${command.first()} 失败（退出码 $code）：\n$output" }
+            check(code == 0) { "${command.first()} 澶辫触锛堥€€鍑虹爜 $code锛夛細\n$output" }
         }
 
         val apkRoot = apkRootDir
@@ -251,7 +251,7 @@ val injectIccoaDex by tasks.registering {
                         !it.name.endsWith("-injected.apk") && !it.name.endsWith("-aligned.apk")
                 }
             }
-        require(apks.isNotEmpty()) { "找不到 APK：先运行 assembleDebug / assembleRelease" }
+        require(apks.isNotEmpty()) { "鎵句笉鍒?APK锛氬厛杩愯 assembleDebug / assembleRelease" }
 
         apks.forEach { apk ->
             val isRelease = apk.parentFile?.name == "release"
@@ -268,7 +268,7 @@ val injectIccoaDex by tasks.registering {
                     entry.size == dexBytes.size.toLong() &&
                     zip.getInputStream(entry).readBytes().contentEquals(dexBytes)
             }.map { it.name }.toSet()
-            if (stale.isNotEmpty()) logger.lifecycle(">>> [${apk.name}] 移除历史注入副本: ${stale.joinToString(", ")}")
+            if (stale.isNotEmpty()) logger.lifecycle(">>> [${apk.name}] 绉婚櫎鍘嗗彶娉ㄥ叆鍓湰: ${stale.joinToString(", ")}")
 
             val kept = entries.filter { it.name !in stale }
             val names = kept.map { it.name }.toSet()
@@ -302,7 +302,7 @@ val injectIccoaDex by tasks.registering {
                 zout.close()
             }
             zip.close()
-            logger.lifecycle(">>> [${apk.name}] 已附加 $dexName (${dexFile.length()} B)")
+            logger.lifecycle(">>> [${apk.name}] 宸查檮鍔?$dexName (${dexFile.length()} B)")
 
             // --- 2. align ---
             runTool(listOf(zipalign.absolutePath, "-p", "-f", "4", injected.absolutePath, aligned.absolutePath))
@@ -321,12 +321,12 @@ val injectIccoaDex by tasks.registering {
                 signing["keyPassword"]?.let { args += listOf("--key-pass", "pass:$it") }
                 args += listOf("--out", apk.absolutePath, aligned.absolutePath)
                 runTool(args)
-                logger.lifecycle(">>> ${apk.name} 已注入 ICCOA SDK 并重签：${apk.absolutePath}")
+                logger.lifecycle(">>> ${apk.name} 宸叉敞鍏?ICCOA SDK 骞堕噸绛撅細${apk.absolutePath}")
             } else {
                 // Without a keystore apksigner is also the only writer back to the output path;
                 // copying keeps the injected package complete and merely unsigned.
                 aligned.copyTo(apk, overwrite = true)
-                logger.warn(">>> ${apk.name} 无可用签名密钥 → 保留注入后的未签名包")
+                logger.warn(">>> ${apk.name} 鏃犲彲鐢ㄧ鍚嶅瘑閽?鈫?淇濈暀娉ㄥ叆鍚庣殑鏈鍚嶅寘")
             }
             injected.delete()
             aligned.delete()
@@ -339,3 +339,4 @@ afterEvaluate {
     tasks.matching { it.name == "assembleDebug" || it.name == "assembleRelease" }
         .configureEach { finalizedBy(injectIccoaDex) }
 }
+
