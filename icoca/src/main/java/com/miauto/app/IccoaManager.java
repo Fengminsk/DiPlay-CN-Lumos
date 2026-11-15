@@ -275,6 +275,10 @@ public class IccoaManager {
 
     /** 会话结束后重新广播的延时：留出 SDK 内部收尾时间，避免与断连流程竞争。 */
     private static final long RE_ADVERTISE_DELAY_MS = 1200L;
+    private static final long RECONNECT_STRIKE_WINDOW_MS = 120_000L;
+    private static final int RECONNECT_STRIKE_LIMIT = 3;
+    private int reconnectStrikes = 0;
+    private long lastReconnectStrikeAtMs = 0L;
 
     /**
      * 「仅 5G」的本地快照（实际生效值，开关源见 {@link #refreshFiveGhzOnly()}）。
@@ -794,6 +798,26 @@ public class IccoaManager {
 
     private void scheduleReAdvertise() {
         scheduleReAdvertiseAfter(RE_ADVERTISE_DELAY_MS);
+    }
+
+    /**
+     * Three abnormal drops in two minutes: stop rebroadcasting. A phone that keeps tearing the
+     * WFD session down would otherwise put the head unit through an endless AOA/WFD reconnect
+     * loop; the driver can reconnect explicitly from the home screen.
+     */
+    private boolean allowAutoReconnect() {
+        long now = SystemClock.elapsedRealtime();
+        if (lastReconnectStrikeAtMs == 0L || now - lastReconnectStrikeAtMs > RECONNECT_STRIKE_WINDOW_MS) {
+            reconnectStrikes = 0;
+        }
+        lastReconnectStrikeAtMs = now;
+        reconnectStrikes++;
+        if (reconnectStrikes > RECONNECT_STRIKE_LIMIT) {
+            log("！120 秒内异常断连 " + reconnectStrikes + " 次，停止自动重播；请检查手机锁屏/省电设置");
+            pauseLink("连续异常断连");
+            return false;
+        }
+        return true;
     }
 
     /** 可指定延时的重播排程；{@link ReconnectBackoff} 用它对无线建链失败做指数退避。 */
@@ -2468,6 +2492,8 @@ public class IccoaManager {
                 case ST_CAST_CONNECTED:
                     // 真连上了：撤销待执行的重新广播，免得刚连上就被重播打断。
                     sessionActive = true;
+                    reconnectStrikes = 0;
+                    lastReconnectStrikeAtMs = 0L;
                     boolean firstStateOfSession = sessionStartedAt == 0L;
                     if (firstStateOfSession) {
                         sessionStartedAt = SystemClock.uptimeMillis();
@@ -2622,8 +2648,10 @@ public class IccoaManager {
                         break;
                     }
                     log("★ 异常断连（param=" + param + "）→ 自动重连：立即重新广播");
-                    scheduleReAdvertise();
-                    scheduleAutoRefresh();
+                    if (allowAutoReconnect()) {
+                        scheduleReAdvertise();
+                        scheduleAutoRefresh();
+                    }
                     break;
 
                 default:
