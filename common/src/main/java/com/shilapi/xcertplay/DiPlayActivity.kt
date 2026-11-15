@@ -448,8 +448,8 @@ class DiPlayActivity : ComponentActivity(), AppAppearanceOwner {
         carPlayStateJob = lifecycleScope.launch {
             CarPlayLiveSession.state.collect { state ->
                 carPlayOverlay?.render(state)
-                if (carPlayAutoOpen && state.phase == CarPlayLiveSession.Phase.Streaming && state.firstFrame &&
-                    CarPlayBackgroundSession.snapshot() != null && carPlayOverlay?.parent == null) {
+                if (carPlayAutoOpen && CarPlayBackgroundSession.snapshot() != null &&
+                    carPlayOverlay?.parent == null) {
                     carPlayOverlay = null
                     carPlayAutoOpen = false
                     openProjection()
@@ -5233,7 +5233,7 @@ class DiPlayActivity : ComponentActivity(), AppAppearanceOwner {
         } else continueCarPlayStart()
     }
     private fun openProjection(homeSnapshot: android.graphics.Bitmap? = null) {
-        if (!CarPlayLiveSession.value().firstFrame || CarPlayBackgroundSession.snapshot() == null) {
+        if (CarPlayBackgroundSession.snapshot() == null) {
             showCarPlayOverlay(autoOpen = true)
             return
         }
@@ -5246,7 +5246,7 @@ class DiPlayActivity : ComponentActivity(), AppAppearanceOwner {
     }
 
     private fun showCarPlaySession() {
-        if (CarPlayLiveSession.value().firstFrame) openProjection()
+        if (CarPlayBackgroundSession.snapshot() != null) openProjection()
         else showCarPlayOverlay(autoOpen = true)
     }
 
@@ -5257,8 +5257,7 @@ class DiPlayActivity : ComponentActivity(), AppAppearanceOwner {
         val overlay = DiPlayCarPlayPairingOverlay(this,
             onClose = { carPlayAutoOpen = false; removeCarPlayOverlay() },
             onProjection = {
-                if (carPlayAutoOpen && CarPlayLiveSession.value().firstFrame &&
-                    CarPlayBackgroundSession.snapshot() != null) {
+                if (carPlayAutoOpen && CarPlayBackgroundSession.snapshot() != null) {
                     carPlayAutoOpen = false
                     openProjection(glassHome?.snapshotBlurred())
                     // The card already filled the screen and faded to black. Keep that last

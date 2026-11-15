@@ -45,8 +45,8 @@ android {
         applicationId = "com.shihab.diplay.cn"
         minSdk = 25
         targetSdk = 37
-        versionCode = 124
-        versionName = "0.2.15-cn.7-lumos.26-diagnostics"
+        versionCode = 125
+        versionName = "0.2.15-cn.7-lumos.27-diagnostics"
 
     }
 

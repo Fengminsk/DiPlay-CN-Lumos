@@ -595,8 +595,7 @@ class CarPlayHostActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        if (CarPlayLiveSession.value().phase != CarPlayLiveSession.Phase.Streaming ||
-            CarPlayBackgroundSession.snapshot() == null) {
+        if (CarPlayBackgroundSession.snapshot() == null) {
             startActivity(Intent(this, DiPlayActivity::class.java)
                 .addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT))
             finish()
