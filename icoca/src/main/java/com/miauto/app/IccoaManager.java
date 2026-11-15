@@ -1202,7 +1202,10 @@ public class IccoaManager {
             log("视频已暂停，或本轮从未成功绑定过 Surface → 本次不再换面"
                     + "（避免对已失效的 Surface 做 setOutputSurface → hasError → 重建解码器）");
         }
-        videoPaused = false;
+        // Keep videoPaused when this destroy followed onPause: onResume uses it as the
+        // "rebind the surviving/new surface" signal. Clearing it here made the setting-screen
+        // round trip leave the decoder on the SDK's dummy surface forever.
+        if (!wasAttached) videoPaused = false;
     }
 
     /**
