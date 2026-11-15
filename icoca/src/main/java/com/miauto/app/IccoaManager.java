@@ -2934,6 +2934,7 @@ public class IccoaManager {
                 .setSupportSoftAP(supportSoftAp)
                 .setSupportCamera(false)
                 .setSupportHevc(false)
+                .setSupportAvRawPacket(false)
                 .setSupportMic(true)
                 .setUseCustomAudioRecord(false)
                 .setSupportStereoRecord(false)
