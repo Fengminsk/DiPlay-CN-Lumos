@@ -4,6 +4,7 @@ import android.content.Context
 import android.content.Intent
 import android.hardware.usb.UsbDevice
 import android.hardware.usb.UsbManager
+import android.os.SystemClock
 import android.util.Log
 import androidx.core.content.IntentCompat
 import com.shilapi.xcertplay.AirPlayPersistence
@@ -25,6 +26,11 @@ object PhoneLinkRouter {
     const val EXTRA_CARPLAY_USB_ATTACHED = "carplay_usb_attached"
 
     private const val TAG = "DiPlay/PhoneLink"
+    private const val ATTACH_STORM_WINDOW_MS = 20_000L
+    private const val ATTACH_STORM_LIMIT = 8
+    private const val ICCOA_RESTART_COOLDOWN_MS = 12_000L
+    private val attachTimes = ArrayDeque<Long>()
+    @Volatile private var lastIccoaStartElapsed = 0L
 
     /** Reads the attached device out of a `USB_DEVICE_ATTACHED` intent. */
     fun attachedDevice(intent: Intent?): UsbDevice? {
@@ -57,6 +63,17 @@ object PhoneLinkRouter {
 
     /** Applies the decision and returns it, so callers (and tests) can see what was chosen. */
     fun onUsbAttached(context: Context, device: UsbDevice): LinkAction {
+        val now = SystemClock.elapsedRealtime()
+        synchronized(attachTimes) {
+            while (attachTimes.isNotEmpty() && now - attachTimes.first() > ATTACH_STORM_WINDOW_MS) {
+                attachTimes.removeFirst()
+            }
+            attachTimes.addLast(now)
+            if (attachTimes.size > ATTACH_STORM_LIMIT) {
+                LinkLog.append(context, "USB attach storm (${attachTimes.size} in 20s); ignoring attach")
+                return LinkAction.IGNORE
+            }
+        }
         val kind = UsbPhoneClassifier.classify(signature(device))
         val source = PhoneLinkSettings.loadSource(context)
         val action = PhoneLinkPolicy.decide(kind)
@@ -115,7 +132,15 @@ object PhoneLinkRouter {
             // wireless tap must re-enter start() so it clears that mode and starts BLE advertising.
             if (shouldStartIccoa(engine.isStarted, active, engine.manager.isUsbOnly,
                     wiredOnly, retryIfStarted)) {
-                IcocaEngine.start(context, wiredOnly)
+                val now = SystemClock.elapsedRealtime()
+                val transportChanged = engine.manager.isUsbOnly != wiredOnly
+                if (engine.isStarted && !active && !transportChanged &&
+                    now - lastIccoaStartElapsed < ICCOA_RESTART_COOLDOWN_MS) {
+                    LinkLog.append(context, "wired: ICCOA restart ignored during cooldown")
+                } else {
+                    lastIccoaStartElapsed = now
+                    IcocaEngine.start(context, wiredOnly)
+                }
             }
         }
         if (!wiredOnly || !askPermission) {
@@ -162,25 +187,13 @@ object PhoneLinkRouter {
                 IcocaEngine.refreshUsb(context)
                 onStarted()
             } else {
-                IccoaAoaProbe.beforeSdk(context, device) { startSdk ->
-                    if (!IcocaSettings.usb(context) || IcocaSettings.wireless(context)) {
-                        LinkLog.appendProbe(context, "AOA probe: transport changed before SDK start")
-                        return@beforeSdk
-                    }
-                    if (startSdk) {
-                        val stillAttached = usb.deviceList.values.any { it.deviceId == device.deviceId }
-                        if (!stillAttached) {
-                            LinkLog.appendProbe(context, "AOA probe: device detached before SDK start")
-                            return@beforeSdk
-                        }
-                        if (IcocaEngine.isStarted(context)) {
-                            LinkLog.appendProbe(context, "AOA probe: SDK became active during probe; keeping its state")
-                        } else {
-                            startEngine()
-                        }
-                    }
-                    onStarted()
-                }
+                // The SDK owns AOA from the first open. The old preflight opened and closed the
+                // same device first; the SDK then saw an extra re-enumeration, rescanned, failed
+                // its MANAGE_USB grant and looped attach/detach until the head unit's USB stack
+                // stalled.
+                LinkLog.append(context, "wired: starting ICCOA SDK without an AOA preflight")
+                startEngine()
+                onStarted()
             }
         }
         if (UsbPermissionBroker.has(context, device)) {
