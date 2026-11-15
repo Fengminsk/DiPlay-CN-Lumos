@@ -256,6 +256,51 @@ public class IccoaManager {
 
     private void stopHeartbeat() {
         main.removeCallbacks(heartbeatRunnable);
+        stopWfdKeepAlive();
+    }
+
+    /**
+     * WFD advertises {@code Session: ...timeout=30}. The sink must keep that RTSP session alive;
+     * this benign SET_PARAMETER is the car-side heartbeat for the phone's WFD source.
+     */
+    private final Runnable wfdKeepAliveRunnable = new Runnable() {
+        @Override
+        public void run() {
+            if (!sessionActive) return;
+            try {
+                UCarAdapter a = adapter;
+                if (a != null) {
+                    Object cast = readField(a, "mCastManager");
+                    Object session = cast == null ? null : readField(cast, "mWfdSessionId");
+                    if (session instanceof String && !((String) session).isEmpty()) {
+                        java.util.HashMap<String, String> params = new java.util.HashMap<>();
+                        params.put("wfd_idr_request", "");
+                        Class<?> sink = Class.forName("com.ucarsink.sink.natives.SinkNative");
+                        Object ok = sink.getMethod("setParameter", String.class, java.util.HashMap.class)
+                                .invoke(null, session, params);
+                        log("WFD 保活：SET_PARAMETER wfd_idr_request session=" + session + " ok=" + ok);
+                    }
+                }
+            } catch (Throwable t) {
+                log("WFD 保活失败（继续）：" + t);
+            }
+            if (sessionActive) main.postDelayed(this, 8_000L);
+        }
+    };
+
+    private static Object readField(Object target, String name) throws Exception {
+        java.lang.reflect.Field field = target.getClass().getDeclaredField(name);
+        field.setAccessible(true);
+        return field.get(target);
+    }
+
+    private void startWfdKeepAlive() {
+        main.removeCallbacks(wfdKeepAliveRunnable);
+        main.postDelayed(wfdKeepAliveRunnable, 5_000L);
+    }
+
+    private void stopWfdKeepAlive() {
+        main.removeCallbacks(wfdKeepAliveRunnable);
     }
 
     /** 异步读一次 P2P 组信息；{@code tag} 非空时把结果单独打一行（断连现场用）。 */
@@ -2514,6 +2559,13 @@ public class IccoaManager {
                     main.removeCallbacks(castStopReconsiderRunnable);
                     // ★ 会话期间必须保住 Wi-Fi 与 CPU，否则音频会被省电策略打断（见 SessionKeepAlive）。
                     keepAlive.acquire();
+                    // The projection surface is the phone's WFD consumer. If the phone connects
+                    // while the car sits on the home screen, no Surface exists and the phone
+                    // tears the cast down after a few seconds even though AOA control is up.
+                    if (!IcocaHost.isForeground()) {
+                        log("连接建立但投影页不在前台 → 主动拉起 ICCOA 投影页");
+                        IcocaHost.openProjection();
+                    }
                     // ★ 昼夜诊断随会话起停（默认只读，不发任何包；见 DayNightProbe）。
                     dayNight.start();
                     // ★ 每次会话建立都把音频焦点的「一次性闩」重新打开。
@@ -2534,6 +2586,7 @@ public class IccoaManager {
                     // ★ 会话心跳：每 5 秒一行会话健康度快照。断连时「最后一条心跳」就是现场，
                     //   这是没有周期性采样时唯一无法补救的信息（见 HEARTBEAT_INTERVAL_MS）。
                     startHeartbeat();
+                    startWfdKeepAlive();
                     // 流量基线按会话重算：跨会话的字节差会把「重连空窗」算成 0KB/s 或超大值。
                     P2pTrafficProbe.resetBaseline();
                     probeP2p("会话建立");

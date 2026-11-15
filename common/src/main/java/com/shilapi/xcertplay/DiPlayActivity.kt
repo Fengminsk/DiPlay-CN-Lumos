@@ -637,6 +637,7 @@ class DiPlayActivity : ComponentActivity(), AppAppearanceOwner {
         carPlayOverlay = null
         iccoaOverlay?.let { (it.parent as? ViewGroup)?.removeView(it) }
         iccoaOverlay = null
+        IcocaProjectionHost.setPairingCardVisible(false)
         iccoaStateJob?.cancel()
         iccoaStateJob = null
         // The engine deliberately outlives this screen. Opening settings, going home or rotating
@@ -5083,6 +5084,7 @@ class DiPlayActivity : ComponentActivity(), AppAppearanceOwner {
         if (engine != null && engine.isStarted &&
             engine.state.value.phase == IcocaBridge.Phase.Connected
         ) {
+            IcocaProjectionHost.setPairingCardVisible(false)
             stopCarPlayForIccoa()
             startActivity(
                 Intent(this, IcocaProjectionActivity::class.java)
@@ -5130,6 +5132,7 @@ class DiPlayActivity : ComponentActivity(), AppAppearanceOwner {
             IcocaEngine.bridge(this@DiPlayActivity).state.collect { state -> overlay.render(state) }
         }
         addContentView(overlay, ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT))
+        IcocaProjectionHost.setPairingCardVisible(true)
         var backdropFrame = 0
         val backdropTick = object : Runnable {
             override fun run() {
@@ -5152,6 +5155,7 @@ class DiPlayActivity : ComponentActivity(), AppAppearanceOwner {
     private fun removeIccoaOverlay(stopEngine: Boolean = false) {
         val overlay = iccoaOverlay ?: return
         iccoaOverlay = null
+        IcocaProjectionHost.setPairingCardVisible(false)
         glassHome?.setPairingMode(false)
         iccoaStateJob?.cancel()
         iccoaStateJob = null
@@ -5172,6 +5176,7 @@ class DiPlayActivity : ComponentActivity(), AppAppearanceOwner {
     private fun handoffIccoaProjection() {
         val overlay = iccoaOverlay ?: return
         iccoaOverlay = null
+        IcocaProjectionHost.setPairingCardVisible(false)
         iccoaStateJob?.cancel()
         iccoaStateJob = null
         glassHome?.setPairingMode(false)

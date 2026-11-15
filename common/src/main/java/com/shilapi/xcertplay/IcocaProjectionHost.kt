@@ -19,6 +19,14 @@ internal object IcocaProjectionHost : IcocaHost.ProjectionScreen {
     @Volatile
     private var foreground = false
 
+    /** The pairing card owns the transition; do not let the engine pre-empt its expand animation. */
+    @Volatile
+    private var pairingCardVisible = false
+
+    fun setPairingCardVisible(value: Boolean) {
+        pairingCardVisible = value
+    }
+
     fun attach(context: Context) {
         appContext = context.applicationContext
         IcocaHost.setProjectionScreen(this)
@@ -32,7 +40,7 @@ internal object IcocaProjectionHost : IcocaHost.ProjectionScreen {
 
     override fun open() {
         val context = appContext ?: return
-        if (foreground) return
+        if (foreground || pairingCardVisible) return
         context.startActivity(
             Intent(context, IcocaProjectionActivity::class.java)
                 .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_REORDER_TO_FRONT),
