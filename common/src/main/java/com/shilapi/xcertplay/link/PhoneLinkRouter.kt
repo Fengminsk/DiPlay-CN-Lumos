@@ -94,14 +94,17 @@ object PhoneLinkRouter {
                         .apply { isDaemon = true }
                         .start()
                 }
-                if (!CarPlayBackgroundSession.hasSession() ||
-                    AirPlayPersistence.loadWirelessEnabled(context)
-                ) {
+                if (!CarPlayBackgroundSession.hasSession()) {
                     context.startActivity(
                         Intent(context, DiPlayActivity::class.java)
                             .putExtra(EXTRA_CARPLAY_USB_ATTACHED, true)
                             .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP),
                     )
+                } else {
+                    // The iPhone re-enumerates several times during CarPlay startup. Starting the
+                    // home Activity on each attach covered the running CarPlay host with the
+                    // "control channel running" card. Keep the existing host in front instead.
+                    LinkLog.append(context, "CarPlay attach: session already active, keeping host")
                 }
             }
 
