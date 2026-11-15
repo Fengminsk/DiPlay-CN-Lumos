@@ -84,7 +84,9 @@ object PhoneLinkRouter {
                 "kind=$kind source=$source action=$action",
         )
         when (action) {
-            LinkAction.START_CARPLAY -> if (!CarPlayBackgroundSession.hasSession() ||
+            LinkAction.START_CARPLAY -> if (iccoaLinkActive(context)) {
+                LinkLog.append(context, "CarPlay attach ignored: ICCOA link is already active")
+            } else if (!CarPlayBackgroundSession.hasSession() ||
                 AirPlayPersistence.loadWirelessEnabled(context)) {
                 context.startActivity(Intent(context, DiPlayActivity::class.java)
                     .putExtra(EXTRA_CARPLAY_USB_ATTACHED, true)
@@ -108,6 +110,12 @@ object PhoneLinkRouter {
         }
         return action
     }
+
+    /** True while an ICCOA link is connecting or streaming; CarPlay must not take the screen. */
+    internal fun iccoaLinkActive(context: Context): Boolean = runCatching {
+        val engine = IcocaEngine.bridge(context.applicationContext)
+        engine.isStarted && engine.state.value.phase != IcocaBridge.Phase.Disconnected
+    }.getOrDefault(false)
 
     /**
      * Starts the engine, but in wired mode only after the phone's USB permission is granted.

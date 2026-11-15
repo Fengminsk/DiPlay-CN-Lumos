@@ -605,6 +605,7 @@ class CarPlayHostActivity : ComponentActivity() {
         window.setWindowAnimations(0)
         @Suppress("DEPRECATION")
         overridePendingTransition(0, 0)
+        live = java.lang.ref.WeakReference(this)
         NavigationWidgetUpdater.attach(applicationContext)
         CarPlayCallKeys.install(applicationContext)
         CenterMapOverlay.requestShow = ::showCenterMap
@@ -1433,6 +1434,7 @@ class CarPlayHostActivity : ComponentActivity() {
     }
 
     override fun onDestroy() {
+        if (live?.get() === this) live = null
         serviceStateJob?.cancel()
         serviceStateJob = null
         serviceUiListener?.let(DiPlaySessionService::detachUi)
@@ -5390,7 +5392,18 @@ class CarPlayHostActivity : ComponentActivity() {
         }
     }
 
-    private companion object {
+    companion object {
+        @Volatile private var live: java.lang.ref.WeakReference<CarPlayHostActivity>? = null
+
+        /** Protocol switch: finish the CarPlay host and stop its controller before ICCOA shows. */
+        fun finishForIccoaSwitch() {
+            val activity = live?.get() ?: return
+            activity.runOnUiThread {
+                activity.finishAndRemoveTask()
+                activity.shutdown(terminateProcess = false, reason = "switch to ICCOA")
+            }
+        }
+
         const val CLUSTER_SMALL_WINDOW_ON = 1
         const val CLUSTER_SMALL_WINDOW_AUTO = 2
         const val SIDE_PANEL_REFRESH_MILLIS = 5_000L

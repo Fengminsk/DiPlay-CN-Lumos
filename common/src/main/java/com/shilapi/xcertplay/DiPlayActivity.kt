@@ -483,7 +483,7 @@ class DiPlayActivity : ComponentActivity(), AppAppearanceOwner {
         // CarPlay carry a "page" extra, which isLauncherIntent rejects.
         if (isLauncherIntent(intent) && CarPlayLiveSession.value().firstFrame &&
             CarPlayBackgroundSession.hasSession() &&
-            AirPlayPersistence.loadLauncherReturnsToCarPlay(this)) {
+            AirPlayPersistence.loadLauncherReturnsToCarPlay(this) && !iccoaLinkActive()) {
             page = "home"; render(); openProjection(); return
         }
         page = intent.getStringExtra("page") ?: "home"
@@ -592,7 +592,7 @@ class DiPlayActivity : ComponentActivity(), AppAppearanceOwner {
         super.onResume()
         applyFullscreenMode()
         // Returning from another activity can bring the head unit's own density back.
-        if (enforceInterfaceSize()) render()
+        if (!initialLaunch && enforceInterfaceSize()) render()
         if (Build.VERSION.SDK_INT < 33 && AppLocale.preference(this) != languagePreferenceAtCreate) {
             recreate()
             return
@@ -602,7 +602,7 @@ class DiPlayActivity : ComponentActivity(), AppAppearanceOwner {
         if (!initialLaunch && !adbSwitchChangePending && !pausedForAdbSwitchChange &&
             (page == "home" || page == "settings" || page == "connection" || page == "setup")) render()
         if (page == "home" && CarPlayBackgroundSession.hasSession() &&
-            !CarPlayLiveSession.value().firstFrame && carPlayOverlay == null) {
+            !CarPlayLiveSession.value().firstFrame && carPlayOverlay == null && !iccoaLinkActive()) {
             showCarPlayOverlay(autoOpen = true)
         }
         if (resumeIccoaAfterWifiSettings) {
@@ -616,9 +616,6 @@ class DiPlayActivity : ComponentActivity(), AppAppearanceOwner {
             startCarHotspotOnLaunch()
             if (consumeBluetoothAutoConnectIntent(intent)) {
                 handler.post { connect(true) }
-            } else if (setupError == null && !CarPlayBackgroundSession.hasSession() &&
-                DiPlayPreferences.autoConnect(this) && intent.getStringExtra("page") == null && page != "setup") {
-                handler.post { connect(DiPlayPreferences.autoConnectWireless(this)) }
             }
         }
     }
@@ -732,6 +729,11 @@ class DiPlayActivity : ComponentActivity(), AppAppearanceOwner {
     private fun render() = render(appearanceOnly = false)
 
     private fun render(appearanceOnly: Boolean, preferredFocusTag: Any? = null) {
+        // The ICCOA pairing card is an independent content view. A full render removes it, so a
+        // USB-permission or connection callback that resumes this Activity used to delete the card
+        // while the engine kept connecting: the phone ended up mirrored in the background with no
+        // expansion animation and no projection page.
+        if (iccoaOverlay != null) return
         val restoreCarPlayOverlay = carPlayOverlay != null
         val restoreCarPlayAutoOpen = carPlayAutoOpen
         if (restoreCarPlayOverlay) removeCarPlayOverlay()
@@ -5058,6 +5060,21 @@ class DiPlayActivity : ComponentActivity(), AppAppearanceOwner {
         openCarplaySetupFromHome()
     }
 
+    /** ICCOA is connecting/streaming, or its pairing card is on screen. */
+    private fun iccoaLinkActive(): Boolean = iccoaOverlay != null || runCatching {
+        val engine = IcocaEngine.bridge(this)
+        engine.isStarted && engine.state.value.phase != IcocaBridge.Phase.Disconnected
+    }.getOrDefault(false)
+
+    /** A protocol switch must remove CarPlay's host and controller, not only its background session. */
+    private fun stopCarPlayForIccoa() {
+        CarPlayHostActivity.finishForIccoaSwitch()
+        runCatching { DiPlaySessionService.stop(this) }
+        if (CarPlayBackgroundSession.hasSession()) {
+            CarPlayBackgroundSession.stop { runOnUiThread { resetWirelessGroup() } }
+        }
+    }
+
     private fun openIccoaPairing() {
         if (iccoaOverlay != null) return
         // A tap while the link is already up means "show me the picture", not "pair again":
@@ -5066,6 +5083,7 @@ class DiPlayActivity : ComponentActivity(), AppAppearanceOwner {
         if (engine != null && engine.isStarted &&
             engine.state.value.phase == IcocaBridge.Phase.Connected
         ) {
+            stopCarPlayForIccoa()
             startActivity(
                 Intent(this, IcocaProjectionActivity::class.java)
                     .addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT),
@@ -5093,17 +5111,11 @@ class DiPlayActivity : ComponentActivity(), AppAppearanceOwner {
             return
         }
         PhoneLinkSettings.saveSource(this, ProjectionSource.ICCOA)
-        // A protocol switch cuts the other link; nothing else does.
-        if (CarPlayBackgroundSession.hasSession()) {
-            CarPlayBackgroundSession.stop { runOnUiThread { resetWirelessGroup() } }
-        }
         // Keep a file record: a Pad testing against a phone is not on adb, so logcat alone loses it.
         LinkLog.startCapture(this)
         LinkLog.append(this, "ICCOA selected: wired=$wired")
-        // Wired needs the USB grant *before* the SDK scans: the SDK reads the serial number before
-        // checking permission and a SecurityException kills its scan thread for good.
-        PhoneLinkRouter.startIccoa(this, wiredOnly = wired, askPermission = true,
-            retryIfStarted = true) { iccoaStarted = true }
+        // Put the card on screen before touching CarPlay or the engine. Every render() and
+        // CarPlay-stop callback after this sees iccoaOverlay and leaves the card alone.
         val overlay = DiPlayIccoaPairingOverlay(
             context = this,
             night = appNight,
@@ -5128,6 +5140,13 @@ class DiPlayActivity : ComponentActivity(), AppAppearanceOwner {
             }
         }
         overlay.post(backdropTick)
+
+        // A protocol switch cuts the other link; nothing else does.
+        stopCarPlayForIccoa()
+        // Wired needs the USB grant *before* the SDK scans: the SDK reads the serial number before
+        // checking permission and a SecurityException kills its scan thread for good.
+        PhoneLinkRouter.startIccoa(this, wiredOnly = wired, askPermission = true,
+            retryIfStarted = true) { iccoaStarted = true }
     }
 
     private fun removeIccoaOverlay(stopEngine: Boolean = false) {
