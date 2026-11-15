@@ -28,6 +28,7 @@ class IcocaProjectionActivity : ComponentActivity() {
     private var boundWidth = 0
     private var boundHeight = 0
     private var firstResume = true
+    private var wasPaused = false
 
     private fun bindSurface(holder: SurfaceHolder, width: Int, height: Int) {
         if (width <= 0 || height <= 0) return
@@ -93,15 +94,22 @@ class IcocaProjectionActivity : ComponentActivity() {
         // starts the decoder twice and the second start blacks the picture out.
         if (firstResume) {
             firstResume = false
+            wasPaused = false
             return
         }
         val surface = surfaceView.holder.surface
         if (surface != null && surface.isValid) {
-            bridge.resumeCastingIfStillPaused(surface, surfaceView.width, surfaceView.height)
+            val rebound = bridge.resumeCastingIfStillPaused(surface, surfaceView.width, surfaceView.height)
+            // The pause path in older builds cleared the paused marker; if the surface survived
+            // (car settings/launcher drawn as an overlay), force one re-bind so the decoder is
+            // not left on the SDK's dummy surface.
+            if (!rebound && wasPaused) bridge.forceRestartCast()
         }
+        wasPaused = false
     }
 
     override fun onPause() {
+        wasPaused = true
         IcocaProjectionHost.setForeground(false)
         super.onPause()
     }

@@ -342,7 +342,9 @@ class DiPlayActivity : ComponentActivity(), AppAppearanceOwner {
     private fun askForUsbAutoConfirmAtLaunch() {
         if (usbAutoConfirmOffered || UsbAutoConfirmService.isEnabled(this)) return
         usbAutoConfirmOffered = true
-        promptEnableUsbAutoConfirm()
+        // First two cold starts ask; from the third, the permission marker in the UI is
+        // enough. Reinstalling the app clears the counter, so a fresh install asks again.
+        if (UsbAutoConfirmPrompt.shouldAskOnLaunch(this)) promptEnableUsbAutoConfirm()
     }
     private val iconPicker = registerForActivityResult(ActivityResultContracts.GetContent(), ::cropIcon)
     private val iconDocumentPicker = registerForActivityResult(ActivityResultContracts.OpenDocument(), ::cropIcon)
@@ -5061,10 +5063,10 @@ class DiPlayActivity : ComponentActivity(), AppAppearanceOwner {
         openCarplaySetupFromHome()
     }
 
-    /** ICCOA is connecting/streaming, or its pairing card is on screen. */
+    /** ICCOA is actually connected/streaming, or its pairing card is on screen. */
     private fun iccoaLinkActive(): Boolean = iccoaOverlay != null || runCatching {
         val engine = IcocaEngine.bridge(this)
-        engine.isStarted && engine.state.value.phase != IcocaBridge.Phase.Disconnected
+        engine.isStarted && engine.state.value.phase == IcocaBridge.Phase.Connected
     }.getOrDefault(false)
 
     /** A protocol switch must remove CarPlay's host and controller, not only its background session. */

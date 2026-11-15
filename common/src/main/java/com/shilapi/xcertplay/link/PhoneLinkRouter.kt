@@ -84,13 +84,25 @@ object PhoneLinkRouter {
                 "kind=$kind source=$source action=$action",
         )
         when (action) {
-            LinkAction.START_CARPLAY -> if (iccoaLinkActive(context)) {
-                LinkLog.append(context, "CarPlay attach ignored: ICCOA link is already active")
-            } else if (!CarPlayBackgroundSession.hasSession() ||
-                AirPlayPersistence.loadWirelessEnabled(context)) {
-                context.startActivity(Intent(context, DiPlayActivity::class.java)
-                    .putExtra(EXTRA_CARPLAY_USB_ATTACHED, true)
-                    .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP))
+            LinkAction.START_CARPLAY -> {
+                // An explicitly attached iPhone is CarPlay's strongest signal. Do not let a
+                // merely-connecting ICCOA engine swallow it; stop ICCOA's USB scan first so
+                // both engines never fight over the iPhone's USBMUX interface.
+                if (iccoaLinkActive(context)) {
+                    LinkLog.append(context, "CarPlay attach: stopping ICCOA before CarPlay")
+                    Thread { runCatching { IcocaEngine.stop(context.applicationContext) } }
+                        .apply { isDaemon = true }
+                        .start()
+                }
+                if (!CarPlayBackgroundSession.hasSession() ||
+                    AirPlayPersistence.loadWirelessEnabled(context)
+                ) {
+                    context.startActivity(
+                        Intent(context, DiPlayActivity::class.java)
+                            .putExtra(EXTRA_CARPLAY_USB_ATTACHED, true)
+                            .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP),
+                    )
+                }
             }
 
             LinkAction.START_ICCOA -> {
@@ -111,10 +123,10 @@ object PhoneLinkRouter {
         return action
     }
 
-    /** True while an ICCOA link is connecting or streaming; CarPlay must not take the screen. */
+    /** True while an ICCOA link is actually connected/streaming; CarPlay must not take the screen. */
     internal fun iccoaLinkActive(context: Context): Boolean = runCatching {
         val engine = IcocaEngine.bridge(context.applicationContext)
-        engine.isStarted && engine.state.value.phase != IcocaBridge.Phase.Disconnected
+        engine.isStarted && engine.state.value.phase == IcocaBridge.Phase.Connected
     }.getOrDefault(false)
 
     /**

@@ -5395,12 +5395,16 @@ class CarPlayHostActivity : ComponentActivity() {
     companion object {
         @Volatile private var live: java.lang.ref.WeakReference<CarPlayHostActivity>? = null
 
-        /** Protocol switch: finish the CarPlay host and stop its controller before ICCOA shows. */
+        /** Protocol switch: stop the CarPlay controller/USB first, then finish the host. */
         fun finishForIccoaSwitch() {
             val activity = live?.get() ?: return
             activity.runOnUiThread {
-                activity.finishAndRemoveTask()
-                activity.shutdown(terminateProcess = false, reason = "switch to ICCOA")
+                // Closing the controller before destroying the Activity is what releases the
+                // iPhone's USBMUX usbfs claim. Finishing first leaves the interface claimed and
+                // every later CarPlay attempt fails with "could not claim USBMUX interface 1".
+                activity.shutdown(terminateProcess = false, reason = "switch to ICCOA") {
+                    activity.finishAndRemoveTask()
+                }
             }
         }
 
