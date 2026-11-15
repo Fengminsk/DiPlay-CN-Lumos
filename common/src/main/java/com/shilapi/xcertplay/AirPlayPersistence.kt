@@ -69,6 +69,7 @@ object AirPlayPersistence {
     private const val KEY_FPS = "display_fps"
     private const val KEY_MEDIA_BUFFER_MS = "media_buffer_ms"
     private const val KEY_MAIN_BUFFERED_AUDIO = "main_buffered_audio"
+    private const val KEY_SPEECH_WITHOUT_8_16_KHZ = "speech_without_8_16_khz"
     private const val KEY_CALL_AT_CALL_RATE = "call_at_call_rate"
     private const val KEY_CAR_BLUETOOTH_AUDIO = "car_bluetooth_audio"
     private const val KEY_MEDIA_OVER_BLUETOOTH = "media_over_bluetooth"
@@ -565,6 +566,14 @@ object AirPlayPersistence {
 
     fun saveMainBufferedAudio(context: Context, enabled: Boolean) {
         context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit().putBoolean(KEY_MAIN_BUFFERED_AUDIO, enabled).apply()
+    }
+
+    /** Do not offer 8 and 16 kHz PCM for navigation prompts and alerts; applies at reconnect. */
+    fun loadSpeechWithout8And16Khz(context: Context): Boolean =
+        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).getBoolean(KEY_SPEECH_WITHOUT_8_16_KHZ, false)
+
+    fun saveSpeechWithout8And16Khz(context: Context, enabled: Boolean) {
+        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit().putBoolean(KEY_SPEECH_WITHOUT_8_16_KHZ, enabled).apply()
     }
 
     /** Offer calls as PCM at the call's own rate instead of 48 kHz Opus; experimental, applies at reconnect. */

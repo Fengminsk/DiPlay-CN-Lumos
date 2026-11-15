@@ -1000,6 +1000,8 @@
     <string name="settings_navigation_prompt_audio_focus_description">During each CarPlay navigation prompt, DiPlay requests temporary audio focus that lets other sound duck, and releases it after the prompt. Try this if prompts are silent until music plays, or if music should get quieter during prompts. The head unit’s own audio may get quieter or pause during prompts. Applies at the next CarPlay connection.</string>
     <string name="settings_low_latency_decoder">Low-latency decoding (experimental)</string>
     <string name="settings_low_latency_decoder_description">Asks Qualcomm video decoders to output each frame as soon as it is decoded instead of holding the next ones. Can lower the delay by tens of milliseconds. Turn it off if the picture shows artifacts or freezes. Applies at the next connection.</string>
+    <string name="settings_speech_without_low_rates">USB 下更清晰的导航语音（实验性）</string>
+    <string name="settings_speech_without_low_rates_description">USB 连接时，iPhone 可能以 8 kHz 电话音质发送导航播报和 Siri 的语音回答。开启后不再为这类声音提供 8 和 16 kHz，让 iPhone 选择更高的采样率。如果播报没有声音，请关闭。会重新连接 CarPlay。</string>
 </resources>
 
 

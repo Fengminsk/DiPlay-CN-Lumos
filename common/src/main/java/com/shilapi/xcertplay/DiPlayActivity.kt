@@ -2376,6 +2376,12 @@ class DiPlayActivity : ComponentActivity(), AppAppearanceOwner {
                 AirPlayPersistence.saveMainBufferedAudio(this, it)
                 reconnectIfRunning()
             }
+            toggle(card, getString(R.string.settings_speech_without_low_rates),
+                getString(R.string.settings_speech_without_low_rates_description),
+                AirPlayPersistence.loadSpeechWithout8And16Khz(this)) {
+                AirPlayPersistence.saveSpeechWithout8And16Khz(this, it)
+                reconnectIfRunning()
+            }
             toggle(card, getString(R.string.settings_call_at_call_rate),
                 getString(R.string.settings_call_at_call_rate_description),
                 AirPlayPersistence.loadCallAtCallRate(this)) {

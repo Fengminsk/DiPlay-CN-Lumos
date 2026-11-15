@@ -947,6 +947,8 @@
     <string name="settings_media_over_bluetooth_description">DiPlay offers the iPhone no music audio, so music should stream over the iPhone\'s Bluetooth connection with the car, while navigation prompts, alerts, calls and Siri keep using CarPlay audio. Keep the iPhone paired with the car and choose Bluetooth as the car\'s audio source. If music pauses or plays on the iPhone instead, turn this off. Reconnects CarPlay.</string>
     <string name="settings_low_latency_decoder">Low-latency decoding (experimental)</string>
     <string name="settings_low_latency_decoder_description">Asks Qualcomm video decoders to output each frame as soon as it is decoded instead of holding the next ones. Can lower the delay by tens of milliseconds. Turn it off if the picture shows artifacts or freezes. Applies at the next connection.</string>
+    <string name="settings_speech_without_low_rates">USB 下更清晰的導航語音（實驗性）</string>
+    <string name="settings_speech_without_low_rates_description">USB 連線時，iPhone 可能以 8 kHz 電話音質傳送導航播報和 Siri 的語音回答。開啟後不再為這類聲音提供 8 和 16 kHz，讓 iPhone 選擇更高的取樣率。如果播報沒有聲音，請關閉。會重新連線 CarPlay。</string>
 </resources>
 
 
